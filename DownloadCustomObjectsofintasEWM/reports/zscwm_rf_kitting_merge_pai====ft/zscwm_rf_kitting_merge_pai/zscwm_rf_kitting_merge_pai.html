@@ -1,0 +1,1573 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZSCWM_RF_KITTING_MERGE_PAI</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for function: ZSCWM_RF_KITTING_MERGE_PAI</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  HU selection for screen 301</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*****************************************************************************************</font>
+<font color ="#0000FF">*                          INTAS PHARMA                                                 *</font>
+<font color ="#0000FF">*****************************************************************************************</font>
+<font color ="#0000FF">*  OBJECT INFORMATION                                                                   *</font>
+<font color ="#0000FF">*****************************************************************************************</font>
+<font color ="#0000FF">* Module             : EWM                                                              *</font>
+<font color ="#0000FF">* Developer          : Vinoth Kumar Raja                                                *</font>
+<font color ="#0000FF">* Requestor          : Shylaja                                                          *</font>
+<font color ="#0000FF">* Date Of Creation   : 23.09.2022                                                       *</font>
+<font color ="#0000FF">* Transport Request  : EWDK900104                                                       *</font>
+<font color ="#0000FF">* Development Object : ZSCWM_RF_KITTING_MERGE_PAI                                       *</font>
+<font color ="#0000FF">* Description        :                                                                  *</font>
+<font color ="#0000FF">*                                                                                       *</font>
+<font color ="#0000FF">*=======================================================================================*</font>
+<font color ="#0000FF">* MODIFICATION HISTORY                                                                  *</font>
+<font color ="#0000FF">*---------------------------------------------------------------------------------------*</font>
+<font color ="#0000FF">* Mod. No.  Date    Name        Transport Number        Change Desc.                    *</font>
+<font color ="#0000FF">*---------------------------------------------------------------------------------------*</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*---------------------------------------------------------------------------------------*</font>
+
+<font color ="#0000FF">*       <a href ="global-zscwm_rf_kitting_merge_pai.html">Global data declarations</a></font>
+FUNCTION zscwm_rf_kitting_merge_pai.
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+<font color ="#0000FF">*"*"Local Interface:</font>
+<font color ="#0000FF">*"  CHANGING</font>
+<font color ="#0000FF">*"     REFERENCE(CS_REHU_PROD) TYPE  /SCWM/S_RF_REHU_PROD</font>
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+<font color ="#0000FF">*============================================================================================*</font>
+<font color ="#0000FF">*                            VARIABLE DECLARE                                                *</font>
+<font color ="#0000FF">*============================================================================================*</font>
+  DATA : ls_docid         TYPE /scwm/s_docid_itmid,
+         ls_kit_stock     TYPE /scwm/s_mfg_stage_stock,
+         lt_huident       TYPE /scwm/tt_huident,
+         ls_huident       LIKE LINE OF lt_huident,
+         ls_huhdr_s       TYPE /scwm/s_huhdr_int,
+         ls_huhdr_d       TYPE /scwm/s_huhdr_int,
+         lo_pack_hu       TYPE REF TO /scwm/cl_wm_packing,
+         ls_pack_controle TYPE /scwm/s_pack_controle,
+         ls_wrkc          TYPE /scwm/tworkst,
+         lv_hu_matid_pack TYPE /scwm/de_matid,
+         lt_huitm         TYPE /scwm/tt_huitm_int,
+         lt_huhdr         TYPE /scwm/tt_huhdr_int,
+         ls_par_chi_hu    TYPE ty_par_chi_hu,
+         ls_quantity      TYPE /scwm/s_quan,
+         lv_man_order     TYPE /scwm/de_prod_order,
+         lv_char40        TYPE /scwm/de_rf_text,
+         lt_enq           TYPE STANDARD TABLE OF seqg3,
+         lv_garg          TYPE seqg3-garg,
+         lv_varkey        TYPE rstable-varkey,
+         lv_seq_no(2)     TYPE n,
+         LS_item          TYPE /scwm/dlv_item_out_prd_str.
+  DATA(lv_fcode1) = /scwm/cl_rf_bll_srvc=&gt;get_fcode( ).
+  DATA(lv_step) = /scwm/cl_rf_bll_srvc=&gt;get_step( ).
+  /scwm/cl_tm=&gt;cleanup( ).
+  DATA ls_rsrc TYPE /scwm/rsrc.
+  CLEAR ls_rsrc.
+  CALL FUNCTION '/SCWM/RSRC_RESOURCE_MEMORY'
+    EXPORTING
+      iv_uname = sy-uname
+    CHANGING
+      cs_rsrc  = ls_rsrc.
+  /scwm/cl_tm=&gt;set_lgnum( ls_rsrc-lgnum ).
+  /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_on( '/SCWM/S_RF_REHU_PROD-HUTO_CREATE' ).
+  CREATE OBJECT lo_pack_hu.
+  IF cs_rehu_prod-zzmanuf_order IS NOT INITIAL.
+    DATA(lv_manf_order) = cs_rehu_prod-zzmanuf_order.
+  ENDIF.
+  CASE lv_step.
+    WHEN 'ZKITMG'.
+<font color ="#0000FF">*============================================================================================*</font>
+<font color ="#0000FF">*                                  Change Alt Qty                                                     *</font>
+<font color ="#0000FF">*============================================================================================*</font>
+      IF lv_fcode1 EQ 'CHGQTY'.
+        IF cs_rehu_prod-zzmanuf_order IS INITIAL.
+          MESSAGE 'First scan manufacture order' TYPE 'E'.
+        ENDIF.
+        IF cs_rehu_prod-vltyp IS INITIAL.
+          MESSAGE 'Enter Workcenter' TYPE 'E'.
+        ENDIF.
+        IF cs_rehu_prod-huident IS INITIAL.
+          MESSAGE 'First Scan Source HU' TYPE 'E'.
+        ENDIF.
+        /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_on( '/SCWM/S_RF_REHU_PROD-NISTA_VERIF' ).
+        /scwm/cl_rf_bll_srvc=&gt;set_field( '/SCWM/S_RF_REHU_PROD-NISTA_VERIF' ).
+<font color ="#0000FF">*============================================================================================*</font>
+<font color ="#0000FF">*                                  Enter                                                     *</font>
+<font color ="#0000FF">*============================================================================================*</font>
+      ELSEIF lv_fcode1 EQ 'ENTER'.
+        IF cs_rehu_prod-huident IS NOT INITIAL.
+          READ TABLE gt_par_chi_hu INTO ls_par_chi_hu WITH KEY par_hu = cs_rehu_prod-huident.
+          IF sy-subrc NE 0.
+            CLEAR : cs_rehu_prod-huident,cs_rehu_prod-vlenr,cs_rehu_prod-matnr_verif,cs_rehu_prod-maktx,
+                    cs_rehu_prod-charg,cs_rehu_prod-nista_verif,cs_rehu_prod-altme.
+            MESSAGE 'Source HU not found this Manufacture order' TYPE 'E'.
+          ENDIF.
+          READ TABLE gt_huhdr INTO DATA(ls_shu) WITH KEY huident = cs_rehu_prod-huident.
+          IF ls_shu-top NE abap_true.
+            MESSAGE 'Please Scan Parent HU' TYPE 'E'.
+          ENDIF.
+          IF ls_shu-lgtyp NE cs_rehu_prod-vltyp.
+            MESSAGE 'SHU not in KIT workcenter' TYPE 'E'.
+          ENDIF.
+          IF ls_shu-copst EQ abap_true.
+            MESSAGE 'Source is alreay closed' TYPE 'E'.
+          ENDIF.
+          /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-HUIDENT' ).
+        ENDIF.
+        IF cs_rehu_prod-nlenr IS NOT INITIAL.
+          CLEAR ls_huident-huident.
+          CALL FUNCTION 'CONVERSION_EXIT_HUID_INPUT'
+            EXPORTING
+              input  = cs_rehu_prod-nlenr
+            IMPORTING
+              output = ls_huident-huident.
+          CLEAR ls_huhdr_d.
+          CALL METHOD lo_pack_hu-&gt;get_hu
+            EXPORTING
+              iv_huident = ls_huident-huident
+              iv_lock    = 'X'
+            IMPORTING
+              es_huhdr   = ls_huhdr_d
+            EXCEPTIONS
+              not_found  = 1
+              OTHERS     = 2.
+          IF sy-subrc NE 0.
+            CLEAR cs_rehu_prod-nlenr.
+            MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+                  WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+          ENDIF.
+          IF ls_huhdr_d-lgtyp NE cs_rehu_prod-vltyp.
+            CLEAR cs_rehu_prod-nlenr.
+            MESSAGE 'Destination HU workcenter not matching' TYPE 'E'.
+          ENDIF.
+          IF ls_huhdr_d-copst IS NOT INITIAL.
+            MESSAGE 'Scanned DHU already closed' TYPE 'E'.
+          ENDIF.
+        ENDIF.
+        IF cs_rehu_prod-zzmanuf_order IS NOT INITIAL AND cs_rehu_prod-vltyp IS INITIAL.
+          CLEAR lv_man_order. REFRESH : gt_docid,gt_huhdr,gt_hutree,gt_kit_stock.
+          lv_man_order = cs_rehu_prod-zzmanuf_order.
+          CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'
+            EXPORTING
+              input  = lv_man_order
+            IMPORTING
+              output = lv_man_order.
+          SELECT a~docid,
+                 b~itemid,
+                 b~doccat FROM /scdl/db_refdoc AS a
+                          INNER JOIN /scdl/db_proci_p AS b
+                          ON a~docid EQ b~docid
+                          INTO TABLE @DATA(lt_dlv)
+                          WHERE a~refdoccat EQ 'PPO'
+                          AND   a~doccat    EQ 'PWR'
+                          AND   a~refdocno  EQ @lv_man_order
+                          AND   b~itemcat   EQ 'CMP' .
+          IF sy-subrc NE 0.
+            MESSAGE 'Invalid Manufacture Order' TYPE 'E'.
+          ENDIF.
+          REFRESH gt_docid.
+          LOOP AT lt_dlv INTO DATA(ls_dlv).
+            CLEAR ls_docid.
+            ls_docid-doccat = ls_dlv-doccat.
+            ls_docid-docid = ls_dlv-docid.
+            ls_docid-itmid = ls_dlv-itemid.
+            APPEND ls_docid TO gt_docid.
+            CLEAR ls_docid.
+          ENDLOOP.
+          REFRESH gt_kit_stock.
+          TRY.
+              /scwm/cl_mfg_stp_service=&gt;get_stock_single_order(
+                EXPORTING
+                  it_docid_itmid = gt_docid
+                IMPORTING
+                  et_stock       = gt_kit_stock
+              ).
+            CATCH /scwm/cx_core.
+          ENDTRY.
+          IF gt_kit_stock IS INITIAL.
+            MESSAGE 'Manufacture order item details not found' TYPE 'E'.
+          ENDIF.
+          CLEAR ls_kit_stock. REFRESH lt_huident.
+          LOOP AT gt_kit_stock INTO ls_kit_stock.
+            CLEAR ls_huident.
+            ls_huident-huident = ls_kit_stock-huident.
+            APPEND ls_huident TO lt_huident.
+            CLEAR : ls_kit_stock,ls_huident.
+          ENDLOOP.
+          REFRESH : gt_huhdr,gt_huitm,gt_hutree.
+          CALL FUNCTION '/SCWM/HU_READ_MULT'
+            EXPORTING
+              it_huident   = lt_huident
+            IMPORTING
+              et_huhdr     = gt_huhdr
+              et_huitm     = gt_huitm
+              et_hutree    = gt_hutree
+            EXCEPTIONS
+              wrong_input  = 1
+              not_possible = 2
+              OTHERS       = 3.
+          IF sy-subrc NE 0.
+            MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+                  WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+          ENDIF.
+          /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-ZZMANUF_ORDER' ).
+          /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_on( '/SCWM/S_RF_REHU_PROD-VLTYP' ).
+          /scwm/cl_rf_bll_srvc=&gt;set_field( '/SCWM/S_RF_REHU_PROD-VLTYP' ).
+        ELSEIF cs_rehu_prod-zzmanuf_order IS NOT INITIAL AND cs_rehu_prod-vltyp IS NOT INITIAL AND
+               cs_rehu_prod-huident IS INITIAL.
+          DATA(lt_kit_stock) = gt_kit_stock.
+          DELETE lt_kit_stock WHERE lgtyp NE cs_rehu_prod-vltyp.
+          IF lt_kit_stock IS INITIAL.
+            MESSAGE 'Work center Source HU not exist' TYPE 'E'.
+          ENDIF.
+          DELETE gt_huhdr WHERE lgtyp NE cs_rehu_prod-vltyp.
+          IF gt_huhdr IS INITIAL.
+            MESSAGE 'Work center Source HU not exist' TYPE 'E'.
+          ENDIF.
+          CLEAR ls_shu. REFRESH gt_par_chi_hu.
+          LOOP AT gt_hutree INTO DATA(ls_hutree).
+            READ TABLE gt_huhdr INTO DATA(ls_huhdr_1) WITH KEY guid_hu = ls_hutree-guid_parent
+                                                              copst   = abap_false.
+            IF sy-subrc EQ 0.
+              ls_par_chi_hu-par_hu   = ls_huhdr_1-huident.
+              ls_par_chi_hu-par_guid = ls_huhdr_1-guid_hu.
+              CLEAR ls_huhdr_1.
+              READ TABLE gt_huhdr INTO ls_huhdr_1 WITH KEY guid_hu = ls_hutree-guid.
+              IF sy-subrc EQ 0.
+                ls_par_chi_hu-chi_hu = ls_huhdr_1-huident.
+                ls_par_chi_hu-chi_guid = ls_huhdr_1-guid_hu.
+              ENDIF.
+              APPEND ls_par_chi_hu TO gt_par_chi_hu.
+            ENDIF.
+            CLEAR : ls_hutree,ls_huhdr_1,ls_par_chi_hu.
+          ENDLOOP.
+          LOOP AT gt_huhdr INTO ls_huhdr_1 WHERE copst EQ abap_false.
+            READ TABLE gt_par_chi_hu INTO ls_par_chi_hu WITH KEY par_hu = ls_huhdr_1-huident.
+            IF sy-subrc NE 0.
+              READ TABLE gt_par_chi_hu INTO ls_par_chi_hu WITH KEY chi_hu = ls_huhdr_1-huident.
+              IF sy-subrc NE 0.
+                CLEAR ls_par_chi_hu.
+                ls_par_chi_hu-par_hu = ls_huhdr_1-huident.
+                ls_par_chi_hu-par_guid = ls_huhdr_1-guid_hu.
+                APPEND ls_par_chi_hu TO gt_par_chi_hu.
+              ENDIF.
+            ENDIF.
+            CLEAR : ls_huhdr_1,ls_par_chi_hu.
+          ENDLOOP.
+          /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-VLTYP' ).
+          /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_on( '/SCWM/S_RF_REHU_PROD-HUIDENT' ).
+          /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-NLENR' ).
+          /scwm/cl_rf_bll_srvc=&gt;set_field( '/SCWM/S_RF_REHU_PROD-HUIDENT' ).
+        ENDIF.
+        IF cs_rehu_prod-huto_create IS INITIAL.
+          IF cs_rehu_prod-vlenr IS NOT INITIAL.
+            IF cs_rehu_prod-huident IS INITIAL.
+              CLEAR cs_rehu_prod-vlenr.
+              /scwm/cl_rf_bll_srvc=&gt;set_field( '/SCWM/S_RF_REHU_PROD-HUIDENT' ).
+              MESSAGE 'First enter source HU' TYPE 'E'.
+            ENDIF.
+            CLEAR ls_huident-huident.
+            CALL FUNCTION 'CONVERSION_EXIT_HUID_INPUT'
+              EXPORTING
+                input  = cs_rehu_prod-vlenr
+              IMPORTING
+                output = ls_huident-huident.
+            READ TABLE gt_huhdr INTO DATA(ls_nhu) WITH KEY huident = ls_huident-huident.
+            IF sy-subrc NE 0.
+              CLEAR : cs_rehu_prod-vlenr,cs_rehu_prod-matnr_verif,cs_rehu_prod-maktx,
+                      cs_rehu_prod-charg,cs_rehu_prod-nista_verif,cs_rehu_prod-altme.
+              MESSAGE 'Nested HU Not Found on this Order' TYPE 'E'.
+            ENDIF.
+            READ TABLE gt_par_chi_hu INTO ls_par_chi_hu WITH KEY par_hu = cs_rehu_prod-huident
+                                                                 chi_hu = ls_huident-huident.
+            IF sy-subrc NE 0.
+              CLEAR : cs_rehu_prod-vlenr,cs_rehu_prod-matnr_verif,cs_rehu_prod-maktx,
+                      cs_rehu_prod-charg,cs_rehu_prod-nista_verif,cs_rehu_prod-altme.
+              MESSAGE 'Nested HU Not Found on source HU' TYPE 'E'.
+            ENDIF.
+            /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-VLENR' ).
+            CLEAR ls_huident-huident.
+          ENDIF.
+          IF cs_rehu_prod-zzmanuf_order IS NOT INITIAL AND cs_rehu_prod-vltyp IS NOT INITIAL AND
+             cs_rehu_prod-huident IS NOT INITIAL AND cs_rehu_prod-vlenr IS INITIAL.
+            CLEAR ls_par_chi_hu.
+            READ TABLE gt_par_chi_hu INTO ls_par_chi_hu WITH KEY par_hu = cs_rehu_prod-huident.
+            IF sy-subrc EQ 0 AND ls_par_chi_hu-chi_hu IS INITIAL.
+              CLEAR ls_kit_stock.
+              READ TABLE gt_kit_stock INTO ls_kit_stock WITH KEY huident = cs_rehu_prod-huident.
+              IF sy-subrc EQ 0.
+                cs_rehu_prod-matnr_verif = ls_kit_stock-matnr.
+                cs_rehu_prod-maktx       = ls_kit_stock-maktx.
+                cs_rehu_prod-charg       = ls_kit_stock-charg.
+                IF  cs_rehu_prod-nista_verif IS INITIAL.
+                  cs_rehu_prod-nista_verif = ls_kit_stock-quana.
+                  CONDENSE cs_rehu_prod-nista_verif.
+                ENDIF.
+                cs_rehu_prod-altme       = ls_kit_stock-altme.
+<font color ="#0000FF">*                below changes are added by Naresh on 21.02.23</font>
+<font color ="#0000FF">*                check Required Qty from PMR</font>
+                IF cs_rehu_prod-nista IS INITIAL.
+                  zscwm_cl_get_pcr_items=&gt;fetch_pcr_items(
+                    EXPORTING
+                      ev_lgnum       = ls_rsrc-lgnum
+                      ev_manuf_order = cs_rehu_prod-zzmanuf_order
+                      ev_matnr       = ls_kit_stock-matnr
+                    IMPORTING
+                      is_item        = LS_item ).
+                  IF NOT LS_item-qty-qty IS INITIAL.
+                    cs_rehu_prod-nista = LS_item-qty-qty.
+                  ENDIF.
+                ENDIF.
+                /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_on( '/SCWM/S_RF_REHU_PROD-NLENR' ).
+                /scwm/cl_rf_bll_srvc=&gt;set_field( '/SCWM/S_RF_REHU_PROD-NLENR' ).
+                /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-NISTA_VERIF' ).
+              ENDIF.
+            ELSE.
+              /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_on( '/SCWM/S_RF_REHU_PROD-VLENR' ).
+              /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-HUIDENT' ).
+              /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-NLENR' ).
+              /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-NISTA_VERIF' ).
+              /scwm/cl_rf_bll_srvc=&gt;set_field( '/SCWM/S_RF_REHU_PROD-VLENR' ).
+            ENDIF.
+          ELSEIF cs_rehu_prod-zzmanuf_order IS NOT INITIAL AND cs_rehu_prod-vltyp IS NOT INITIAL AND
+                 cs_rehu_prod-huident IS NOT INITIAL AND cs_rehu_prod-vlenr IS NOT INITIAL.
+            CLEAR ls_kit_stock.
+            READ TABLE gt_kit_stock INTO ls_kit_stock WITH KEY huident = ls_nhu-huident.
+            IF sy-subrc EQ 0.
+              cs_rehu_prod-matnr_verif = ls_kit_stock-matnr.
+              cs_rehu_prod-maktx       = ls_kit_stock-maktx.
+              cs_rehu_prod-charg       = ls_kit_stock-charg.
+              IF  cs_rehu_prod-nista_verif IS INITIAL.
+                cs_rehu_prod-nista_verif = ls_kit_stock-quana.
+              ENDIF.
+              cs_rehu_prod-altme       = ls_kit_stock-altme.
+<font color ="#0000FF">*              below changes are added by Naresh on 21.02.23</font>
+<font color ="#0000FF">*                check Required Qty</font>
+              IF cs_rehu_prod-nista IS INITIAL.
+                zscwm_cl_get_pcr_items=&gt;fetch_pcr_items(
+                  EXPORTING
+                    ev_lgnum       = ls_rsrc-lgnum
+                    ev_manuf_order = cs_rehu_prod-zzmanuf_order
+                    ev_matnr       = ls_kit_stock-matnr
+                  IMPORTING
+                    is_item        = LS_item ).
+                IF NOT LS_item-qty-qty IS INITIAL.
+                  IF cs_rehu_prod-nista_verif GT  LS_item-qty-qty.
+                    cs_rehu_prod-nista = LS_item-qty-qty.
+                  ELSE.
+                    cs_rehu_prod-nista = cs_rehu_prod-nista_verif.
+                  ENDIF.
+                ENDIF.
+              ENDIF.
+              /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-NISTA_VERIF' ).
+              /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_on( '/SCWM/S_RF_REHU_PROD-NLENR' ).
+              /scwm/cl_rf_bll_srvc=&gt;set_field( '/SCWM/S_RF_REHU_PROD-NLENR' ).
+            ELSE.
+              CLEAR : cs_rehu_prod-vlenr,cs_rehu_prod-matnr_verif,cs_rehu_prod-maktx,
+              cs_rehu_prod-charg,cs_rehu_prod-nista_verif,cs_rehu_prod-altme.
+              /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_on( '/SCWM/S_RF_REHU_PROD-VLENR' ).
+              /scwm/cl_rf_bll_srvc=&gt;set_field( '/SCWM/S_RF_REHU_PROD-VLENR' ).
+              MESSAGE 'HU have no stock' TYPE 'E'.
+            ENDIF.
+          ENDIF.
+        ELSE.
+          IF cs_rehu_prod-vlenr IS NOT INITIAL.
+            CLEAR : cs_rehu_prod-vlenr,cs_rehu_prod-matnr_verif,cs_rehu_prod-maktx,
+                    cs_rehu_prod-charg,cs_rehu_prod-nista_verif,cs_rehu_prod-altme.
+            /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-NISTA_VERIF' ).
+          ENDIF.
+          IF cs_rehu_prod-zzmanuf_order IS NOT INITIAL AND cs_rehu_prod-vltyp IS NOT INITIAL.
+            CLEAR : cs_rehu_prod-vlenr,cs_rehu_prod-matnr_verif,cs_rehu_prod-maktx,
+                    cs_rehu_prod-charg,cs_rehu_prod-nista_verif,cs_rehu_prod-altme.
+            /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-VLENR' ).
+            /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-NISTA_VERIF' ).
+            /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-NISTA' ).
+            /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_on( '/SCWM/S_RF_REHU_PROD-NLENR' ).
+            /scwm/cl_rf_bll_srvc=&gt;set_field( '/SCWM/S_RF_REHU_PROD-NLENR' ).
+<font color ="#0000FF">*            ENDIF.</font>
+          ENDIF.
+        ENDIF.
+<font color ="#0000FF">*============================================================================================*</font>
+<font color ="#0000FF">*                                CALL CREATE HU SCREEN                                       *</font>
+<font color ="#0000FF">*============================================================================================*</font>
+      ELSEIF lv_fcode1 EQ 'FCHUCS'.
+        IF cs_rehu_prod-zzmanuf_order IS INITIAL.
+          MESSAGE 'First scan manufacture order' TYPE 'E'.
+        ENDIF.
+        IF cs_rehu_prod-vltyp IS INITIAL.
+          MESSAGE 'Enter Workcenter' TYPE 'E'.
+        ENDIF.
+        IF cs_rehu_prod-huident IS INITIAL.
+          MESSAGE 'First Scan Source HU' TYPE 'E'.
+        ENDIF.
+        IF cs_rehu_prod-nlenr IS NOT INITIAL.
+          MESSAGE 'First clear destination HU' TYPE 'E'.
+        ENDIF.
+
+<font color ="#0000FF">*============================================================================================*</font>
+<font color ="#0000FF">*                                        SAVE                                                *</font>
+<font color ="#0000FF">*============================================================================================*</font>
+      ELSEIF lv_fcode1 EQ 'SAVE'.
+        IF cs_rehu_prod-vltyp IS INITIAL.
+          MESSAGE 'Enter Workcenter' TYPE 'E'.
+        ENDIF.
+        IF cs_rehu_prod-huident IS INITIAL.
+          MESSAGE 'First scan source HU' TYPE 'E'.
+        ENDIF.
+        IF cs_rehu_prod-nlenr IS INITIAL.
+          MESSAGE 'First scan destination HU' TYPE 'E'.
+        ENDIF.
+
+        IF cs_rehu_prod-huident IS NOT INITIAL.
+          CLEAR ls_shu.
+          READ TABLE gt_huhdr INTO ls_shu WITH KEY huident = cs_rehu_prod-huident.
+          IF sy-subrc NE 0.
+            CLEAR : cs_rehu_prod-huident,cs_rehu_prod-vlenr,cs_rehu_prod-matnr_verif,cs_rehu_prod-maktx,
+                    cs_rehu_prod-charg,cs_rehu_prod-nista_verif,cs_rehu_prod-altme,
+                    cs_rehu_prod-nista.
+            MESSAGE 'Source HU not found this Manufacture order' TYPE 'E'.
+          ENDIF.
+          IF ls_shu-top NE abap_true.
+            MESSAGE 'Please Scan Parent HU' TYPE 'E'.
+          ENDIF.
+          CLEAR ls_par_chi_hu.
+          READ TABLE gt_par_chi_hu INTO ls_par_chi_hu WITH KEY par_hu = cs_rehu_prod-huident.
+          IF sy-subrc NE 0.
+            CLEAR : cs_rehu_prod-huident,cs_rehu_prod-vlenr,cs_rehu_prod-matnr_verif,cs_rehu_prod-maktx,
+                    cs_rehu_prod-charg,cs_rehu_prod-nista_verif,cs_rehu_prod-altme,
+                    cs_rehu_prod-nista.
+            MESSAGE 'Source HU not found this Manufacture order' TYPE 'E'.
+          ENDIF.
+        ENDIF.
+        IF cs_rehu_prod-nlenr IS NOT INITIAL.
+          CLEAR ls_huident-huident.
+          CALL FUNCTION 'CONVERSION_EXIT_HUID_INPUT'
+            EXPORTING
+              input  = cs_rehu_prod-nlenr
+            IMPORTING
+              output = ls_huident-huident.
+          CLEAR ls_huhdr_d.
+          CALL METHOD lo_pack_hu-&gt;get_hu
+            EXPORTING
+              iv_huident = ls_huident-huident
+              iv_lock    = 'X'
+            IMPORTING
+              es_huhdr   = ls_huhdr_d
+            EXCEPTIONS
+              not_found  = 1
+              OTHERS     = 2.
+          IF sy-subrc NE 0.
+            CLEAR cs_rehu_prod-nlenr.
+            MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+                  WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+          ENDIF.
+          IF ls_huhdr_d-lgtyp NE cs_rehu_prod-vltyp.
+            CLEAR cs_rehu_prod-nlenr.
+            MESSAGE 'Destination HU workcenter not matching' TYPE 'E'.
+          ENDIF.
+          IF ls_huhdr_d-copst IS NOT INITIAL.
+            MESSAGE 'Scanned DHU already closed' TYPE 'E'.
+          ENDIF.
+        ENDIF.
+        IF cs_rehu_prod-huto_create IS NOT INITIAL.
+          CLEAR ls_huhdr_s.
+          CALL METHOD lo_pack_hu-&gt;get_hu
+            EXPORTING
+              iv_guid_hu = ls_par_chi_hu-par_guid
+              iv_lock    = 'X'
+            IMPORTING
+              es_huhdr   = ls_huhdr_s
+            EXCEPTIONS
+              not_found  = 1
+              OTHERS     = 2.
+          IF sy-subrc &lt;&gt; 0.
+            MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+                  WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+          ENDIF.
+          CALL METHOD lo_pack_hu-&gt;/scwm/if_pack_bas~empty_hu
+            EXPORTING
+              iv_hu      = ls_huhdr_s-guid_hu
+              iv_dest_hu = ls_huhdr_d-guid_hu
+            EXCEPTIONS
+              error      = 1
+              OTHERS     = 2.
+          IF sy-subrc &lt;&gt; 0.
+            MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+              WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+          ENDIF.
+          CALL METHOD lo_pack_hu-&gt;/scwm/if_pack_bas~save
+            EXPORTING
+              iv_commit = abap_true
+              iv_wait   = abap_true
+            EXCEPTIONS
+              error     = 1
+              OTHERS    = 2.
+          IF sy-subrc NE 0.
+            ROLLBACK WORK.
+            /scwm/cl_tm=&gt;cleanup( ).
+            MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+          ELSE.
+            COMMIT WORK AND WAIT.
+            /scwm/cl_tm=&gt;cleanup( ).
+            DELETE gt_par_chi_hu WHERE par_hu EQ cs_rehu_prod-huident.
+            IF gt_par_chi_hu IS INITIAL.
+              CLEAR : cs_rehu_prod-huident,cs_rehu_prod-vlenr,cs_rehu_prod-matnr_verif,cs_rehu_prod-maktx,
+                      cs_rehu_prod-charg,cs_rehu_prod-nista_verif,cs_rehu_prod-altme,
+                      cs_rehu_prod-nista.
+              /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-ZZMANUF_ORDER' ).
+              /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-VLTYP' ).
+              /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-HUIDENT' ).
+              /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-VLENR' ).
+              /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-NISTA_VERIF' ).
+              /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-NISTA' ).
+              /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_on( '/SCWM/S_RF_REHU_PROD-NLENR' ).
+              /scwm/cl_rf_bll_srvc=&gt;set_field( '/SCWM/S_RF_REHU_PROD-NLENR' ).
+            ELSE.
+              CLEAR : cs_rehu_prod-huident,cs_rehu_prod-vlenr,cs_rehu_prod-matnr_verif,cs_rehu_prod-maktx,
+                      cs_rehu_prod-charg,cs_rehu_prod-nista_verif,cs_rehu_prod-altme,cs_rehu_prod-huto_create,
+                      cs_rehu_prod-nista.
+              /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_on( '/SCWM/S_RF_REHU_PROD-HUIDENT' ).
+              /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-ZZMANUF_ORDER' ).
+              /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-VLTYP' ).
+              /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-VLENR' ).
+              /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-NISTA_VERIF' ).
+<font color ="#0000FF">*              /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-NISTA' ).</font>
+              /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-NLENR' ).
+              /scwm/cl_rf_bll_srvc=&gt;set_field( '/SCWM/S_RF_REHU_PROD-HUIDENT' ).
+            ENDIF.
+          ENDIF.
+        ELSE.
+          CLEAR ls_par_chi_hu.
+          READ TABLE gt_par_chi_hu INTO ls_par_chi_hu WITH KEY par_hu = cs_rehu_prod-huident.
+          IF sy-subrc EQ 0 AND ls_par_chi_hu-chi_hu IS NOT INITIAL.
+            IF cs_rehu_prod-vlenr IS INITIAL.
+              MESSAGE 'First scan Nested HU' TYPE 'E'.
+            ENDIF.
+          ENDIF.
+          IF cs_rehu_prod-nista_verif IS INITIAL.
+            MESSAGE 'Enter Quantiy to pack' TYPE 'E'.
+          ENDIF.
+          IF cs_rehu_prod-vlenr IS NOT INITIAL.
+            CLEAR ls_huident-huident.
+            CALL FUNCTION 'CONVERSION_EXIT_HUID_INPUT'
+              EXPORTING
+                input  = cs_rehu_prod-vlenr
+              IMPORTING
+                output = ls_huident-huident.
+            CLEAR ls_nhu.
+            READ TABLE gt_huhdr INTO ls_nhu WITH KEY huident = ls_huident-huident.
+            IF sy-subrc NE 0.
+              MESSAGE 'Nested HU Not Found on this Order' TYPE 'E'.
+            ENDIF.
+            READ TABLE gt_par_chi_hu INTO ls_par_chi_hu WITH KEY par_hu = cs_rehu_prod-huident
+                                                                 chi_hu = ls_huident-huident.
+            IF sy-subrc NE 0.
+              CLEAR : cs_rehu_prod-vlenr,cs_rehu_prod-matnr_verif,cs_rehu_prod-maktx,
+                      cs_rehu_prod-charg,cs_rehu_prod-nista_verif,cs_rehu_prod-altme,
+                      cs_rehu_prod-nista.
+              MESSAGE 'Nested HU Not Found on source HU' TYPE 'E'.
+            ENDIF.
+            CLEAR ls_huident-huident.
+          ENDIF.
+          CLEAR ls_huident-huident.
+          CALL FUNCTION 'CONVERSION_EXIT_HUID_INPUT'
+            EXPORTING
+              input  = cs_rehu_prod-nlenr
+            IMPORTING
+              output = ls_huident-huident.
+          CLEAR ls_huhdr_d.
+          CALL METHOD lo_pack_hu-&gt;get_hu
+            EXPORTING
+              iv_huident = ls_huident-huident
+              iv_lock    = 'X'
+            IMPORTING
+              es_huhdr   = ls_huhdr_d
+            EXCEPTIONS
+              not_found  = 1
+              OTHERS     = 2.
+          IF sy-subrc NE 0.
+            CLEAR cs_rehu_prod-nlenr.
+            MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+                  WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+          ENDIF.
+          IF ls_huhdr_d-lgtyp NE cs_rehu_prod-vltyp.
+            CLEAR cs_rehu_prod-nlenr.
+            MESSAGE 'Destination HU workcenter not matching' TYPE 'E'.
+          ENDIF.
+          CLEAR ls_huident-huident.
+          IF cs_rehu_prod-vlenr IS NOT INITIAL.
+            CALL FUNCTION 'CONVERSION_EXIT_HUID_INPUT'
+              EXPORTING
+                input  = cs_rehu_prod-vlenr
+              IMPORTING
+                output = ls_huident-huident.
+          ELSE.
+            CALL FUNCTION 'CONVERSION_EXIT_HUID_INPUT'
+              EXPORTING
+                input  = cs_rehu_prod-huident
+              IMPORTING
+                output = ls_huident-huident.
+          ENDIF.
+          CLEAR ls_huhdr_s. REFRESH lt_huitm.
+          CALL METHOD lo_pack_hu-&gt;get_hu
+            EXPORTING
+              iv_huident = ls_huident-huident
+              iv_lock    = 'X'
+            IMPORTING
+              et_huitm   = lt_huitm
+              es_huhdr   = ls_huhdr_s
+            EXCEPTIONS
+              not_found  = 1
+              OTHERS     = 2.
+          IF sy-subrc &lt;&gt; 0.
+            MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+                  WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+          ENDIF.
+          IF cs_rehu_prod-vlenr IS NOT INITIAL.
+            IF line_exists( gt_kit_stock[ huident = ls_huident-huident
+                                          matnr = cs_rehu_prod-matnr_verif ] ).
+              DATA(ls_stock) = gt_kit_stock[ huident = ls_huident-huident
+                                        matnr = cs_rehu_prod-matnr_verif ].
+<font color ="#0000FF">*              check Qty changed or not</font>
+              IF ls_stock-quana NE cs_rehu_prod-nista_verif.
+                DATA(LV_CHANGEed) = ABAP_true.
+              ENDIF.
+            ENDIF.
+            IF LV_CHANGEed EQ ABAP_true.
+              CLEAR ls_quantity.
+              ls_quantity-quan = cs_rehu_prod-nista_verif.
+              ls_quantity-unit = cs_rehu_prod-altme.
+              CALL METHOD lo_pack_hu-&gt;/scwm/if_pack_bas~repack_stock
+                EXPORTING
+                  iv_dest_hu    = ls_huhdr_d-guid_hu
+                  iv_source_hu  = ls_huhdr_s-guid_hu
+                  iv_stock_guid = ls_stock-guid_stock
+                  is_quantity   = ls_quantity
+                EXCEPTIONS
+                  error         = 1
+                  OTHERS        = 2.
+              IF sy-subrc NE 0.
+                MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+                      WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+              ENDIF.
+            ELSE.
+              CALL METHOD lo_pack_hu-&gt;/scwm/if_pack_bas~pack_hu
+                EXPORTING
+                  iv_source_hu = ls_huhdr_s-guid_hu
+                  iv_dest_hu   = ls_huhdr_d-guid_hu
+                EXCEPTIONS
+                  error        = 1
+                  OTHERS       = 2.
+            ENDIF.
+            IF sy-subrc NE 0.
+              MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+                    WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+            ENDIF.
+          ELSE.
+            CLEAR ls_kit_stock.
+            READ TABLE gt_kit_stock INTO ls_kit_stock WITH KEY huident = ls_huident-huident
+                                                               matnr   = cs_rehu_prod-matnr_verif.
+            IF sy-subrc EQ 0.
+              CLEAR ls_quantity.
+              ls_quantity-quan = cs_rehu_prod-nista_verif.
+              ls_quantity-unit = cs_rehu_prod-altme.
+              CALL METHOD lo_pack_hu-&gt;/scwm/if_pack_bas~repack_stock
+                EXPORTING
+                  iv_dest_hu    = ls_huhdr_d-guid_hu
+                  iv_source_hu  = ls_huhdr_s-guid_hu
+                  iv_stock_guid = ls_kit_stock-guid_stock
+                  is_quantity   = ls_quantity
+                EXCEPTIONS
+                  error         = 1
+                  OTHERS        = 2.
+              IF sy-subrc NE 0.
+                MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+                  WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+              ENDIF.
+<font color ="#0000FF">*              check required Qty and Actual qty</font>
+              DELETE gt_kit_stock  WHERE guid_parent = ls_kit_stock-guid_parent
+                                   AND   guid_stock  = ls_kit_stock-guid_stock.
+              CLEAR ls_quantity.
+            ENDIF.
+          ENDIF.
+          CALL METHOD lo_pack_hu-&gt;/scwm/if_pack_bas~save
+            EXPORTING
+              iv_commit = abap_true
+              iv_wait   = abap_true
+            EXCEPTIONS
+              error     = 1
+              OTHERS    = 2.
+          IF sy-subrc NE 0.
+            ROLLBACK WORK.
+            /scwm/cl_tm=&gt;cleanup( ).
+            MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+          ELSE.
+            COMMIT WORK AND WAIT.
+            /scwm/cl_tm=&gt;cleanup( ).
+            IF line_exists( gt_kit_stock[ huident = ls_huident-huident
+                                          matnr = cs_rehu_prod-matnr_verif ] ).
+              ls_stock = gt_kit_stock[ huident = ls_huident-huident
+                                             matnr = cs_rehu_prod-matnr_verif ].
+              CALL METHOD zscwm_cl_get_pcr_items=&gt;stock_release(
+                EXPORTING
+                  ev_lgnum  = ls_rsrc-lgnum
+                  es_stock  = ls_stock
+                  ev_nista  = cs_rehu_prod-nista_verif
+                IMPORTING
+                  Iv_result = DATA(lv_result) ).
+
+            ENDIF.
+            IF cs_rehu_prod-vlenr IS NOT INITIAL.
+              CLEAR ls_huident-huident.
+              CALL FUNCTION 'CONVERSION_EXIT_HUID_INPUT'
+                EXPORTING
+                  input  = cs_rehu_prod-vlenr
+                IMPORTING
+                  output = ls_huident-huident.
+              DELETE gt_par_chi_hu WHERE chi_hu EQ ls_huident-huident.
+            ELSE.
+              REFRESH lt_huitm.
+              CALL FUNCTION '/SCWM/HU_READ'
+                EXPORTING
+                  iv_appl    = 'WME'
+                  iv_lgnum   = ls_rsrc-lgnum
+                  iv_huident = cs_rehu_prod-huident
+                IMPORTING
+                  et_huitm   = lt_huitm
+                EXCEPTIONS
+                  deleted    = 1
+                  not_found  = 2
+                  error      = 3
+                  OTHERS     = 4.
+              IF sy-subrc EQ 0 AND lt_huitm IS NOT INITIAL.
+                CLEAR : cs_rehu_prod-vlenr,cs_rehu_prod-matnr_verif,cs_rehu_prod-maktx,
+                        cs_rehu_prod-charg,cs_rehu_prod-nista_verif,cs_rehu_prod-altme,
+                        cs_rehu_prod-huto_create, cs_rehu_prod-nista.
+                CLEAR ls_kit_stock.
+                READ TABLE gt_kit_stock INTO ls_kit_stock WITH KEY huident = cs_rehu_prod-huident.
+                IF sy-subrc EQ 0.
+                  cs_rehu_prod-matnr_verif = ls_kit_stock-matnr.
+                  cs_rehu_prod-maktx       = ls_kit_stock-maktx.
+                  cs_rehu_prod-charg       = ls_kit_stock-charg.
+                  cs_rehu_prod-nista_verif = ls_kit_stock-quana.
+                  cs_rehu_prod-altme       = ls_kit_stock-altme.
+                  CONDENSE cs_rehu_prod-nista_verif.
+                  IF cs_rehu_prod-nista IS INITIAL.
+                    zscwm_cl_get_pcr_items=&gt;fetch_pcr_items(
+                      EXPORTING
+                        ev_lgnum       = ls_rsrc-lgnum
+                        ev_manuf_order = cs_rehu_prod-zzmanuf_order
+                        ev_matnr       = ls_kit_stock-matnr
+                      IMPORTING
+                        is_item        = LS_item ).
+                    IF NOT LS_item-qty-qty IS INITIAL.
+                      cs_rehu_prod-nista = LS_item-qty-qty.
+                    ENDIF.
+                  ENDIF.
+                  /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-HUIDENT' ).
+                  /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-VLENR' ).
+                  /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-ZZMANUF_ORDER' ).
+                  /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-VLTYP' ).
+                  /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-NISTA_VERIF' ).
+                  /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_on( '/SCWM/S_RF_REHU_PROD-NLENR' ).
+                  /scwm/cl_rf_bll_srvc=&gt;set_field( '/SCWM/S_RF_REHU_PROD-NLENR' ).
+                  RETURN.
+                ENDIF.
+              ELSE.
+                DELETE gt_par_chi_hu WHERE par_hu EQ cs_rehu_prod-huident.
+              ENDIF.
+            ENDIF.
+            IF gt_par_chi_hu IS INITIAL.
+              REFRESH lt_huitm.
+              CALL FUNCTION '/SCWM/HU_READ'
+                EXPORTING
+                  iv_appl    = 'WME'
+                  iv_lgnum   = ls_rsrc-lgnum
+                  iv_huident = cs_rehu_prod-huident
+                IMPORTING
+                  et_huitm   = lt_huitm
+                EXCEPTIONS
+                  deleted    = 1
+                  not_found  = 2
+                  error      = 3
+                  OTHERS     = 4.
+              IF sy-subrc EQ 0  AND lt_huitm IS NOT INITIAL.
+                CLEAR ls_par_chi_hu.
+                ls_par_chi_hu-par_hu = cs_rehu_prod-huident.
+                APPEND ls_par_chi_hu TO gt_par_chi_hu.
+                CLEAR ls_par_chi_hu.
+                CLEAR ls_kit_stock.
+                READ TABLE gt_kit_stock INTO ls_kit_stock WITH KEY huident = cs_rehu_prod-huident.
+                IF sy-subrc EQ 0.
+                  CLEAR : cs_rehu_prod-vlenr,cs_rehu_prod-matnr_verif,cs_rehu_prod-maktx,
+                          cs_rehu_prod-charg,cs_rehu_prod-nista_verif,cs_rehu_prod-altme,
+                          cs_rehu_prod-nista.
+                  cs_rehu_prod-matnr_verif = ls_kit_stock-matnr.
+                  cs_rehu_prod-maktx       = ls_kit_stock-maktx.
+                  cs_rehu_prod-charg       = ls_kit_stock-charg.
+                  cs_rehu_prod-nista_verif = ls_kit_stock-quana.
+                  cs_rehu_prod-altme       = ls_kit_stock-altme.
+
+                  /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_on( '/SCWM/S_RF_REHU_PROD-NLENR' ).
+                  /scwm/cl_rf_bll_srvc=&gt;set_field( '/SCWM/S_RF_REHU_PROD-NLENR' ).
+                ENDIF.
+              ELSE.
+                CLEAR : cs_rehu_prod-huident,cs_rehu_prod-vlenr,cs_rehu_prod-matnr_verif,cs_rehu_prod-maktx,
+                        cs_rehu_prod-charg,cs_rehu_prod-nista_verif,cs_rehu_prod-altme,
+                        cs_rehu_prod-nista.
+                /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-ZZMANUF_ORDER' ).
+                /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-VLTYP' ).
+                /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-HUIDENT' ).
+                /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-VLENR' ).
+                /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-NISTA_VERIF' ).
+                /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_on( '/SCWM/S_RF_REHU_PROD-NLENR' ).
+                /scwm/cl_rf_bll_srvc=&gt;set_field( '/SCWM/S_RF_REHU_PROD-NLENR' ).
+              ENDIF.
+            ELSE.
+              CLEAR : cs_rehu_prod-vlenr,cs_rehu_prod-matnr_verif,cs_rehu_prod-maktx,
+                      cs_rehu_prod-charg,cs_rehu_prod-nista_verif,cs_rehu_prod-altme,
+                      cs_rehu_prod-nista.
+              /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-HUIDENT' ).
+              /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_on( '/SCWM/S_RF_REHU_PROD-VLENR' ).
+              /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-ZZMANUF_ORDER' ).
+              /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-VLTYP' ).
+              /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-NISTA_VERIF' ).
+              /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-NLENR' ).
+              /scwm/cl_rf_bll_srvc=&gt;set_field( '/SCWM/S_RF_REHU_PROD-VLENR' ).
+            ENDIF.
+          ENDIF.
+        ENDIF.
+<font color ="#0000FF">*============================================================================================*</font>
+<font color ="#0000FF">*                                     HU CLOSE                                               *</font>
+<font color ="#0000FF">*============================================================================================*</font>
+      ELSEIF lv_fcode1 EQ 'FCHUCL'.
+        IF cs_rehu_prod-vltyp IS INITIAL.
+          MESSAGE 'Enter Workcenter' TYPE 'E'.
+        ENDIF.
+        IF cs_rehu_prod-nlenr IS INITIAL.
+          MESSAGE 'Enter destination HU to close' TYPE 'E'.
+        ENDIF.
+        IF lo_pack_hu IS NOT BOUND.
+          CALL METHOD /scwm/cl_wm_packing=&gt;get_instance
+            IMPORTING
+              eo_instance = lo_pack_hu.
+        ENDIF.
+        CLEAR : ls_pack_controle.
+        ls_pack_controle-prmode        = '02'.
+        ls_pack_controle-cdstgrp_mat   = 'X'.
+        ls_pack_controle-cdstgrp_hu    = 'X'.
+        ls_pack_controle-processor_det = 'X'.
+        CLEAR ls_wrkc.
+        CALL FUNCTION '/SCWM/TWORKST_READ_SINGLE'
+          EXPORTING
+            iv_lgnum       = ls_rsrc-lgnum
+            iv_workstation = cs_rehu_prod-vltyp
+          IMPORTING
+            es_workst      = ls_wrkc
+          EXCEPTIONS
+            error          = 1
+            not_found      = 2
+            OTHERS         = 3.
+        IF sy-subrc NE 0.
+          MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+          WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+        ENDIF.
+        ls_pack_controle-chkpack_dstgrp   = ls_wrkc-chkpack_dstgrp.
+        ls_pack_controle-chkpack_stoprout = ls_wrkc-chkpack_stoprout.
+        ls_pack_controle-lock_source      = ls_wrkc-lock_source.
+        CALL METHOD lo_pack_hu-&gt;init_by_workstation
+          EXPORTING
+            is_workstation   = ls_wrkc
+            is_pack_controle = ls_pack_controle
+            iv_no_hu_by_wc   = 'X'
+          EXCEPTIONS
+            error            = 1
+            OTHERS           = 2.
+        IF sy-subrc NE 0.
+          MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+          WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+        ENDIF.
+        CLEAR ls_huident-huident.
+        CALL FUNCTION 'CONVERSION_EXIT_HUID_INPUT'
+          EXPORTING
+            input  = cs_rehu_prod-nlenr
+          IMPORTING
+            output = ls_huident-huident.
+        CLEAR ls_huhdr_d. REFRESH : lt_huitm,lt_huhdr.
+        CALL METHOD lo_pack_hu-&gt;/scwm/if_pack~get_hu
+          EXPORTING
+            iv_huident = ls_huident-huident
+            iv_lock    = 'X'
+          IMPORTING
+            et_huitm   = lt_huitm
+            et_huhdr   = lt_huhdr
+            es_huhdr   = ls_huhdr_d
+          EXCEPTIONS
+            not_found  = 1
+            OTHERS     = 2.
+        IF sy-subrc &lt;&gt; 0.
+          MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+          WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+        ENDIF.
+        IF ls_huhdr_d-lgtyp NE cs_rehu_prod-vltyp.
+          CLEAR cs_rehu_prod-nlenr.
+          MESSAGE 'Destination HU workcenter not matching' TYPE 'E'.
+        ENDIF.
+        IF ls_huhdr_d-copst IS NOT INITIAL.
+          MESSAGE 'Scanned DHU already closed' TYPE 'E'.
+        ENDIF.
+        IF lt_huitm IS INITIAL.
+          MESSAGE 'Destination HU is empty first pack and try' TYPE 'E'.
+        ENDIF.
+        DELETE lt_huhdr WHERE huident EQ ls_huident-huident.
+        CLEAR ls_nhu.
+        READ TABLE lt_huhdr INTO ls_nhu INDEX 1.
+        IF sy-subrc EQ 0.
+          READ TABLE gt_kit_stock INTO ls_kit_stock WITH KEY huident = ls_nhu-huident.
+          IF sy-subrc NE 0.
+            MESSAGE 'Destiantion HU not realted to Manufature order' TYPE 'E'.
+          ENDIF.
+        ENDIF.
+        DO.
+          REFRESH lt_enq. CLEAR : lv_garg,lv_varkey.
+          CONCATENATE  sy-mandt ls_rsrc-lgnum cs_rehu_prod-zzmanuf_order INTO lv_varkey.
+          CONCATENATE '*' lv_varkey '*' INTO lv_garg.
+          CALL FUNCTION 'ENQUEUE_READ'
+            EXPORTING
+              gclient               = sy-mandt
+              guname                = '*'
+              garg                  = lv_garg
+            TABLES
+              enq                   = lt_enq
+            EXCEPTIONS
+              communication_failure = 1
+              system_failure        = 2
+              OTHERS                = 3.
+          IF sy-subrc EQ 0.
+            IF lt_enq IS NOT INITIAL.
+              WAIT UP TO 1 SECONDS.
+              CONTINUE.
+            ELSE.
+              CLEAR lv_varkey.
+              CONCATENATE sy-mandt ls_rsrc-lgnum cs_rehu_prod-zzmanuf_order INTO lv_varkey.
+              CALL FUNCTION 'ENQUEUE_E_TABLE'
+                EXPORTING
+                  mode_rstable   = 'E'
+                  tabname        = '/SCWM/S_RF_REHU_PROD'
+                  varkey         = lv_varkey
+                EXCEPTIONS
+                  foreign_lock   = 1
+                  system_failure = 2
+                  OTHERS         = 3.
+              IF sy-subrc EQ 0.
+                EXIT.
+              ELSE.
+                MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+                        WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+              ENDIF.
+            ENDIF.
+          ELSE.
+            MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+                    WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+          ENDIF.
+        ENDDO.
+        REFRESH gt_total_hu.
+        TRY.
+            /scwm/cl_mfg_stp_service=&gt;get_stock_single_order(
+              EXPORTING
+                it_docid_itmid = gt_docid
+              IMPORTING
+                et_stock       = gt_total_hu
+            ).
+          CATCH /scwm/cx_core.
+        ENDTRY.
+        CLEAR ls_kit_stock. REFRESH lt_huident.
+        LOOP AT gt_total_hu INTO ls_kit_stock.
+          CLEAR ls_huident.
+          ls_huident-huident = ls_kit_stock-huident.
+          APPEND ls_huident TO lt_huident.
+          CLEAR : ls_kit_stock,ls_huident.
+        ENDLOOP.
+        REFRESH lt_huhdr.
+        CALL FUNCTION '/SCWM/HU_READ_MULT'
+          EXPORTING
+            it_huident   = lt_huident
+          IMPORTING
+            et_huhdr     = lt_huhdr
+          EXCEPTIONS
+            wrong_input  = 1
+            not_possible = 2
+            OTHERS       = 3.
+        IF sy-subrc NE 0.
+          CALL FUNCTION 'DEQUEUE_E_TABLE'
+            EXPORTING
+              mode_rstable = 'E'
+              tabname      = '/SCWM/S_RF_REHU_PROD'
+              varkey       = lv_varkey.
+          MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+                WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+        ENDIF.
+        CLEAR ls_huhdr_1.
+        DELETE lt_huhdr WHERE top EQ abap_false.
+        IF lt_huhdr IS INITIAL.
+          CALL FUNCTION 'DEQUEUE_E_TABLE'
+            EXPORTING
+              mode_rstable = 'E'
+              tabname      = '/SCWM/S_RF_REHU_PROD'
+              varkey       = lv_varkey.
+          MESSAGE 'Parent HU not found on given order' TYPE 'E'.
+        ENDIF.
+        SORT lt_huhdr BY ps_level_seq DESCENDING.
+        CLEAR ls_huhdr_1.
+        READ TABLE lt_huhdr INTO ls_huhdr_1 INDEX 1.
+        CLEAR lv_seq_no.
+        IF sy-subrc EQ 0 AND ls_huhdr_1-ps_level_seq IS NOT INITIAL.
+          lv_seq_no = ls_huhdr_1-ps_level_seq + 01.
+        ELSE.
+          lv_seq_no = 1.
+        ENDIF.
+        ls_huhdr_d-ps_level_seq = lv_seq_no.
+        CALL METHOD lo_pack_hu-&gt;/scwm/if_pack_bas~change_huhdr
+          EXPORTING
+            is_huhdr   = ls_huhdr_d
+          IMPORTING
+            es_huhdr   = ls_huhdr_d
+          EXCEPTIONS
+            error      = 1
+            not_locked = 2
+            OTHERS     = 3.
+        IF sy-subrc NE 0.
+          CALL FUNCTION 'DEQUEUE_E_TABLE'
+            EXPORTING
+              mode_rstable = 'E'
+              tabname      = '/SCWM/S_RF_REHU_PROD'
+              varkey       = lv_varkey.
+          MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+        ENDIF.
+        CALL METHOD lo_pack_hu-&gt;hu_process_completed
+          EXPORTING
+            iv_hu  = ls_huhdr_d-guid_hu
+          EXCEPTIONS
+            error  = 1
+            OTHERS = 2.
+        IF sy-subrc EQ 0.
+          CALL METHOD lo_pack_hu-&gt;/scwm/if_pack~save
+            EXPORTING
+              iv_commit = 'X'
+              iv_wait   = 'X'
+            EXCEPTIONS
+              error     = 1
+              OTHERS    = 2.
+          IF sy-subrc &lt;&gt; 0.
+            CALL FUNCTION 'DEQUEUE_E_TABLE'
+              EXPORTING
+                mode_rstable = 'E'
+                tabname      = '/SCWM/S_RF_REHU_PROD'
+                varkey       = lv_varkey.
+            MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+                    WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+          ENDIF.
+          CALL FUNCTION 'DEQUEUE_E_TABLE'
+            EXPORTING
+              mode_rstable = 'E'
+              tabname      = '/SCWM/S_RF_REHU_PROD'
+              varkey       = lv_varkey.
+          COMMIT WORK AND WAIT.
+          DATA(lv_huclose) = abap_true.
+          DATA(lv_nlenr)   = cs_rehu_prod-nlenr.
+        ELSE.
+          CALL FUNCTION 'DEQUEUE_E_TABLE'
+            EXPORTING
+              mode_rstable = 'E'
+              tabname      = '/SCWM/S_RF_REHU_PROD'
+              varkey       = lv_varkey.
+          ROLLBACK WORK.
+          MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+                WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+        ENDIF.
+        CALL METHOD /scwm/cl_tm=&gt;cleanup( ).
+        CLEAR cs_rehu_prod-nlenr.
+        IF gt_par_chi_hu IS INITIAL.
+          CLEAR cs_rehu_prod. REFRESH : gt_docid,gt_huhdr,gt_hutree,gt_kit_stock.
+          /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_on( '/SCWM/S_RF_REHU_PROD-ZZMANUF_ORDER' ).
+          /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-VLTYP' ).
+          /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-HUIDENT' ).
+          /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-VLENR' ).
+          /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-NISTA_VERIF' ).
+          /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-NISTA' ).
+          /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-NLENR' ).
+          /scwm/cl_rf_bll_srvc=&gt;set_field( '/SCWM/S_RF_REHU_PROD-ZZMAN_ORDER' ).
+        ELSE.
+          READ TABLE gt_par_chi_hu INTO ls_par_chi_hu WITH KEY par_hu = cs_rehu_prod-huident.
+          IF sy-subrc EQ 0 AND ls_par_chi_hu-chi_hu IS NOT INITIAL.
+            CLEAR : cs_rehu_prod-vlenr,cs_rehu_prod-matnr_verif,cs_rehu_prod-maktx,
+                    cs_rehu_prod-charg,cs_rehu_prod-nista_verif,cs_rehu_prod-altme,
+                    cs_rehu_prod-nista.
+            /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-HUIDENT' ).
+            /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_on( '/SCWM/S_RF_REHU_PROD-VLENR' ).
+            /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-ZZMANUF_ORDER' ).
+            /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-VLTYP' ).
+            /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-NISTA_VERIF' ).
+            /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-NISTA' ).
+            /scwm/cl_rf_bll_srvc=&gt;set_field( '/SCWM/S_RF_REHU_PROD-VLENR' ).
+          ELSE.
+            CLEAR : cs_rehu_prod-huident,cs_rehu_prod-vlenr,cs_rehu_prod-matnr_verif,cs_rehu_prod-maktx,
+                    cs_rehu_prod-charg,cs_rehu_prod-nista_verif,cs_rehu_prod-altme,
+                    cs_rehu_prod-nista.
+            /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_on( '/SCWM/S_RF_REHU_PROD-HUIDENT' ).
+            /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-VLENR' ).
+            /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-ZZMANUF_ORDER' ).
+            /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-VLTYP' ).
+            /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-NISTA_VERIF' ).
+            /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-NISTA' ).
+            /scwm/cl_rf_bll_srvc=&gt;set_field( '/SCWM/S_RF_REHU_PROD-HUIDENT' ).
+          ENDIF.
+        ENDIF.
+<font color ="#0000FF">*============================================================================================*</font>
+<font color ="#0000FF">*                                     Mix Label Pallet Generation                            *</font>
+<font color ="#0000FF">*============================================================================================*</font>
+        DATA:ls_print              TYPE zscwm_s_hulabel,
+             lt_print              TYPE zscwm_tt_hulabel,
+             ls_output_options     TYPE ssfcompop,
+             ls_control_parameters TYPE ssfctrlop,
+             lf_fm_name            TYPE rs38l_fnam,
+             ls_t300_md            TYPE /scwm/s_t300_md,
+             lv_fpname             TYPE tdsfname VALUE 'ZEWM_MIX_PALLET_LABEL'.
+
+        DATA: ls_select       TYPE /scwm/dlv_selection_str,
+              lt_selection    TYPE /scwm/dlv_selection_tab,
+              lo_prd          TYPE REF TO /scwm/cl_dlv_management_prd,
+              ls_include      TYPE /scwm/dlv_query_incl_str_prd,
+              ls_read_options TYPE /scwm/dlv_query_contr_str,
+              lv_mo           TYPE /scwm/de_prod_order,
+              lv_matid        TYPE /sapapo/matkey-matid.
+
+
+        IF lv_huclose IS NOT INITIAL AND lv_manf_order IS NOT INITIAL.
+          ls_print-inbdlv = lv_manf_order.
+
+<font color ="#0000FF">*--- Warehouse: Get SC Unit location number</font>
+          CALL FUNCTION '/SCWM/T300_MD_READ_SINGLE'
+            EXPORTING
+              iv_lgnum   = ls_rsrc-lgnum
+            IMPORTING
+              es_t300_md = ls_t300_md
+            EXCEPTIONS
+              not_found  = 1
+              OTHERS     = 2.
+          IF sy-subrc EQ 0.
+            CLEAR ls_select.
+            ls_select-fieldname = /scdl/if_dl_logfname_c=&gt;sc_locationid_wh_h.
+            ls_select-option    = 'EQ'.
+            ls_select-sign      = 'I'.
+            ls_select-low       = ls_t300_md-scuguid.
+            APPEND ls_select TO lt_selection.
+          ENDIF.
+
+          lv_mo = lv_manf_order.
+          lv_mo = |{ lv_mo ALPHA = IN }|.
+          CLEAR ls_select.
+          ls_select-fieldname = /scdl/if_dl_logfname_c=&gt;sc_refdocno_ppo_i.
+          ls_select-option    = 'EQ'.
+          ls_select-sign      = 'I'.
+          ls_select-low       = lv_mo.
+          APPEND ls_select TO lt_selection.
+
+<font color ="#0000FF">*--- FETCH delivery DATA from the Query METHOD</font>
+          TRY.
+              lo_prd = /scwm/cl_dlv_management_prd=&gt;get_instance( ).
+              lo_prd-&gt;query(
+                EXPORTING
+                  it_selection    = lt_selection
+                  iv_doccat       = /scdl/if_dl_doc_c=&gt;sc_doccat_egr_prd
+                  is_read_options = ls_read_options
+                  is_include_data = ls_include
+                IMPORTING
+                  et_headers      = DATA(lt_head)
+                  et_items        = DATA(lt_item) ).
+            CATCH /scdl/cx_delivery.                    "#EC NO_HANDLER
+          ENDTRY.
+
+          IF lt_item IS NOT INITIAL.
+            READ TABLE lt_item ASSIGNING FIELD-SYMBOL(&lt;fs_s_item&gt;) INDEX 1.
+            IF sy-subrc EQ 0.
+              ls_print-matnr    = &lt;fs_s_item&gt;-product-productno.
+              ls_print-batch    = &lt;fs_s_item&gt;-product-batchno.
+              ls_print-qty = &lt;fs_s_item&gt;-qty-qty.
+              ls_print-pallet   = lv_seq_no.
+              SHIFT ls_print-pallet LEFT DELETING LEADING '0'.
+              CONDENSE ls_print-pallet NO-GAPS.
+              CALL FUNCTION '/SAPAPO/DM_MATERIAL_GET_MATID'
+                EXPORTING
+                  iv_matnr        = ls_print-matnr
+                IMPORTING
+                  ev_matid        = lv_matid
+                EXCEPTIONS
+                  matid_not_found = 1
+                  OTHERS          = 2.
+              IF sy-subrc EQ 0.
+                SELECT SINGLE maktx FROM /sapapo/mattxt
+                      INTO @DATA(lv_maktx)
+                      WHERE matid = @lv_matid.
+                IF sy-subrc EQ 0.
+                  ls_print-maktx    = lv_maktx.
+                ENDIF.
+              ENDIF.
+
+              CONVERT TIME STAMP &lt;fs_s_item&gt;-sapext-tstfrbb TIME ZONE 'EET' INTO DATE   ls_print-exp_date.
+              CONVERT TIME STAMP &lt;fs_s_item&gt;-sapext-tstfrpd TIME ZONE 'EET' INTO DATE   ls_print-mfg_date.
+            ENDIF.
+
+            ls_print-creusr = ls_rsrc-rsrc. "sy-uname.
+            GET TIME STAMP FIELD DATA(lv_timestam).
+            CONVERT TIME STAMP lv_timestam TIME ZONE 'UTC+2' INTO DATE DATA(lv_date) TIME DATA(lv_time).
+            ls_print-credat = lv_date.
+            ls_print-cretim = lv_time.
+            ls_print-vendor_batch = 'NA'.
+<font color ="#0000FF">****            SELECT SINGLE matnr, charg, vfdat, licha, hsdat</font>
+<font color ="#0000FF">****                  INTO @DATA(ls_mch1) FROM mch1</font>
+<font color ="#0000FF">****                  WHERE matnr EQ @&lt;fs_s_item&gt;-product-productno</font>
+<font color ="#0000FF">****                  AND charg   EQ @&lt;fs_s_item&gt;-product-batchno.</font>
+<font color ="#0000FF">****            IF sy-subrc EQ 0 AND ls_mch1 IS NOT INITIAL.</font>
+<font color ="#0000FF">****              ls_print-vendor_batch = ls_mch1-licha.</font>
+<font color ="#0000FF">****              IF ls_print-vendor_batch IS INITIAL.</font>
+<font color ="#0000FF">****                ls_print-vendor_batch  = 'NA'.</font>
+<font color ="#0000FF">****              ENDIF.</font>
+<font color ="#0000FF">*******--below logic added by Naresh on 20.02.2023</font>
+<font color ="#0000FF">******-Reason: Batch MFD data some times initila,</font>
+<font color ="#0000FF">******         in that case fetch date from MCH1 table</font>
+<font color ="#0000FF">****              IF ls_print-mfg_date IS INITIAL.</font>
+<font color ="#0000FF">*****                CONVERT TIME STAMP ls_mch1-hsdat TIME ZONE 'EET' INTO DATE ls_print-mfg_date.</font>
+<font color ="#0000FF">****                ls_print-mfg_date = ls_mch1-hsdat.</font>
+<font color ="#0000FF">****              ENDIF.</font>
+<font color ="#0000FF">****              IF ls_print-exp_date IS INITIAL.</font>
+<font color ="#0000FF">****                ls_print-exp_date = ls_mch1-vfdat.</font>
+<font color ="#0000FF">****              ENDIF.</font>
+<font color ="#0000FF">******              -EOC</font>
+<font color ="#0000FF">****            ENDIF.</font>
+
+            DATA(lv_batchno) = CONV /scwm/de_charg( &lt;fs_s_item&gt;-product-batchno ).
+            call function <a href ="../zscwm_get_batch_prod_date/zscwm_get_batch_prod_date.html">'ZSCWM_GET_BATCH_PROD_DATE'</a>
+              EXPORTING
+                iv_lgnum    = ls_rsrc-lgnum                 " Warehouse Number/Warehouse Complex
+                iv_entitled = &lt;fs_s_item&gt;-sapext-entitled                 " Party Entitled to Dispose
+                iv_matid    = &lt;fs_s_item&gt;-product-productid                 " Product
+                iv_batchid  = &lt;fs_s_item&gt;-batchid                " Batch
+                iv_batchno  = lv_batchno
+              IMPORTING
+                ev_vfdat    = ls_print-exp_date                 " Shelf Life Expiration Date
+                ev_proddat  = ls_print-mfg_date.                  " Shelf Life Expiration Date
+            ls_print-hu = lv_nlenr.
+<font color ="#0000FF">*            LOOP AT lt_huitm INTO DATA(ls_huitm).</font>
+<font color ="#0000FF">*              ls_print-qty = ls_huitm-quan + ls_print-qty.</font>
+<font color ="#0000FF">*              CLEAR ls_huitm.</font>
+<font color ="#0000FF">*            ENDLOOP.</font>
+          ENDIF.
+          IF ls_print  IS NOT INITIAL.
+            APPEND ls_print TO lt_print.
+<font color ="#0000FF">*-- Get printer device</font>
+            call function <a href ="../zscwm_printer_device_determntn/zscwm_printer_device_determntn.html">'ZSCWM_PRINTER_DEVICE_DETERMNTN'</a>
+              EXPORTING
+                iv_req          = CONV zde_reqname( 'PRINTER_DEVICE' )                " Requriement Name
+                iv_param_name   = CONV zde_param_id( 'MIX_PALLET_LABEL' )                 " Name of parameter for dependent validation
+                iv_active       = abap_true                " General Flag
+              IMPORTING
+                ev_printer      = ls_output_options-tdprinter                 " Spool: Device type name
+                ev_printer_name = ls_output_options-tddest.
+<font color ="#0000FF">**            SELECT SINGLE param_value FROM zparam_details</font>
+<font color ="#0000FF">**              INTO @DATA(lv_printer)</font>
+<font color ="#0000FF">**              WHERE reqname  = 'PRINTER_DEVICE'</font>
+<font color ="#0000FF">**              AND param_name = 'MIX_PALLET_LABEL'</font>
+<font color ="#0000FF">**              AND active = @abap_true.</font>
+<font color ="#0000FF">**            IF sy-subrc EQ 0.</font>
+<font color ="#0000FF">**              ls_output_options-tddest      = lv_printer.</font>
+            IF ls_output_options-tddest IS INITIAL.
+              MESSAGE 'Please maintain Printer name' TYPE 'E' DISPLAY LIKE 'E'.
+            ENDIF.
+            ls_control_parameters-preview   = ' '.
+            ls_control_parameters-device    = 'PRINTER'.
+            ls_control_parameters-no_dialog = 'X'.
+            ls_output_options-tdimmed       = 'X'.
+            ls_output_options-tdnoprev      = 'X'.
+            ls_output_options-tdnewid       = 'X'.
+<font color ="#0000FF">*-- Get fm name</font>
+            IF lv_fpname IS NOT INITIAL.
+              CALL FUNCTION 'SSF_FUNCTION_MODULE_NAME'
+                EXPORTING
+                  formname           = lv_fpname
+                IMPORTING
+                  fm_name            = lf_fm_name
+                EXCEPTIONS
+                  no_form            = 1
+                  no_function_module = 2
+                  OTHERS             = 3.
+              IF sy-subrc NE 0.
+                MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+                        WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+              ENDIF.
+            ENDIF.
+            CALL FUNCTION lf_fm_name
+              EXPORTING
+                control_parameters = ls_control_parameters
+                output_options     = ls_output_options
+                user_settings      = ' '
+              TABLES
+                gt_main            = lt_print
+              EXCEPTIONS
+                formatting_error   = 1
+                internal_error     = 2
+                send_error         = 3
+                user_canceled      = 4
+                OTHERS             = 5.
+            IF sy-subrc NE 0.
+              MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+                      WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+            ENDIF.
+          ENDIF.
+        ENDIF.
+<font color ="#0000FF">*============================================================================================*</font>
+<font color ="#0000FF">*                                     HU F8                                                  *</font>
+<font color ="#0000FF">*============================================================================================*</font>
+      ELSEIF lv_fcode1 EQ 'LISTF'.
+        DATA(lv_field)  = /scwm/cl_rf_bll_srvc=&gt;get_cursor_field( ).
+        IF lv_field EQ '/SCWM/S_RF_REHU_PROD-HUIDENT'.
+          CLEAR : cs_rehu_prod-huident,cs_rehu_prod-vlenr,cs_rehu_prod-matnr_verif,cs_rehu_prod-maktx,
+                  cs_rehu_prod-charg,cs_rehu_prod-nista_verif,cs_rehu_prod-altme.
+          /scwm/cl_rf_bll_srvc=&gt;init_listbox( '/SCWM/S_RF_REHU_PROD-HUIDENT' ).
+          REFRESH lt_kit_stock.
+          lt_kit_stock = gt_kit_stock.
+          DELETE lt_kit_stock WHERE lgtyp NE cs_rehu_prod-vltyp.
+          IF lt_kit_stock IS INITIAL.
+            MESSAGE 'Work center Source HU not exist' TYPE 'E'.
+          ENDIF.
+          SORT : gt_huhdr BY guid_hu.
+          DATA(lt_par_chi_hu) = gt_par_chi_hu.
+          SORT lt_par_chi_hu BY par_hu.
+          DELETE ADJACENT DUPLICATES FROM lt_par_chi_hu COMPARING par_hu.
+          CLEAR ls_par_chi_hu.
+          LOOP AT lt_par_chi_hu INTO ls_par_chi_hu.
+            CLEAR lv_char40.
+            MOVE ls_par_chi_hu-par_hu TO lv_char40.
+            SHIFT lv_char40 LEFT DELETING LEADING '0'.
+            /scwm/cl_rf_bll_srvc=&gt;insert_listbox(
+              iv_fieldname = '/SCWM/S_RF_REHU_PROD-HUIDENT'
+              iv_value     = lv_char40
+              iv_text      = lv_char40 ).
+            CLEAR : ls_shu,lv_char40.
+          ENDLOOP.
+          /scwm/cl_rf_bll_srvc=&gt;set_prmod( '1' ).
+          /scwm/cl_rf_bll_srvc=&gt;set_fcode( 'LIST' ).
+        ELSEIF lv_field EQ '/SCWM/S_RF_REHU_PROD-VLENR'.
+          /scwm/cl_rf_bll_srvc=&gt;init_listbox( '/SCWM/S_RF_REHU_PROD-VLENR' ).
+          CLEAR ls_kit_stock.
+          IF cs_rehu_prod-huident IS INITIAL.
+            CLEAR ls_par_chi_hu.
+            LOOP AT gt_par_chi_hu INTO ls_par_chi_hu.
+              CLEAR lv_char40.
+              MOVE ls_par_chi_hu-chi_hu TO lv_char40.
+              SHIFT lv_char40 LEFT DELETING LEADING '0'.
+              /scwm/cl_rf_bll_srvc=&gt;insert_listbox(
+                iv_fieldname = '/SCWM/S_RF_REHU_PROD-VLENR'
+                iv_value     = lv_char40
+                iv_text      = lv_char40 ).
+              CLEAR : ls_par_chi_hu,lv_char40.
+            ENDLOOP.
+          ELSE.
+            CLEAR ls_par_chi_hu.
+            LOOP AT gt_par_chi_hu INTO ls_par_chi_hu WHERE par_hu = cs_rehu_prod-huident.
+              CLEAR lv_char40.
+              MOVE ls_par_chi_hu-chi_hu TO lv_char40.
+              SHIFT lv_char40 LEFT DELETING LEADING '0'.
+              /scwm/cl_rf_bll_srvc=&gt;insert_listbox(
+                iv_fieldname = '/SCWM/S_RF_REHU_PROD-VLENR'
+                iv_value     = lv_char40
+                iv_text      = lv_char40 ).
+              CLEAR : ls_par_chi_hu,lv_char40.
+            ENDLOOP.
+            /scwm/cl_rf_bll_srvc=&gt;set_prmod( '1' ).
+            /scwm/cl_rf_bll_srvc=&gt;set_fcode( 'LIST' ).
+          ENDIF.
+        ENDIF.
+<font color ="#0000FF">*============================================================================================*</font>
+<font color ="#0000FF">*                                        CLEAR                                               *</font>
+<font color ="#0000FF">*============================================================================================*</font>
+      ELSEIF lv_fcode1 EQ 'CLEAR'.
+        CLEAR cs_rehu_prod. REFRESH : gt_docid,gt_huhdr,gt_hutree,gt_kit_stock.
+        /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_on( '/SCWM/S_RF_REHU_PROD-ZZMANUF_ORDER' ).
+        /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-VLTYP' ).
+        /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-HUIDENT' ).
+        /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-VLENR' ).
+        /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-NISTA_VERIF' ).
+        /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-NISTA' ).
+        /scwm/cl_rf_bll_srvc=&gt;set_screlm_input_off( '/SCWM/S_RF_REHU_PROD-NLENR' ).
+        /scwm/cl_rf_bll_srvc=&gt;set_field( '/SCWM/S_RF_REHU_PROD-ZZMAN_ORDER' ).
+      ENDIF.
+    WHEN 'ZKITHU'.
+<font color ="#0000FF">*============================================================================================*</font>
+<font color ="#0000FF">*                                     CREATE HU                                              *</font>
+<font color ="#0000FF">*============================================================================================*</font>
+      IF lv_fcode1 EQ 'ENTER'.
+        IF cs_rehu_prod-pmat IS INITIAL.
+          MESSAGE 'Enter Packing Material' TYPE 'E'.
+        ENDIF.
+        IF cs_rehu_prod-vlpla IS INITIAL.
+          MESSAGE 'Enter Bin to create HU' TYPE 'E'.
+        ENDIF.
+        IF cs_rehu_prod-vltyp IS INITIAL.
+          MESSAGE 'Enter Workcenter' TYPE 'E'.
+        ENDIF.
+        IF cs_rehu_prod-nlenr IS NOT INITIAL.
+          MESSAGE 'First clear destination HU' TYPE 'E'.
+        ENDIF.
+        SELECT SINGLE lgtyp FROM /scwm/lagp INTO @DATA(lv_lgtyp)
+                            WHERE lgpla EQ @cs_rehu_prod-vlpla.
+        IF sy-subrc NE 0.
+          MESSAGE 'Invalid Bin' TYPE 'E'.
+        ENDIF.
+        IF cs_rehu_prod-vltyp NE lv_lgtyp.
+          CLEAR cs_rehu_prod-vlpla.
+          MESSAGE 'Destination HU workcenter not matching' TYPE 'E'.
+        ENDIF.
+        CLEAR lv_hu_matid_pack.
+        CALL FUNCTION 'CONVERSION_EXIT_MDLPD_INPUT'
+          EXPORTING
+            input  = cs_rehu_prod-pmat
+          IMPORTING
+            output = lv_hu_matid_pack.
+        CLEAR ls_huhdr_d.
+        CALL METHOD lo_pack_hu-&gt;/scwm/if_pack_bas~create_hu
+          EXPORTING
+            iv_pmat    = lv_hu_matid_pack
+            i_location = cs_rehu_prod-vlpla
+          RECEIVING
+            es_huhdr   = ls_huhdr_d
+          EXCEPTIONS
+            error      = 1
+            OTHERS     = 2.
+        IF sy-subrc &lt;&gt; 0.
+          MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+                WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+        ENDIF.
+        CALL METHOD lo_pack_hu-&gt;/scwm/if_pack~save
+          EXPORTING
+            iv_commit = 'X'
+            iv_wait   = 'X'
+          EXCEPTIONS
+            error     = 1
+            OTHERS    = 2.
+        IF sy-subrc &lt;&gt; 0.
+          MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+                  WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+        ENDIF.
+        COMMIT WORK AND WAIT.
+        CALL METHOD /scwm/cl_tm=&gt;cleanup( ).
+        CLEAR cs_rehu_prod-nlenr.
+        CALL FUNCTION 'CONVERSION_EXIT_HUID_OUTPUT'
+          EXPORTING
+            input  = ls_huhdr_d-huident
+          IMPORTING
+            output = cs_rehu_prod-nlenr.
+        /scwm/cl_rf_bll_srvc=&gt;set_prmod(
+          /scwm/cl_rf_bll_srvc=&gt;c_prmod_background ).
+        /scwm/cl_rf_bll_srvc=&gt;set_fcode(
+          /scwm/cl_rf_bll_srvc=&gt;c_fcode_update_back ).
+      ENDIF.
+  ENDCASE.
+
+ENDFUNCTION.
+
+
+<font color ="#0000FF">*Messages</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">*YPE</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: /SCWM/BATCH</font>
+<font color ="#0000FF">*008   No batch class found for product &1</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: /SCWM/DLV_BATCH</font>
+<font color ="#0000FF">*006   Batch Creation Not Allowed for Item Type &1, Document Type &2, Whse &3</font>
+<font color ="#0000FF">*007   Batch Creation Not Allowed</font>
+<font color ="#0000FF">*206   Product &1 subject to batch management requirement</font>
+<font color ="#0000FF">*303   Enter shelf life expiration or best-before date</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: /SCWM/DLV_EGR</font>
+<font color ="#0000FF">*335   Advanced S&R data does not support Expected Goods Receipt Process.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: /SCWM/HU_WM</font>
+<font color ="#0000FF">*043   HU number &1 is internal and cannot be assigned externally</font>
+<font color ="#0000FF">*085   &1 does not lie in a defined number range interval for this HU</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: /SCWM/L1</font>
+<font color ="#0000FF">*700   Unit of measure & not supported for the product</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: /SCWM/MD</font>
+<font color ="#0000FF">*000   &1 &2 &3 &4 &5</font>
+<font color ="#0000FF">*002   Product does not exist</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: /SCWM/RF_DE</font>
+<font color ="#0000FF">*010   Warehouse number is not predefined</font>
+<font color ="#0000FF">*014   Handling unit &1 is not scheduled</font>
+<font color ="#0000FF">*057   Enter a valid means of transport</font>
+<font color ="#0000FF">*064   Handling unit &1 cannot be unloaded</font>
+<font color ="#0000FF">*092   Enter a storage bin</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: /SCWM/RF_EN</font>
+<font color ="#0000FF">*193   Object is locked; processing not possible</font>
+<font color ="#0000FF">*290   Error in update for receiving of HU &1</font>
+<font color ="#0000FF">*319   Error adjusting Handling Unit item quantity</font>
+<font color ="#0000FF">*333   Goods receipt already posted</font>
+<font color ="#0000FF">*337   Error locking Delivery</font>
+<font color ="#0000FF">*374   Enter HU</font>
+<font color ="#0000FF">*404   Enter positive quantity (&gt;0)</font>
+<font color ="#0000FF">*415   HU is already processed</font>
+<font color ="#0000FF">*420   Handling unit &1 already exists in the warehouse</font>
+<font color ="#0000FF">*421   Material &1 does not exist</font>
+<font color ="#0000FF">*422   Material &1 is not a packaging material</font>
+<font color ="#0000FF">*430   HU &1 is related to other delivery</font>
+<font color ="#0000FF">*436   BBD &1 does not match the inbound delivery item</font>
+<font color ="#0000FF">*491   Delivery quantity exceeded</font>
+<font color ="#0000FF">*604   Only integer value is valid</font>
+<font color ="#0000FF">*605   Selected value &1 is too large</font>
+<font color ="#0000FF">*822   Can’t process serial-number-managed products when creating multiple HUs</font>
+<font color ="#0000FF">*823   Can’t create multiple HUs for a product that isn't in an inbound delivery</font>
+<font color ="#0000FF">*894   Creation of batch &1 failed for material &2</font>
+<font color ="#0000FF">*897   Invalid stock segment &1 for product &2</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: /SCWM/UI_PACKING</font>
+<font color ="#0000FF">*049   An error has occurred (probably a program error)</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: &lt;LFS_MESSAGES&gt;-MSGID</font>
+<font color ="#0000FF">*&lt;LF</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: Hard coded</font>
+<font color ="#0000FF">*   Please enter Packaging Material</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: LS_BAPIRET-ID</font>
+<font color ="#0000FF">*LS_</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: LS_MESSAGE-ID</font>
+<font color ="#0000FF">*LS_</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: LS_MESSAGE-MSGID</font>
+<font color ="#0000FF">*LS_</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: LS_MESSAGE_SAVE-MSGI</font>
+<font color ="#0000FF">*LS_</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: ZEWM_MSGS</font>
+<font color ="#0000FF">*008   Material &1 does not exist</font>
+<font color ="#0000FF">*026   Please enter Qty</font>
+<font color ="#0000FF">*027   Please enter data and proceed</font>
+<font color ="#0000FF">*032   Doc. Type &1 is not allowed for this Transaction</font>
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 757
+</font>
+</body>
+</html>

@@ -1,0 +1,224 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZSCWM_RF_QC_BUTTON_PBO</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for function: ZSCWM_RF_QC_BUTTON_PBO</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  FM For QC Button PBO</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">********************************************************************************************************</font>
+<font color ="#0000FF">*                          INTAS PHARMA                                                 *</font>
+<font color ="#0000FF">********************************************************************************************************</font>
+<font color ="#0000FF">*  OBJECT INFORMATION                                                                   *</font>
+<font color ="#0000FF">********************************************************************************************************</font>
+<font color ="#0000FF">* Module             : EWM                                                                             *</font>
+<font color ="#0000FF">* Developer          : Akahay V Kumar                                                                  *</font>
+<font color ="#0000FF">* Requestor          : Shylaja                                                                         *</font>
+<font color ="#0000FF">* Date Of Creation   : 16.12.2022                                                                      *</font>
+<font color ="#0000FF">* Transport Request  : EWDK900184                                                               *</font>
+<font color ="#0000FF">* Development Object : ZSCWM_RF_QC_BUTTON_PBO                                 *</font>
+<font color ="#0000FF">* Description        : this is  FM for QC button  from GR -Zone to Sampling area) in RFUI &gt;&gt;**************</font>
+<font color ="#0000FF">*                                                                                       *</font>
+<font color ="#0000FF">*=======================================================================================================*</font>
+<font color ="#0000FF">*  MODIFICATION HISTORY                                                                                 *</font>
+<font color ="#0000FF">*-------------------------------------------------------------------------------------------------------*</font>
+<font color ="#0000FF">* Mod. No.  Date    Name        Transport Number        Change Desc.                    ----------------*</font>
+<font color ="#0000FF">*-------------------------------------------------------------------------------------------------------*</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*-------------------------------------------------------------------------------------------------------*</font>
+
+<font color ="#0000FF">*       <a href ="global-zscwm_rf_qc_button_pbo.html">Global data declarations</a></font>
+FUNCTION zscwm_rf_qc_button_pbo .
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+<font color ="#0000FF">*"*"Local Interface:</font>
+<font color ="#0000FF">*"  CHANGING</font>
+<font color ="#0000FF">*"     REFERENCE(ADHOC) TYPE  /SCWM/S_RF_ADHOC</font>
+<font color ="#0000FF">*"     REFERENCE(CS_REHU_HU) TYPE  /SCWM/S_RF_REHU_HU</font>
+<font color ="#0000FF">*"     REFERENCE(CT_REHU_HU) TYPE  /SCWM/TT_RF_REHU_HU</font>
+<font color ="#0000FF">*"     REFERENCE(CS_REHU) TYPE  /SCWM/S_RF_ADMIN_REHU</font>
+<font color ="#0000FF">*"     REFERENCE(CS_REHU_PROD) TYPE  /SCWM/S_RF_REHU_PROD</font>
+<font color ="#0000FF">*"     REFERENCE(CT_REHU_PROD) TYPE  /SCWM/TT_RF_REHU_PROD</font>
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+<font color ="#0000FF">*  data declarations                                                   *</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+  DATA: ls_rsrc  TYPE /scwm/rsrc,
+        ls_res   TYPE /scwm/rsrc,
+        lv_uname TYPE sy-uname.
+  DATA: lc_consatnt TYPE lgpla VALUE 'GR-ZONE'.
+  DATA: lo_pack     TYPE REF TO /scwm/cl_wm_packing.
+  DATA: lc_ptype   TYPE zde_param_id VALUE 'WPT_MVMT_ZGSP',
+        lc_Inbound TYPE zde_reqname  VALUE 'INBOUND',
+        lc_dbin    TYPE zde_param_id VALUE 'WPT_MVMT_BIN_GSMP',
+        lc_dstype  TYPE zde_param_id VALUE 'WPT_MVMT_STY_GSMP'.
+
+  DATA:lt_create_hu TYPE /scwm/tt_to_crea_hu,
+       lt_bapiret   TYPE bapiret2_t,
+       ls_bapiret   TYPE bapiret2,
+       lv_severity  TYPE bapi_mtype,
+       lv_tanum     TYPE /scwm/tanum,
+       lo_packing   TYPE REF TO /scwm/cl_wm_packing,
+       lv_msg       TYPE Char200.
+
+  STATICS:lv_parallel TYPE abap_bool.
+
+  FIELD-SYMBOLS &lt;ls_who&gt; TYPE /scwm/s_who_int.
+
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+<font color ="#0000FF">*  program logic                                                       *</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+
+  BREAK-POINT      ID /scwm/rf_adhoc.
+
+<font color ="#0000FF">* Set default values</font>
+  lv_uname = sy-uname.
+  CALL FUNCTION '/SCWM/RSRC_RESOURCE_MEMORY'
+    EXPORTING
+      iv_uname = lv_uname
+    CHANGING
+      cs_rsrc  = ls_res.
+
+  CALL FUNCTION '/SCWM/RSRC_READ_SINGLE'
+    EXPORTING
+      iv_lgnum    = ls_res-lgnum
+      iv_rsrc     = ls_res-rsrc
+    IMPORTING
+      es_rsrc     = ls_rsrc
+    EXCEPTIONS
+      wrong_input = 1
+      not_found   = 2
+      OTHERS      = 3.
+
+  adhoc-lgnum = ls_rsrc-lgnum.
+  IF adhoc-lgnum IS INITIAL.
+    MESSAGE e010(/scwm/rf_de) .
+  ENDIF.
+
+  CALL METHOD /scwm/cl_tm=&gt;set_lgnum( ls_rsrc-lgnum ).
+
+  adhoc-drsrc = ls_rsrc-rsrc.
+  IF adhoc-drsrc IS INITIAL.
+    MESSAGE e057(/scwm/rf_de).
+  ENDIF.
+
+<font color ="#0000FF">* Introduce the used parameter</font>
+  CALL METHOD /scwm/cl_rf_bll_srvc=&gt;init_screen_param.
+  CALL METHOD /scwm/cl_rf_bll_srvc=&gt;set_screen_param
+    EXPORTING
+      iv_param_name = 'ADHOC'.
+
+  SELECT SINGLE param_value INTO @DATA(lv_ptype) FROM zparam_details
+         WHERE lgnum EQ @adhoc-lgnum  AND reqname EQ @lc_Inbound
+         AND  param_name EQ @lc_ptype.
+  IF sy-subrc EQ 0.
+    adhoc-procty  = lv_ptype.
+  ENDIF.
+
+
+  SELECT SINGLE param_value INTO @DATA(lv_dbin) FROM zparam_details
+         WHERE lgnum EQ @adhoc-lgnum  AND reqname EQ @lc_Inbound AND param_name EQ @lc_dbin.
+
+  SELECT SINGLE param_value INTO @DATA(lv_dstype) FROM zparam_details
+         WHERE lgnum EQ @adhoc-lgnum AND reqname EQ @lc_Inbound AND param_name EQ @lc_dstype.
+
+  SELECT COUNT(*) FROM /scwm/t333 WHERE procty EQ adhoc-procty .
+  IF sy-subrc EQ 0 .
+    adhoc-nlenr = cs_rehu_hu-huident .
+    adhoc-nlpla = lv_dbin .
+  ELSE .
+    MESSAGE 'Invalid WPT' TYPE 'E' .
+  ENDIF .
+
+  IF lo_packing IS NOT BOUND.
+    CREATE OBJECT lo_packing.
+  ENDIF.
+
+  CALL METHOD lo_packing-&gt;get_hu
+    EXPORTING
+      iv_huident = cs_rehu_hu-huident
+      iv_lock    = 'X'
+    IMPORTING
+      et_huitm   = DATA(et_huitm)
+      es_huhdr   = DATA(es_huhdr)
+    EXCEPTIONS
+      not_found  = 1
+      OTHERS     = 2.
+
+  adhoc-vlpla = es_huhdr-lgpla.
+  adhoc-vlenr = cs_rehu_hu-huident .
+  IF adhoc-vlpla IS INITIAL .
+    MESSAGE e092(/scwm/rf_de).
+    RETURN.
+  ENDIF.
+
+  ASSIGN et_huitm[ 1 ] TO FIELD-SYMBOL(&lt;fs_items&gt;).
+
+  INSERT INITIAL LINE INTO TABLE lt_create_hu ASSIGNING FIELD-SYMBOL(&lt;fs_create&gt;).
+  IF sy-subrc EQ 0.
+    MOVE-CORRESPONDING &lt;fs_items&gt; TO &lt;fs_create&gt;.
+    &lt;fs_create&gt;-huident = cs_rehu_hu-huident.
+    &lt;fs_create&gt;-guid_hu = es_huhdr-guid_hu.
+    &lt;fs_create&gt;-procty  = lv_ptype .
+    &lt;fs_create&gt;-nltyp   = lv_dstype .
+    &lt;fs_create&gt;-nlpla   = lv_dbin.
+    &lt;fs_create&gt;-dstgrp  = es_huhdr-dstgrp.
+<font color ="#0000FF">*   &lt;fs_create&gt;-squit   = abap_true .</font>
+  ENDIF.
+
+  CALL FUNCTION '/SCWM/TO_CREATE_MOVE_HU'
+    EXPORTING
+      iv_lgnum       = adhoc-lgnum
+      iv_update_task = space
+      iv_commit_work = space
+      iv_bname       = sy-uname
+      it_create_hu   = lt_create_hu
+    IMPORTING
+      ev_tanum       = lv_tanum
+<font color ="#0000FF">*     et_ltap_vb     = lt_ltap</font>
+      et_bapiret     = lt_bapiret
+      ev_severity    = lv_severity.
+
+
+  LOOP AT lt_bapiret INTO ls_bapiret WHERE type = 'E'.
+    ROLLBACK WORK.
+    MESSAGE ID ls_bapiret-id TYPE 'I' NUMBER ls_bapiret-number
+          WITH ls_bapiret-message_v1 ls_bapiret-message_v2 ls_bapiret-message_v3
+               ls_bapiret-message_v4 INTO lv_msg ." DISPLAY LIKE 'E'.
+  ENDLOOP.
+
+  COMMIT WORK AND WAIT.
+  IF lv_msg IS INITIAL .
+    lv_msg =  VALUE #( lt_bapiret[ type = 'S' number = '073' ]-message OPTIONAL ).
+    MESSAGE lv_msg TYPE 'E'.
+  ELSE .
+    MESSAGE lv_msg TYPE 'E'.
+  ENDIF.
+
+
+ENDFUNCTION.
+
+
+<font color ="#0000FF">*Messages</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">*YPE</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: /SCWM/RF_DE</font>
+<font color ="#0000FF">*010   Warehouse number is not predefined</font>
+<font color ="#0000FF">*057   Enter a valid means of transport</font>
+<font color ="#0000FF">*092   Enter a storage bin</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: Hard coded</font>
+<font color ="#0000FF">*   Invalid WPT</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: LS_BAPIRET-ID</font>
+<font color ="#0000FF">*LS_</font>
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 757
+</font>
+</body>
+</html>

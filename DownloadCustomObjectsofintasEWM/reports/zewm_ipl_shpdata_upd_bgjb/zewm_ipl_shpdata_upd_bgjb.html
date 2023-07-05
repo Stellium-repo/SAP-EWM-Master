@@ -1,0 +1,188 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZEWM_IPL_SHPDATA_UPD_BGJB</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZEWM_IPL_SHPDATA_UPD_BGJB</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Report to pull the Shipper Data from ECC to EWM for ZIPL/Z109</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Report ZEWM_IPL_SHPDATA_UPD_BGJB</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+REPORT zewm_ipl_shpdata_upd_bgjb.
+
+include <a href ="zewm_ipl_shpdata_upd_bgjb_top.html">zewm_ipl_shpdata_upd_bgjb_top</a>.
+include <a href ="zewm_ipl_shpdata_upd_bgjb_sel.html">zewm_ipl_shpdata_upd_bgjb_sel</a>.
+
+START-OF-SELECTION.
+
+  CLEAR: ls_timestamp_r, lt_timestamp_r, ls_dattim_from, ls_dattim_to.
+  IF  p_cdatto IS INITIAL.
+    CLEAR  p_ctimto.
+  ENDIF.
+  ls_dattim_from-date = p_cdatfr.
+  ls_dattim_from-time = p_ctimfr.
+  ls_dattim_to-date   = p_cdatto.
+  ls_dattim_to-time   = p_ctimto.
+  CALL FUNCTION '/SCWM/CONVERT_DATE_TIME'
+    EXPORTING
+      iv_lgnum           = p_lgnum
+      is_dattim_from     = ls_dattim_from
+      is_dattim_to       = ls_dattim_to
+    IMPORTING
+      es_timestamp_range = ls_timestamp_r
+    EXCEPTIONS
+      input_error        = 0 "does not matter
+      data_not_found     = 1
+      OTHERS             = 2.
+  IF sy-subrc = 0.
+    IF ls_timestamp_r IS NOT INITIAL.
+      "Pass timestamp range back to select-option
+      APPEND ls_timestamp_r TO lt_timestamp_r.
+    ENDIF.
+
+  ELSE.
+    MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+  ENDIF.
+
+<font color ="#0000FF">*--- Warehouse: Get SC Unit location number</font>
+  CALL FUNCTION '/SCWM/T300_MD_READ_SINGLE'
+    EXPORTING
+      iv_lgnum   = 'GW01'
+    IMPORTING
+      es_t300_md = ls_t300_md
+    EXCEPTIONS
+      not_found  = 1
+      OTHERS     = 2.
+  IF sy-subrc EQ 0.
+    CLEAR ls_select.
+    ls_select-fieldname = /scdl/if_dl_logfname_c=&gt;sc_locationid_wh_h.
+    ls_select-option    = 'EQ'.
+    ls_select-sign      = 'I'.
+    ls_select-low       = ls_t300_md-scuguid.
+    APPEND ls_select TO lt_selection.
+  ENDIF.
+
+  CLEAR ls_select.
+  ls_select-fieldname = /scdl/if_dl_logfname_c=&gt;sc_doctype_h.
+  ls_select-option    = 'EQ'.
+  ls_select-sign      = 'I'.
+  ls_select-low       = s_docty-low.
+  APPEND ls_select TO lt_selection.
+
+  IF s_docty IS NOT INITIAL.
+<font color ="#0000FF">*--- FETCH delivery DATA from the Query METHOD</font>
+    TRY.
+        lo_prd = /scwm/cl_dlv_management_prd=&gt;get_instance( ).
+        lo_prd-&gt;query(
+        EXPORTING
+        it_selection    = lt_selection
+        iv_doccat       = /scdl/if_dl_doc_c=&gt;sc_doccat_inb_prd
+        is_read_options = ls_read_options
+        is_include_data = ls_include
+        IMPORTING
+        et_headers    = DATA(lt_head)
+        et_items      = DATA(lt_item) ).
+      CATCH /scdl/cx_delivery.                          "#EC NO_HANDLER
+    ENDTRY.
+  ENDIF.
+
+  SORT lt_item ASCENDING BY docid.
+  DELETE ADJACENT DUPLICATES FROM lt_item COMPARING docid itemid.
+
+  IF lt_item IS NOT INITIAL.
+    LOOP AT lt_item INTO DATA(ls_item).
+      ls_shipper_data-matnr = ls_item-product-productno.
+      ls_shipper_data-charg = ls_item-product-batchno.
+      APPEND ls_shipper_data TO lt_shipper_data.
+      CLEAR: ls_shipper_data.
+    ENDLOOP.
+
+    SORT lt_shipper_data BY matnr charg.
+    DELETE ADJACENT DUPLICATES FROM lt_shipper_data COMPARING matnr charg.
+    CREATE OBJECT lo_erpsys.
+    TRY.
+        lo_erpsys-&gt;get_logsys_by_bskey(
+          EXPORTING
+            iv_bskey  = lc_bskey
+          RECEIVING
+            ev_logsys = DATA(lv_logsys) ).
+      CATCH /scwm/cx_erpintegration .
+    ENDTRY.
+
+    TRY.
+        /scwm/cl_erp_system=&gt;get_rfc_destination_by_logsys(
+          EXPORTING
+            iv_logsys   = lv_logsys
+          RECEIVING
+            ev_rfcdest  = lv_rfcdest ).
+      CATCH /scwm/cx_erpintegration .
+
+    ENDTRY.
+
+<font color ="#0000FF">*-- Call RFC to fetch Custom table data from ECC System</font>
+    CALL FUNCTION 'ZEWM_SHP_DATA_FETCH'
+      DESTINATION lv_rfcdest
+      CHANGING
+        ct_shp_data = lt_shipper_data.
+
+    IF lt_shipper_data IS NOT INITIAL.
+      SELECT * FROM zdiv_tab_cal
+        INTO TABLE @DATA(lt_div_tab)
+        FOR ALL ENTRIES IN @lt_shipper_data
+        WHERE matnr = @lt_shipper_data-matnr
+        AND charg = @lt_shipper_data-charg.
+      IF lt_div_tab IS NOT INITIAL.
+        LOOP AT lt_shipper_data INTO ls_shipper.
+          READ TABLE lt_div_tab ASSIGNING FIELD-SYMBOL(&lt;fs_s_div&gt;) WITH KEY matnr = ls_shipper-matnr
+                                                                            charg = ls_shipper-charg.
+          IF sy-subrc EQ 0.
+            DELETE lt_shipper_data WHERE matnr = &lt;fs_s_div&gt;-matnr AND charg = &lt;fs_s_div&gt;-charg.
+          ENDIF.
+          ls_shipper-credat = sy-datum.
+          ls_shipper-cretim = sy-timlo.
+          ls_shipper-creusr = sy-uname.
+          MODIFY lt_shipper_data FROM ls_shipper TRANSPORTING creusr credat cretim
+                                          WHERE matnr = &lt;fs_s_div&gt;-matnr
+                                          AND   charg = &lt;fs_s_div&gt;-charg.
+        ENDLOOP.
+        MODIFY zdiv_tab_cal FROM TABLE lt_shipper_data.
+        COMMIT WORK.
+      ELSE.
+        LOOP AT lt_shipper_data INTO ls_shipper.
+          ls_shipper-credat = sy-datum.
+          ls_shipper-cretim = sy-timlo.
+          ls_shipper-creusr = sy-uname.
+          MODIFY lt_shipper_data FROM ls_shipper TRANSPORTING creusr credat cretim
+                                         WHERE matnr = ls_shipper-matnr
+                                         AND charg   = ls_shipper-charg.
+        ENDLOOP.
+        MODIFY zdiv_tab_cal FROM TABLE lt_shipper_data.
+        COMMIT WORK.
+      ENDIF.
+
+    ENDIF.
+  ENDIF.
+
+<font color ="#0000FF">*Text elements</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">* 001 Created On</font>
+<font color ="#0000FF">* 002 to</font>
+
+
+<font color ="#0000FF">*Selection texts</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">* P_LGNUM         Warehouse Number</font>
+<font color ="#0000FF">* S_DOCTY         Document Type</font>
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 757
+</font>
+</body>
+</html>

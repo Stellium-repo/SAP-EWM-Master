@@ -1,0 +1,36 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>LZSCWM_FG_RF_SAMPLTOP</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: LZSCWM_FG_RF_SAMPLTOP</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Post Goods issue by Delivery</b></font>
+<hr>
+<pre width="100">
+FUNCTION-POOL zscwm_fg_rf_sampl.            "MESSAGE-ID ..
+
+<font color ="#0000FF">* INCLUDE LZSCWM_FG_RF_SAMPLD...             " Local class definition</font>
+
+DATA: go_wm_pack       TYPE REF TO /scwm/cl_wm_packing,
+      gt_param_details TYPE STANDARD TABLE OF zparam_details.
+
+TYPES : BEGIN OF ty_hulist ,
+          docid      TYPE /scdl/dl_docid,
+          huident    TYPE /scwm/de_huident,
+          guid_hu    TYPE /scwm/guid_hu,
+          scan_check TYPE flag,
+          top        TYPE char1,
+          bottom     TYPE char1,
+        END OF ty_hulist.
+
+DATA: gt_hulist    TYPE TABLE OF ty_hulist,
+      gt_huitm_all TYPE /scwm/tt_huitm_int,
+      g_wa_hulist  TYPE  ty_hulist.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 757
+</font>
+</body>
+</html>

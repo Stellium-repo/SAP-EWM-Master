@@ -1,0 +1,166 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZAN_PALLET_MGMT_TOP</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZAN_PALLET_MGMT_TOP</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZAN_PALLET_MGMT_TOP</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include ZAN_PALLET_MGMT_TOP                      - Module Pool      ZAN_PALLET_MGMT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+PROGRAM zan_pallet_mgmt.
+TABLES : zexdocfl , zexdochdr , zexproduct , zan_pallet_mgmt , vbak ,
+         vbap , zexshiphdr , ausp , inob , cabn , zdiv_tab_cal.
+DATA :
+<font color ="#0000FF">*       I_BLINO LIKE ZEXDOCFL-DOCNO,</font>
+  i_dimension  LIKE zdiv_tab_cal-dimension,
+  i_trmode(10) TYPE c.
+
+DATA : lines TYPE i.
+
+DATA : BEGIN OF i_tab OCCURS 0,
+         r1(1),
+         r2(1),
+         matnr      LIKE mara-matnr,
+         maktx      LIKE makt-maktx,
+         dimension  LIKE zdiv_tab_cal-dimension,
+         pallet(3)  TYPE n,
+         pallet1(3) TYPE n,
+         palletsize LIKE zan_pallet_mgmt-palletsize,
+       END OF i_tab.
+DATA : BEGIN OF i_carton OCCURS 0,
+         werks          LIKE t001w-werks,
+         matnr          LIKE mara-matnr,
+         charg          LIKE zexcarton-batchno,
+         docno          LIKE zexcarton-docno,
+         docitmsrl      LIKE zexcarton-docitmsrl,
+         serialno       LIKE zexcarton-serialno,
+         fromno         LIKE zexcarton-fromno,
+         tono           LIKE zexcarton-tono,
+         shipperqty1    LIKE zexcarton-shipperqty,
+         boxqty1        TYPE zexcarton-boxqty,
+         stripqty       LIKE zexcarton-stripqty,
+<font color ="#0000FF">*        STRIPQTY(13) TYPE P DECIMALS 0,</font>
+         shipperqty(13) TYPE p DECIMALS 0,
+         boxqty(13)     TYPE p DECIMALS 0,
+         grosswt        LIKE zexcarton-grosswt,
+         netwt          LIKE zexcarton-netwt,
+         noofcarton     LIKE zexcarton-noofcarton,
+         looseind       LIKE zexcarton-looseind,
+         palletsize     LIKE zan_pallet_mgmt-palletsize,
+         pallet(4)      TYPE n,
+         blino          LIKE zexdocfl-docno,
+       END OF i_carton.
+DATA : BEGIN OF i_final OCCURS 0,
+         palletno(4)      TYPE n,
+         matnr            LIKE mara-matnr,
+         maktx            LIKE makt-maktx,
+         charg            LIKE lips-charg,
+         mfdate(11),
+         vfdat            LIKE mcha-vfdat,
+         werks            LIKE t001w-werks,
+         frmshipper       LIKE zan_pallet_mgmt-frmshipper,
+         toshipper        LIKE zan_pallet_mgmt-toshipper,
+         grwt             LIKE zan_pallet_mgmt-grwt,
+         netwt            LIKE zexcarton-netwt,
+         palletsize       LIKE zan_pallet_mgmt-palletsize,
+         palletshipper(3) TYPE n,
+         packing          LIKE zan_pallet_mgmt-packing,
+         pallet(4)        TYPE n,
+         blino            LIKE zexdocfl-docno,
+       END OF i_final.
+
+DATA : BEGIN OF i_psi OCCURS 0,
+         docno     LIKE zexdocfl-docno,
+         docitmsrl LIKE zexcarton-docitmsrl,
+         matnr     LIKE mara-matnr,
+       END OF i_psi.
+CONTROLS : table1 TYPE TABLEVIEW USING SCREEN '1000'.
+CONTROLS : table2 TYPE TABLEVIEW USING SCREEN '1001'.
+
+DATA : uk(1) , euro(1).
+
+DATA : delimiter(1) TYPE c VALUE 'X',
+       l1(15)       TYPE n,
+       w1(15)       TYPE n,
+       h1(15)       TYPE n,
+       l2(15)       TYPE n,
+       w2(15)       TYPE n,
+       h2(15)       TYPE n,
+       d1(15)       TYPE p DECIMALS 2,
+       d2(15)       TYPE p DECIMALS 2,
+       d3(15)       TYPE p DECIMALS 2,
+       d4(15)       TYPE p DECIMALS 2,
+       d5(15)       TYPE p DECIMALS 2,
+       d11(15)      TYPE p DECIMALS 0,
+       d22(15)      TYPE p DECIMALS 0,
+       d33(15)      TYPE p DECIMALS 0,
+       d44(15)      TYPE p DECIMALS 0,
+       height(15)   TYPE n,
+       row(15)      TYPE n,
+       column(15)   TYPE n,
+       pallet(15)   TYPE n.
+
+DATA : zmfgdate LIKE cawn-atwrt.
+DATA : mat_werks_batch(32).
+DATA : i_srno(10) TYPE n.
+DATA : i_psino LIKE zexdocfl-docno.
+
+DATA : flg_r     TYPE i,
+       flg_r_e   TYPE i,
+       flg_r_e_1 TYPE i.
+DATA : i_frmshipper  LIKE zexcarton-fromno,
+       i_frmshipper1 LIKE zexcarton-fromno.
+DATA : i_toshipper   LIKE zexcarton-tono,
+       i_temppacking LIKE zan_pallet_mgmt-packing.
+
+DATA : i_palletheight(3) TYPE n VALUE '185'.
+DATA : i_palletweight(2) TYPE n VALUE '18'.
+
+DATA : BEGIN OF i_temp OCCURS 0,
+         palletno(4)      TYPE n,
+         matnr            LIKE mara-matnr,
+         maktx            LIKE makt-maktx,
+         charg            LIKE lips-charg,
+         mfdate(11),
+         vfdat            LIKE mcha-vfdat,
+         werks            LIKE t001w-werks,
+         frmshipper       LIKE zan_pallet_mgmt-frmshipper,
+         toshipper        LIKE zan_pallet_mgmt-toshipper,
+         grwt             LIKE zan_pallet_mgmt-grwt,
+         netwt            LIKE zexcarton-netwt,
+         palletsize       LIKE zan_pallet_mgmt-palletsize,
+         palletshipper(3) TYPE n,
+         packing          LIKE zan_pallet_mgmt-packing,
+         pallet(4)        TYPE n,
+         blino            LIKE zexdocfl-docno,
+         noofshipper(13)  TYPE p DECIMALS 2,
+         looseheight(15)  TYPE n,
+         flg(1),
+         fullpallet(1),
+       END OF i_temp.
+DATA : i_noofshipper(13) TYPE p DECIMALS 2,
+       i_groupno(10)     TYPE n,
+       mixpallet(1),
+       answer(1).
+DATA : fullpalletline(1),
+       i_mod(5)          TYPE n,
+       i_shippercount(2) TYPE n,
+       first(13)         TYPE n,
+       second(3)         TYPE n,
+       i_tempshipperqty  TYPE string.
+DATA lv_dlv TYPE /scdl/dl_refdocno.
+SELECTION-SCREEN BEGIN OF SCREEN 100 AS SUBSCREEN.
+<font color ="#0000FF">*SELECT-OPTIONS : I_BLINO FOR ZEXDOCHDR-DOCNO NO INTERVALS.</font>
+  SELECT-OPTIONS : i_eccno FOR lv_dlv NO INTERVALS.
+SELECTION-SCREEN END OF SCREEN 100.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 757
+</font>
+</body>
+</html>
