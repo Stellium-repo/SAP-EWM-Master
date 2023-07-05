@@ -1,0 +1,482 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZEWM_REQUISITION_SLIP_F01</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZEWM_REQUISITION_SLIP_F01</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZEWM_REQUISITION_SLIP_F01</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+<font color ="#0000FF">***INCLUDE ZEWM_REQUISITION_SLIP_F01.</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form fetch_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM fetch_data .
+
+  DATA: ls_t300_md            TYPE /scwm/s_t300_md,
+        ls_select             TYPE /scwm/dlv_selection_str,
+        lo_dev                TYPE REF TO /scwm/cl_dlv_management_prd,
+        ls_include            TYPE /scwm/dlv_query_incl_str_prd,
+        ls_read_options       TYPE /scwm/dlv_query_contr_str,
+        lt_selection          TYPE /scwm/dlv_selection_tab,
+        ls_head               TYPE zscwm_s_mat_slip_head,
+        lt_item_slip          TYPE zscwm_t_mat_slip,
+        ls_item_slip          TYPE zscwm_s_mat_slip,
+        ls_output_options     TYPE ssfcompop,
+        ls_control_parameters TYPE ssfctrlop,
+        lf_fm_name            TYPE rs38l_fnam,
+        lv_fpname             TYPE tdsfname VALUE 'ZEWM_MATERIAL_ISSUANCE_SLIP',
+        ls_tanum              TYPE /scwm/s_tanum,
+        lt_ordim              TYPE TABLE OF /scwm/ordim_c,
+        lt_df_check           TYPE /scwm/dl_docflow_tab,
+        lt_to_det_mon         TYPE /scwm/tt_to_det_mon,
+        lt_itemwt_link        TYPE  /scwm/tt_itemwt_int,
+        lt_tanum              TYPE /scwm/t_tanum.
+
+  DATA: lv_maktx TYPE /sapapo/maktx,
+        lv_matnr TYPE matnr.
+
+
+  IF s_mo IS NOT INITIAL.
+<font color ="#0000FF">*--- Warehouse: Get sc Unit location number</font>
+    CALL FUNCTION '/SCWM/T300_MD_READ_SINGLE'
+      EXPORTING
+        iv_lgnum   = p_lgnum
+      IMPORTING
+        es_t300_md = ls_t300_md
+      EXCEPTIONS
+        not_found  = 1
+        OTHERS     = 2.
+    IF sy-subrc EQ 0.
+      CLEAR ls_select.
+      ls_select-fieldname = /scdl/if_dl_logfname_c=&gt;sc_locationid_wh_h.
+      ls_select-option    = 'EQ'.
+      ls_select-sign      = 'I'.
+      ls_select-low       = ls_t300_md-scuguid.
+      APPEND ls_select TO lt_selection.
+    ENDIF.
+
+    LOOP AT s_mo INTO DATA(ls_mo).
+      CLEAR ls_select.
+      ls_select-fieldname = /scdl/if_dl_logfname_c=&gt;sc_refdocno_ppo_h.
+      ls_select-option    = 'EQ'.
+      ls_select-sign      = 'I'.
+      ls_select-low       = ls_mo-low.
+      APPEND ls_select TO lt_selection.
+    ENDLOOP.
+
+<font color ="#0000FF">*-- Read Options for Query Method</font>
+    ls_read_options-docflow_succ_1level_only = abap_true.
+    ls_read_options-data_retrival_only = abap_true.
+    ls_include-head_refdoc   = abap_true.
+    ls_include-head_status   = abap_true.
+    ls_include-item_docflow  = abap_true.
+    ls_include-item_refdoc   = abap_true.
+<font color ="#0000FF">*    ls_include-item_product_ext   = abap_true.</font>
+<font color ="#0000FF">*    ls_include-item_textline   = abap_true.</font>
+
+    ls_include-head_status_dyn   = 'Y'.
+    APPEND /scdl/if_dl_status_c=&gt;sc_t_goods_issue
+            TO ls_include-head_status_dyn_detail.
+
+    lo_dev = /scwm/cl_dlv_management_prd=&gt;get_instance( ).
+    CALL METHOD lo_dev-&gt;query
+      EXPORTING
+        it_selection    = lt_selection
+        iv_doccat       = /scwm/if_dl_c=&gt;sc_doccat_wmpwr
+        is_read_options = ls_read_options
+        is_include_data = ls_include
+      IMPORTING
+        et_headers      = DATA(lt_headers)
+        et_items        = DATA(lt_items)
+        et_hu_prd       = DATA(lt_hu_prd).
+
+    DELETE lt_selection WHERE fieldname EQ 'REFDOCNO_PPO_H'.
+<font color ="#0000FF">*-- Get printer device</font>
+    call function <a href ="zscwm_printer_device_determntn/zscwm_printer_device_determntn.html">'ZSCWM_PRINTER_DEVICE_DETERMNTN'</a>
+      EXPORTING
+        iv_req          = CONV zde_reqname( 'PRINTER_DEVICE' )                " Requriement Name
+        iv_param_name   = CONV zde_param_id( 'REQ_SLIP_PRINTER' )                 " Name of parameter for dependent validation
+        iv_active       = abap_true                " General Flag
+      IMPORTING
+        ev_printer      = ls_output_options-tdprinter                 " Spool: Device type name
+        ev_printer_name = ls_output_options-tddest.
+<font color ="#0000FF">*    SELECT SINGLE param_value FROM zparam_details</font>
+<font color ="#0000FF">*      INTO @DATA(lv_printer)</font>
+<font color ="#0000FF">*      WHERE reqname  = 'PRINTER_DEVICE'</font>
+<font color ="#0000FF">*      AND param_name = 'REQ_SLIP_PRINTER'</font>
+<font color ="#0000FF">*      AND active = @abap_true.</font>
+<font color ="#0000FF">**    IF sy-subrc EQ 0.</font>
+<font color ="#0000FF">**      ls_output_options-tddest      = lv_printer.</font>
+<font color ="#0000FF">**    ELSE.</font>
+    IF ls_output_options-tddest IS INITIAL.
+      MESSAGE 'Please maintain Printer name' TYPE 'E' DISPLAY LIKE 'E'.
+    ENDIF.
+
+    ls_control_parameters-preview   = 'X'.
+    ls_control_parameters-device    = 'PRINTER'.
+    ls_control_parameters-no_dialog = 'X'.
+
+    ls_output_options-tdimmed     = 'X'.
+    ls_output_options-tdnoprev    = 'X'.
+    ls_output_options-tdnewid     = 'X'.
+    ls_output_options-tdcovtitle  = 'REQSLIP'.
+
+<font color ="#0000FF">*-- Get fm name</font>
+    IF lv_fpname IS NOT INITIAL.
+      CALL FUNCTION 'SSF_FUNCTION_MODULE_NAME'
+        EXPORTING
+          formname           = lv_fpname
+        IMPORTING
+          fm_name            = lf_fm_name
+        EXCEPTIONS
+          no_form            = 1
+          no_function_module = 2
+          OTHERS             = 3.
+      IF sy-subrc &lt;&gt; 0.
+<font color ="#0000FF">*-- Implement suitable error handling here</font>
+      ENDIF.
+
+    ENDIF.
+
+    IF lt_headers IS NOT INITIAL.
+
+<font color ="#0000FF">*--- Get Availability Group</font>
+      SELECT cat, avlgrp FROM /scwm/tcat
+        INTO TABLE @DATA(lt_avlgrp)
+        WHERE lgnum = @p_lgnum.
+      IF sy-subrc EQ 0.
+        SELECT stge_loc, avlgrp FROM /scwm/tmapstloc
+          INTO TABLE @DATA(lt_stgloc)
+          WHERE lgnum = @p_lgnum.
+      ENDIF.
+<font color ="#0000FF">*--- Fetch data for print form</font>
+      LOOP AT lt_headers INTO DATA(ls_data).
+
+        READ TABLE ls_data-refdoc ASSIGNING FIELD-SYMBOL(&lt;fs_s_ref&gt;) WITH KEY refdoccat = 'PPO'.
+        IF sy-subrc EQ 0.
+          DATA(lv_po)  =  &lt;fs_s_ref&gt;-refdocno.
+          ls_head-process_order = |{ lv_po ALPHA = OUT }|.
+          CLEAR ls_select.
+          ls_select-fieldname = /scdl/if_dl_logfname_c=&gt;sc_refdocno_ppo_i.
+          ls_select-option    = 'EQ'.
+          ls_select-sign      = 'I'.
+          ls_select-low       = &lt;fs_s_ref&gt;-refdocno.
+          APPEND ls_select TO lt_selection.
+          READ TABLE ls_data-status ASSIGNING FIELD-SYMBOL(&lt;fs_s_status&gt;)
+                                    WITH KEY status_type = 'DGI'.
+          IF sy-subrc EQ 0.
+            IF &lt;fs_s_status&gt;-status_value NE '9'.
+              CONCATENATE 'Consumption Posting not completed for the MO'  lv_po  INTO DATA(lv_msg).
+              MESSAGE lv_msg TYPE 'E' DISPLAY LIKE 'E'.
+              RETURN.
+            ENDIF.
+          ENDIF.
+
+<font color ="#0000FF">*--- FETCH EGR DATA from the Query METHOD</font>
+          TRY.
+              lo_dev-&gt;query(
+                EXPORTING
+                  it_selection    = lt_selection
+                  iv_doccat       = /scdl/if_dl_doc_c=&gt;sc_doccat_egr_prd
+                  is_read_options = ls_read_options
+                  is_include_data = ls_include
+                IMPORTING
+                  et_items        = DATA(lt_item_egr) ).
+            CATCH /scdl/cx_delivery.                    "#EC NO_HANDLER
+          ENDTRY.
+          READ TABLE lt_item_egr ASSIGNING FIELD-SYMBOL(&lt;fs_s_egr&gt;) INDEX 1.
+          IF sy-subrc EQ 0.
+            ls_head-batch    = &lt;fs_s_egr&gt;-product-batchno.
+
+<font color ="#0000FF">****            SELECT SINGLE matnr, charg, vfdat, hsdat FROM mch1</font>
+<font color ="#0000FF">****                          INTO @DATA(ls_mch1)</font>
+<font color ="#0000FF">****                          WHERE matnr = @&lt;fs_s_egr&gt;-product-productno</font>
+<font color ="#0000FF">****                          AND   charg = @&lt;fs_s_egr&gt;-product-batchno.</font>
+<font color ="#0000FF">****            IF sy-subrc = 0.</font>
+<font color ="#0000FF">****              ls_head-exp_date = ls_mch1-vfdat.</font>
+<font color ="#0000FF">****              ls_head-mfg_date = ls_mch1-hsdat.</font>
+<font color ="#0000FF">****            ENDIF.</font>
+            DATA(lv_charg) = CONV /scwm/de_charg( &lt;fs_s_egr&gt;-product-batchno ).
+            call function <a href ="zscwm_get_batch_prod_date/zscwm_get_batch_prod_date.html">'ZSCWM_GET_BATCH_PROD_DATE'</a>
+              EXPORTING
+                iv_lgnum    = p_lgnum                           " Warehouse Number/Warehouse Complex
+                iv_entitled = &lt;fs_s_egr&gt;-sapext-entitled        " Party Entitled to Dispose
+                iv_matid    = &lt;fs_s_egr&gt;-product-productid      " Product
+                iv_batchid  = &lt;fs_s_egr&gt;-batchid                " Batch
+                iv_batchno  = lv_charg                          " Batch
+              IMPORTING
+                ev_vfdat    = ls_head-exp_date                  " Shelf Life Expiration Date
+                ev_proddat  = ls_head-mfg_date.                 " Shelf Life Expiration Date
+          ENDIF.
+        ENDIF.
+
+        READ TABLE lt_items ASSIGNING FIELD-SYMBOL(&lt;fs_s_item&gt;)
+                               WITH KEY docid   = ls_data-docid
+                                       itemcat  = 'OCP'
+                                       itemtype = 'PRCV'.
+        IF sy-subrc EQ 0.
+          DATA(lv_prod)  = &lt;fs_s_item&gt;-product-productno.
+          ls_head-productno = |{ lv_prod ALPHA = OUT }|.
+          CALL FUNCTION '/SAPAPO/DM_MAT_TEXT_GET'
+            EXPORTING
+              iv_matnr        = &lt;fs_s_item&gt;-product-productno                 " Produktnummer
+              iv_langu        = sy-langu
+            IMPORTING
+              ev_maktx        = lv_maktx
+            EXCEPTIONS
+              not_qualified   = 1
+              not_found       = 2
+              matid_not_found = 3
+              OTHERS          = 4.
+
+<font color ="#0000FF">*          CONCATENATE ls_head-productno lv_maktx INTO ls_head-productno SEPARATED BY '/'.</font>
+          ls_head-maktx = lv_maktx.
+          CONDENSE ls_head-productno.
+
+
+<font color ="#0000FF">*          SPLIT ls_head-qty AT '.' INTO ls_head-qty DATA(lv_dummy1).</font>
+          CALL FUNCTION 'CONVERSION_EXIT_CUNIT_OUTPUT'
+            EXPORTING
+              input          = &lt;fs_s_item&gt;-qty-uom                 " internal display of unit of measurement
+            IMPORTING
+              output         = &lt;fs_s_item&gt;-qty-uom                 " external display of unit of measurement
+            EXCEPTIONS
+              unit_not_found = 1                " Unit of measurement not found
+              OTHERS         = 2.
+
+          ls_head-uom = &lt;fs_s_item&gt;-qty-uom.
+          ls_head-qty = &lt;fs_s_item&gt;-qty-qty.
+
+<font color ="#0000FF">*          CONCATENATE ls_head-qty &lt;fs_s_item&gt;-qty-uom INTO ls_head-qty.</font>
+<font color ="#0000FF">*          CONDENSE ls_head-qty. CLEAR lv_dummy1.</font>
+        ENDIF.
+
+        GET TIME STAMP FIELD DATA(lv_timestam).
+        CONVERT TIME STAMP lv_timestam TIME ZONE 'UTC+2' INTO DATE ls_head-credat TIME ls_head-cretim.
+        ls_head-creusr = sy-uname.
+<font color ="#0000FF">* Get consumption postings (and cancellations) for selected PMR items</font>
+        LOOP AT lt_items ASSIGNING FIELD-SYMBOL(&lt;ls_item&gt;).
+          LOOP AT &lt;ls_item&gt;-docflow ASSIGNING FIELD-SYMBOL(&lt;ls_docflow&gt;).
+            IF &lt;ls_docflow&gt;-doccatto = /scwm/if_docflow_c=&gt;sc_gi OR
+               &lt;ls_docflow&gt;-doccatto = /scwm/if_docflow_c=&gt;sc_gir.
+              ls_tanum-tanum = &lt;ls_docflow&gt;-docnoto.
+              APPEND ls_tanum TO lt_tanum.
+              APPEND &lt;ls_docflow&gt; TO lt_df_check.
+            ENDIF.
+          ENDLOOP.
+
+          IF lt_tanum IS NOT INITIAL.
+            SELECT * FROM /scwm/ordim_c INTO TABLE lt_ordim FOR ALL ENTRIES IN lt_tanum
+                        WHERE   tanum = lt_tanum-tanum  AND
+                                lgnum = p_lgnum AND
+                                ( trart = wmegc_trart_gr OR trart = wmegc_trart_gi ).
+            SORT lt_ordim BY tanum.
+          ENDIF.
+        ENDLOOP.
+
+<font color ="#0000FF">* Filter the selected WTs. Keep only those which are in the document flow of the pmr items</font>
+        SORT lt_df_check BY docnoto itemnoto.
+        LOOP AT lt_ordim ASSIGNING FIELD-SYMBOL(&lt;ls_ordim_c&gt;).
+          READ TABLE lt_df_check TRANSPORTING NO FIELDS WITH KEY docnoto = &lt;ls_ordim_c&gt;-tanum
+                                                                 itemnoto = &lt;ls_ordim_c&gt;-tapos BINARY SEARCH.
+          IF sy-subrc &lt;&gt; 0.
+            DELETE lt_ordim.
+          ENDIF.
+        ENDLOOP.
+        CLEAR lt_df_check.
+
+        MOVE-CORRESPONDING lt_ordim TO lt_to_det_mon.
+
+        LOOP AT lt_to_det_mon INTO DATA(ls_to_mon).
+          CLEAR: lv_maktx,lv_matnr.
+          READ TABLE  lt_items INTO DATA(ls_items) WITH KEY  docid = ls_to_mon-rdocid
+                                                             itemid = ls_to_mon-ritmid
+                                                             itemcat = 'CMP'.
+          IF sy-subrc EQ 0.
+            IF ls_head-prod_line IS INITIAL.
+              ls_head-prod_line       = ls_items-sapext-/scwm/work_center.
+              ls_head-operation       = ls_items-sapext-/scwm/operation.
+              ls_head-operation_descr = ls_items-sapext-/scwm/operation_descr.
+
+              lv_matnr = ls_items-product-productno.
+              READ TABLE ls_items-refdoc ASSIGNING FIELD-SYMBOL(&lt;fs_s_res&gt;) INDEX 1.
+              IF sy-subrc EQ 0.
+                ls_head-res_no = &lt;fs_s_res&gt;-refdocno.
+              ENDIF.
+            ENDIF.
+          ENDIF.
+          READ TABLE lt_items INTO ls_items WITH KEY docid = ls_to_mon-rdocid
+                                                     itemid = ls_to_mon-ritmid.
+          IF sy-subrc = 0.
+            lv_matnr = ls_items-product-productno.
+          ENDIF.
+
+          IF sy-tabix EQ 1.
+            ls_item_slip-sno   =  sy-tabix.
+          ELSE.
+            DATA(lv_slip_line) = lines( lt_item_slip ).
+<font color ="#0000FF">*           ls_item_slip-sno   =  ls_item_slip-sno + 1.</font>
+            ls_item_slip-sno   =  lv_slip_line + 1.
+          ENDIF.
+
+          CALL FUNCTION 'CONVERSION_EXIT_MDLPD_OUTPUT'
+            EXPORTING
+              input  = ls_to_mon-matid
+            IMPORTING
+              output = ls_item_slip-productno.
+
+
+          CALL FUNCTION '/SAPAPO/DM_MAT_TEXT_GET'
+            EXPORTING
+              iv_matnr        = lv_matnr                " Produktnummer
+              iv_langu        = sy-langu
+            IMPORTING
+              ev_maktx        = lv_maktx
+            EXCEPTIONS
+              not_qualified   = 1
+              not_found       = 2
+              matid_not_found = 3
+              OTHERS          = 4.
+<font color ="#0000FF">*          CONCATENATE ls_item_slip-productno lv_maktx INTO ls_item_slip-productno SEPARATED BY '/'.</font>
+          ls_item_slip-maktx = lv_maktx.
+          CONDENSE ls_item_slip-productno.
+          ls_item_slip-qty       = ls_to_mon-nista.
+
+<font color ="#0000FF">*          SPLIT ls_item_slip-qty AT '.' INTO ls_item_slip-qty  DATA(lv_dummy).</font>
+          CALL FUNCTION 'CONVERSION_EXIT_CUNIT_OUTPUT'
+            EXPORTING
+              input          = ls_to_mon-meins                 " internal display of unit of measurement
+            IMPORTING
+              output         = ls_to_mon-meins                 " external display of unit of measurement
+            EXCEPTIONS
+              unit_not_found = 1                " Unit of measurement not found
+              OTHERS         = 2.
+
+          ls_item_slip-uom = ls_to_mon-meins.
+<font color ="#0000FF">*          CONCATENATE  ls_item_slip-qty  ls_to_mon-meins INTO ls_item_slip-qty.</font>
+<font color ="#0000FF">*          CONDENSE  ls_item_slip-qty.</font>
+          ls_item_slip-batch     = ls_to_mon-charg.
+          ls_item_slip-exp_date  = ls_to_mon-vfdat.
+          ls_item_slip-mix_pallet_no = ls_to_mon-zzhuident_parent.
+          IF lt_stgloc IS NOT INITIAL.
+            READ TABLE lt_avlgrp ASSIGNING FIELD-SYMBOL(&lt;fs_s_avag&gt;)
+                                      WITH KEY cat = ls_items-stock-stock_category.
+            IF sy-subrc EQ 0.
+              READ TABLE lt_stgloc ASSIGNING FIELD-SYMBOL(&lt;fs_s_stgloc&gt;)
+                                       WITH KEY avlgrp = &lt;fs_s_avag&gt;-avlgrp.
+              IF sy-subrc EQ 0.
+                ls_item_slip-stg_loc = &lt;fs_s_stgloc&gt;-stge_loc.
+                ls_head-lgort = &lt;fs_s_stgloc&gt;-stge_loc.
+              ENDIF.
+            ENDIF.
+          ENDIF.
+<font color ="#0000FF">*          IF lt_item_slip IS NOT INITIAL.</font>
+<font color ="#0000FF">*            READ TABLE lt_item_slip ASSIGNING FIELD-SYMBOL(&lt;fs_s_slip&gt;)</font>
+<font color ="#0000FF">*                                       WITH KEY productno = ls_item_slip-productno</font>
+<font color ="#0000FF">*                                                batch     = ls_item_slip-batch</font>
+<font color ="#0000FF">*                                                mix_pallet_no = ls_item_slip-mix_pallet_no.</font>
+<font color ="#0000FF">*            IF sy-subrc EQ 0.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*            ENDIF.</font>
+<font color ="#0000FF">*          ENDIF.</font>
+          READ TABLE lt_item_slip ASSIGNING FIELD-SYMBOL(&lt;fs_s_item_slip&gt;)
+                                         WITH KEY productno = ls_item_slip-productno
+                                                  batch     = ls_item_slip-batch
+                                                  mix_pallet_no = ls_item_slip-mix_pallet_no.
+          IF sy-subrc NE 0.
+            APPEND ls_item_slip TO lt_item_slip.
+          ELSE.
+            &lt;fs_s_item_slip&gt;-qty = &lt;fs_s_item_slip&gt;-qty +  ls_item_slip-qty .
+            MODIFY lt_item_slip FROM &lt;fs_s_item_slip&gt; TRANSPORTING qty
+                                            WHERE productno     = ls_item_slip-productno
+                                            AND   batch         = ls_item_slip-batch
+                                            AND   mix_pallet_no = ls_item_slip-mix_pallet_no.
+          ENDIF.
+        ENDLOOP.
+
+
+
+<font color ="#0000FF">*        SORT lt_item_slip BY productno batch mix_pallet_no.</font>
+<font color ="#0000FF">*        LOOP AT lt_items INTO DATA(ls_items) WHERE docid = ls_data-docid  AND  itemcat = 'CMP'.</font>
+<font color ="#0000FF">*          IF ls_head-prod_line IS INITIAL.</font>
+<font color ="#0000FF">*            ls_head-prod_line = ls_items-sapext-/scwm/work_center.</font>
+<font color ="#0000FF">*            ls_head-operation = ls_items-sapext-/scwm/operation.</font>
+<font color ="#0000FF">*            READ TABLE ls_items-refdoc ASSIGNING FIELD-SYMBOL(&lt;fs_s_res&gt;) INDEX 1.</font>
+<font color ="#0000FF">*            IF sy-subrc EQ 0.</font>
+<font color ="#0000FF">*              ls_head-res_no = &lt;fs_s_res&gt;-refdocno.</font>
+<font color ="#0000FF">*            ENDIF.</font>
+<font color ="#0000FF">*          ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*          IF sy-tabix EQ 1.</font>
+<font color ="#0000FF">*            ls_item_slip-sno   =  sy-tabix.</font>
+<font color ="#0000FF">*          ELSE.</font>
+<font color ="#0000FF">*            ls_item_slip-sno   =  ls_item_slip-sno + 1.</font>
+<font color ="#0000FF">*          ENDIF.</font>
+<font color ="#0000FF">*          ls_item_slip-productno = ls_items-product-productno.</font>
+<font color ="#0000FF">*          ls_item_slip-qty       = ls_items-qty-qty.</font>
+<font color ="#0000FF">*          ls_item_slip-batch     = ls_items-product-batchno.</font>
+<font color ="#0000FF">*          ls_item_slip-exp_date  = ls_items-sapext-tstfrbb.</font>
+<font color ="#0000FF">*          IF lt_stgloc IS NOT INITIAL.</font>
+<font color ="#0000FF">*            READ TABLE lt_avlgrp ASSIGNING FIELD-SYMBOL(&lt;fs_s_avag&gt;)</font>
+<font color ="#0000FF">*                                      WITH KEY cat = ls_items-stock-stock_category.</font>
+<font color ="#0000FF">*            IF sy-subrc EQ 0.</font>
+<font color ="#0000FF">*              READ TABLE lt_stgloc ASSIGNING FIELD-SYMBOL(&lt;fs_s_stgloc&gt;)</font>
+<font color ="#0000FF">*                                       WITH KEY avlgrp = &lt;fs_s_avag&gt;-avlgrp.</font>
+<font color ="#0000FF">*              IF sy-subrc EQ 0.</font>
+<font color ="#0000FF">*                ls_item_slip-stg_loc = &lt;fs_s_stgloc&gt;-stge_loc.</font>
+<font color ="#0000FF">*              ENDIF.</font>
+<font color ="#0000FF">*            ENDIF.</font>
+<font color ="#0000FF">*          ENDIF.</font>
+<font color ="#0000FF">*          APPEND ls_item_slip TO lt_item_slip.</font>
+<font color ="#0000FF">*        ENDLOOP.</font>
+
+<font color ="#0000FF">*--- Call Smartform</font>
+        CALL FUNCTION lf_fm_name                 "'/1BCDWB/SF00000022'
+          EXPORTING
+            control_parameters = ls_control_parameters
+            output_options     = ls_output_options
+            user_settings      = ' '
+            wa_head            = ls_head
+<font color ="#0000FF">* IMPORTING</font>
+<font color ="#0000FF">*           DOCUMENT_OUTPUT_INFO       =</font>
+<font color ="#0000FF">*           JOB_OUTPUT_INFO    =</font>
+<font color ="#0000FF">*           JOB_OUTPUT_OPTIONS =</font>
+          TABLES
+            gt_item            = lt_item_slip
+          EXCEPTIONS
+            formatting_error   = 1
+            internal_error     = 2
+            send_error         = 3
+            user_canceled      = 4
+            OTHERS             = 5.
+        IF sy-subrc EQ 0.
+          MESSAGE s204(rmxtpp).
+        ELSE.
+          MESSAGE s111(/scwm/print) DISPLAY LIKE 'E'.
+        ENDIF.
+
+      ENDLOOP.
+    ELSE.
+      MESSAGE s048(/accgo/oe_msg) DISPLAY LIKE 'E'.
+    ENDIF.
+
+  ENDIF.
+
+
+ENDFORM.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 757
+</font>
+</body>
+</html>

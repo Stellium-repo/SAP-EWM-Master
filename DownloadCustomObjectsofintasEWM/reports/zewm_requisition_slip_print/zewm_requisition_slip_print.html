@@ -1,0 +1,75 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZEWM_REQUISITION_SLIP_PRINT</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZEWM_REQUISITION_SLIP_PRINT</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Material Issuance slip</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*                          INTAS PHARMA                                  *</font>
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*  OBJECT INFORMATION                                                    *</font>
+<font color ="#0000FF">************************************************************************ *</font>
+<font color ="#0000FF">* Module             : EWM                                               *</font>
+<font color ="#0000FF">* Developer          : Anagha P                                          *</font>
+<font color ="#0000FF">* Requestor          : Shambhu                                           *</font>
+<font color ="#0000FF">* Date Of Creation   : 21.01.2023                                        *</font>
+<font color ="#0000FF">* Transport Request  :                                                   *</font>
+<font color ="#0000FF">* Development Object : ZEWM_REQUISITION_SLIP_PRINT                       *</font>
+<font color ="#0000FF">* Description        : Material Issuance slip                            *</font>
+<font color ="#0000FF">*                                                                        *</font>
+<font color ="#0000FF">*========================================================================*</font>
+<font color ="#0000FF">* MODIFICATION HISTORY                                                   *</font>
+<font color ="#0000FF">*------------------------------------------------------------------------*</font>
+<font color ="#0000FF">* Mod. No.  Date    Name        Transport Number        Change Desc.     *</font>
+<font color ="#0000FF">*------------------------------------------------------------------------*</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*------------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Report ZEWM_REQUISITION_SLIP_PRINT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+REPORT zewm_requisition_slip_print.
+
+include <a href ="zewm_requisition_slip_top.html">zewm_requisition_slip_top</a>.
+
+
+START-OF-SELECTION.
+
+  PERFORM fetch_data.
+
+  include <a href ="zewm_requisition_slip_f01.html">zewm_requisition_slip_f01</a>.
+
+
+<font color ="#0000FF">*Selection texts</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">* P_LGNUM         Warehouse Number</font>
+<font color ="#0000FF">* S_MO         Manufacturing Order</font>
+
+
+<font color ="#0000FF">*Messages</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">*YPE</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: /ACCGO/OE_MSG</font>
+<font color ="#0000FF">*048   No delivery found for given order</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: /SCWM/PRINT</font>
+<font color ="#0000FF">*111   Printing not successful</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: Hard coded</font>
+<font color ="#0000FF">*   Please maintain Printer name</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: RMXTPP</font>
+<font color ="#0000FF">*204   Printing was successful</font>
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 757
+</font>
+</body>
+</html>

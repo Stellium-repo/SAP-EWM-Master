@@ -1,0 +1,41 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZEWM_IPL_SHPDATA_UPD_BGJB_SEL</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZEWM_IPL_SHPDATA_UPD_BGJB_SEL</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZEWM_IPL_SHPDATA_UPD_BGJB_SEL</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZEWM_IPL_SHPDATA_UPD_BGJB_SEL</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+
+TABLES:  /scwm/s_wip_q_whr_inbound.
+
+SELECTION-SCREEN BEGIN OF BLOCK ssb1.
+  PARAMETERS p_lgnum TYPE /scwm/lgnum OBLIGATORY DEFAULT 'GW01'.
+  SELECT-OPTIONS: s_docty  FOR  /scwm/s_wip_q_whr_inbound-doctype_h.
+  SELECTION-SCREEN:
+  BEGIN OF BLOCK bl,
+  BEGIN OF LINE,
+  COMMENT 1(33) TEXT-001 FOR FIELD p_cdatfr.
+  PARAMETERS:
+    p_cdatfr TYPE  /scwm/s_wip_whrhead-tdelivery_cre_date,
+    p_ctimfr TYPE  /scwm/s_wip_whrhead-tdelivery_cre_time.
+  SELECTION-SCREEN COMMENT 55(5) TEXT-002 FOR FIELD p_cdatto.
+  PARAMETERS:
+    p_cdatto TYPE  /scwm/s_wip_whrhead-tdelivery_cre_date,
+    p_ctimto TYPE  /scwm/s_wip_whrhead-tdelivery_cre_time DEFAULT '235959'.
+  SELECTION-SCREEN:
+  END OF LINE,
+  END OF BLOCK bl.
+SELECTION-SCREEN END OF BLOCK ssb1.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 757
+</font>
+</body>
+</html>
