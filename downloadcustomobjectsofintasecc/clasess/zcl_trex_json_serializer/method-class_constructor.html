@@ -1,0 +1,31 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>CLASS_CONSTRUCTOR</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: CLASS_CONSTRUCTOR</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  CLASS_CONSTRUCTOR</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*   Method attributes.                                                   *</font>
+<font color ="#0000FF">**************************************************************************</font>
+Instantiation: Public
+<font color ="#0000FF">**************************************************************************</font>
+
+method CLASS_CONSTRUCTOR.
+  cl_abap_string_utilities=&gt;c2str_preserving_blanks(
+      exporting source = ': '
+      importing dest   = c_colon ) .
+  cl_abap_string_utilities=&gt;c2str_preserving_blanks(
+      exporting source = ', '
+      importing dest   = c_comma ) .
+endmethod.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

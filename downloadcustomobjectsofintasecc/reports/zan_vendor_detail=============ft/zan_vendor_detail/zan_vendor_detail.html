@@ -1,0 +1,734 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZAN_VENDOR_DETAIL</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for function: ZAN_VENDOR_DETAIL</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Vendor Detail</b></font>
+<hr>
+<pre width="100">
+FUNCTION zan_vendor_detail.
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+<font color ="#0000FF">*"*"Local Interface:</font>
+<font color ="#0000FF">*"  TABLES</font>
+<font color ="#0000FF">*"      I_LFA1 STRUCTURE  ZAN_VENDOR_DETAIL</font>
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+
+<font color ="#0000FF">*       <a href ="global-zan_vendor_detail.html">Global data declarations</a></font>
+  DATA : i_adrnr TYPE adrnr.
+  DATA: reqpr_date TYPE sy-datum.
+  DATA : it_cdhdr TYPE STANDARD TABLE OF cdhdr. " Added by Disha Joshi 05-10-2019"
+  DATA : wa_cdhdr TYPE cdhdr.
+  DATA : it_cdhdr1 TYPE STANDARD TABLE OF cdhdr.
+  DATA : wa_cdhdr1 TYPE cdhdr." End
+  DATA : lv_lifnr TYPE lifnr.
+  DATA : lv_smtp_addr TYPE adr6-smtp_addr.
+  DATA : wa_adr6 TYPE adr6.
+  DATA : BEGIN OF gt_adrnr OCCURS 0,
+           lifnr TYPE lifnr,
+           adrnr TYPE adrnr,
+         END OF gt_adrnr,
+
+         BEGIN OF gt_mail OCCURS 0,
+           addrnumber TYPE ad_addrnum,
+           flgdefault TYPE ad_flgdfad,
+           smtp_addr  TYPE ad_smtpadr,
+         END OF gt_mail.
+
+  reqpr_date = sy-datum - 1.
+
+  SELECT a~lifnr a~name1 a~land1 a~regio
+    a~name2 a~name3 a~name4 a~ort01
+    a~pstlz a~telf1 a~telf2 a~stcd2 a~stcd3
+    a~brsch
+    FROM lfa1 AS a INNER JOIN lfb1 AS b
+    ON a~lifnr = b~lifnr
+    INTO CORRESPONDING FIELDS OF TABLE i_lfa1
+    WHERE ( b~bukrs = 'IPL' OR b~bukrs = 'IP' OR b~bukrs = 'SMHL' )
+    AND b~erdat = reqpr_date.
+
+  IF i_lfa1[] IS NOT INITIAL.
+    SELECT lifnr adrnr
+      FROM lfa1
+      INTO TABLE gt_adrnr
+       FOR ALL ENTRIES IN i_lfa1
+     WHERE lifnr = i_lfa1-lifnr.
+    SORT gt_adrnr BY lifnr adrnr.
+    IF gt_adrnr[] IS NOT INITIAL.
+      SELECT addrnumber flgdefault smtp_addr
+        FROM adr6
+        INTO TABLE gt_mail
+         FOR ALL ENTRIES IN gt_adrnr
+       WHERE addrnumber = gt_adrnr-adrnr.
+      SORT gt_mail BY addrnumber.
+    ENDIF.
+  ENDIF.
+  LOOP AT i_lfa1.
+    SELECT SINGLE adrnr FROM lfa1 INTO i_adrnr
+      WHERE lifnr = i_lfa1-lifnr.
+
+    SELECT SINGLE tel_number FROM adr2
+      INTO i_lfa1-telephone
+      WHERE addrnumber = i_adrnr
+        AND r3_user = '1'.
+
+<font color ="#0000FF">*    SELECT SINGLE smtp_addr FROM adr6</font>
+<font color ="#0000FF">*      INTO i_lfa1-email</font>
+<font color ="#0000FF">*     WHERE addrnumber = i_adrnr</font>
+<font color ="#0000FF">*       AND flgdefault = 'X'.</font>
+<font color ="#0000FF">*    IF sy-subrc &lt;&gt; 0.</font>
+<font color ="#0000FF">*      SELECT SINGLE smtp_addr FROM adr6</font>
+<font color ="#0000FF">*        INTO i_lfa1-email</font>
+<font color ="#0000FF">*        WHERE addrnumber = i_adrnr.</font>
+<font color ="#0000FF">*    ENDIF.</font>
+    DELETE gt_mail WHERE smtp_addr CS 'intaspharma.com'.
+    LOOP AT gt_mail WHERE addrnumber = i_adrnr.
+      CONCATENATE i_lfa1-email gt_mail-smtp_addr
+             INTO i_lfa1-email
+        SEPARATED BY ','.
+      SHIFT i_lfa1-email LEFT DELETING LEADING ','.
+      SHIFT i_lfa1-email LEFT DELETING LEADING space.
+    ENDLOOP.
+
+    SELECT SINGLE verkf FROM lfm1
+      INTO i_lfa1-verkf
+      WHERE lifnr = i_lfa1-lifnr
+        AND verkf &lt;&gt; ''.
+
+    SELECT SINGLE zterm FROM lfm1
+      INTO i_lfa1-zterm
+      WHERE lifnr = i_lfa1-lifnr.
+
+<font color ="#0000FF">*** Added on 12.05.17</font>
+    SELECT SINGLE text1 FROM t052u
+      INTO i_lfa1-payterm_text
+      WHERE zterm = i_lfa1-zterm AND spras = 'EN'.
+
+    SELECT SINGLE bezei FROM t005u INTO i_lfa1-regio_desc
+      WHERE land1 = i_lfa1-land1
+        AND bland = i_lfa1-regio AND spras = 'EN'.
+
+    SELECT SINGLE j_1ipanno ven_class FROM j_1imovend
+      INTO (i_lfa1-panno,i_lfa1-ven_class)
+      WHERE lifnr = i_lfa1-lifnr.
+
+    IF i_lfa1-ven_class = ''.
+      i_lfa1-ven_class_text = 'Registered'.
+    ELSEIF i_lfa1-ven_class = '0'.
+      i_lfa1-ven_class_text = 'Not Registered'.
+    ELSEIF i_lfa1-ven_class = '1'.
+      i_lfa1-ven_class_text = 'Compounding Scheme'.
+    ELSEIF i_lfa1-ven_class = '2'.
+      i_lfa1-ven_class_text = 'Registered'.
+    ENDIF.
+
+    SELECT SINGLE landx FROM t005t INTO i_lfa1-landx
+      WHERE spras = 'EN' AND land1 = i_lfa1-land1.
+
+    SELECT SINGLE namev name1 FROM knvk
+      INTO (i_lfa1-namev,i_lfa1-knvkname1)
+      WHERE lifnr = i_lfa1-lifnr.
+
+    CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'
+      EXPORTING
+        input  = i_lfa1-lifnr
+      IMPORTING
+        output = i_lfa1-lifnr.
+
+    MODIFY i_lfa1.
+  ENDLOOP.
+
+<font color ="#0000FF">******Code Added by Disha Joshi...05.10.2019</font>
+<font color ="#0000FF">*****For XK02</font>
+  CALL FUNCTION 'CHANGEDOCUMENT_READ_ALL'
+    EXPORTING
+      i_objectclass              = 'KRED'
+      i_date_of_change           = reqpr_date
+      i_time_until               = '235959'
+      i_tcode                    = 'XK02'
+      i_time_zone                = 'UTC'
+    CHANGING
+      ct_cdhdr                   = it_cdhdr
+    EXCEPTIONS
+      missing_input_objectclass  = 1
+      missing_input_header       = 2
+      no_position_found          = 3
+      wrong_access_to_archive    = 4
+      time_zone_conversion_error = 5
+      read_too_many_entries      = 6
+      OTHERS                     = 7.
+  IF sy-subrc &lt;&gt; 0.
+
+<font color ="#0000FF">*    MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno</font>
+<font color ="#0000FF">*            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.</font>
+  ELSEIF sy-subrc = 0.
+  ENDIF.
+
+  REFRESH : it_cdhdr1.
+  CLEAR : wa_cdhdr1.
+  CALL FUNCTION 'CHANGEDOCUMENT_READ_ALL'
+    EXPORTING
+      i_objectclass              = 'ADRESSE'
+      i_date_of_change           = reqpr_date
+      i_time_until               = '235959'
+      i_tcode                    = 'XK02'
+      i_time_zone                = 'UTC'
+    CHANGING
+      ct_cdhdr                   = it_cdhdr1
+    EXCEPTIONS
+      missing_input_objectclass  = 1
+      missing_input_header       = 2
+      no_position_found          = 3
+      wrong_access_to_archive    = 4
+      time_zone_conversion_error = 5
+      read_too_many_entries      = 6
+      OTHERS                     = 7.
+  IF sy-subrc &lt;&gt; 0.
+
+<font color ="#0000FF">*    MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno</font>
+<font color ="#0000FF">*            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.</font>
+  ELSEIF sy-subrc = 0.
+    LOOP AT it_cdhdr1 INTO wa_cdhdr1.
+      SELECT SINGLE lifnr
+        FROM lfa1
+        INTO lv_lifnr
+       WHERE adrnr = wa_cdhdr1-objectid+4(10).
+      CLEAR wa_cdhdr1-objectid.
+      wa_cdhdr1-objectid = lv_lifnr.
+      MODIFY it_cdhdr1 FROM wa_cdhdr1.
+      CLEAR : lv_lifnr,wa_cdhdr1.
+    ENDLOOP.
+
+    LOOP AT it_cdhdr1 INTO wa_cdhdr1.
+      IF wa_cdhdr1-change_ind = 'U'.
+        MOVE-CORRESPONDING wa_cdhdr1 TO wa_cdhdr.
+        APPEND wa_cdhdr TO it_cdhdr.
+        CLEAR : wa_cdhdr,wa_cdhdr1.
+      ENDIF.
+    ENDLOOP.
+  ENDIF.
+
+<font color ="#0000FF">******for mk02</font>
+  REFRESH : it_cdhdr1.
+  CLEAR : wa_cdhdr1.
+  CALL FUNCTION 'CHANGEDOCUMENT_READ_ALL'
+    EXPORTING
+      i_objectclass              = 'KRED'
+      i_date_of_change           = reqpr_date
+      i_time_until               = '235959'
+      i_tcode                    = 'MK02'
+      i_time_zone                = 'UTC'
+    CHANGING
+      ct_cdhdr                   = it_cdhdr1
+    EXCEPTIONS
+      missing_input_objectclass  = 1
+      missing_input_header       = 2
+      no_position_found          = 3
+      wrong_access_to_archive    = 4
+      time_zone_conversion_error = 5
+      read_too_many_entries      = 6
+      OTHERS                     = 7.
+  IF sy-subrc &lt;&gt; 0.
+<font color ="#0000FF">*    MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno</font>
+<font color ="#0000FF">*            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.</font>
+  ELSEIF sy-subrc = 0.
+    LOOP AT it_cdhdr1 INTO wa_cdhdr1.
+      IF wa_cdhdr1-change_ind = 'U'.
+        MOVE-CORRESPONDING wa_cdhdr1 TO wa_cdhdr.
+        APPEND wa_cdhdr TO it_cdhdr.
+        CLEAR : wa_cdhdr,wa_cdhdr1.
+      ENDIF.
+    ENDLOOP.
+  ENDIF.
+
+  REFRESH : it_cdhdr1.
+  CLEAR : wa_cdhdr1.
+  CALL FUNCTION 'CHANGEDOCUMENT_READ_ALL'
+    EXPORTING
+      i_objectclass              = 'ADRESSE'
+      i_date_of_change           = reqpr_date
+      i_time_until               = '235959'
+      i_tcode                    = 'MK02'
+      i_time_zone                = 'UTC'
+    CHANGING
+      ct_cdhdr                   = it_cdhdr1
+    EXCEPTIONS
+      missing_input_objectclass  = 1
+      missing_input_header       = 2
+      no_position_found          = 3
+      wrong_access_to_archive    = 4
+      time_zone_conversion_error = 5
+      read_too_many_entries      = 6
+      OTHERS                     = 7.
+  IF sy-subrc &lt;&gt; 0.
+
+<font color ="#0000FF">*    MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno</font>
+<font color ="#0000FF">*            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.</font>
+  ELSEIF sy-subrc = 0.
+    LOOP AT it_cdhdr1 INTO wa_cdhdr1.
+      SELECT SINGLE lifnr
+        FROM lfa1
+        INTO lv_lifnr
+       WHERE adrnr = wa_cdhdr1-objectid+4(10).
+      CLEAR wa_cdhdr1-objectid.
+      wa_cdhdr1-objectid = lv_lifnr.
+      MODIFY it_cdhdr1 FROM wa_cdhdr1.
+      CLEAR : lv_lifnr,wa_cdhdr1.
+    ENDLOOP.
+
+    LOOP AT it_cdhdr1 INTO wa_cdhdr1.
+      IF wa_cdhdr1-change_ind = 'U'.
+        MOVE-CORRESPONDING wa_cdhdr1 TO wa_cdhdr.
+        APPEND wa_cdhdr TO it_cdhdr.
+        CLEAR : wa_cdhdr,wa_cdhdr1.
+      ENDIF.
+    ENDLOOP.
+  ENDIF.
+
+<font color ="#0000FF">*****For FK02</font>
+  REFRESH it_cdhdr1.
+  CLEAR wa_cdhdr1.
+  CALL FUNCTION 'CHANGEDOCUMENT_READ_ALL'
+    EXPORTING
+      i_objectclass              = 'KRED'
+      i_date_of_change           = reqpr_date
+      i_time_until               = '235959'
+      i_tcode                    = 'FK02'
+      i_time_zone                = 'UTC'
+    CHANGING
+      ct_cdhdr                   = it_cdhdr1
+    EXCEPTIONS
+      missing_input_objectclass  = 1
+      missing_input_header       = 2
+      no_position_found          = 3
+      wrong_access_to_archive    = 4
+      time_zone_conversion_error = 5
+      read_too_many_entries      = 6
+      OTHERS                     = 7.
+  IF sy-subrc &lt;&gt; 0.
+<font color ="#0000FF">*    MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno</font>
+<font color ="#0000FF">*            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.</font>
+  ELSEIF sy-subrc = 0.
+    LOOP AT it_cdhdr1 INTO wa_cdhdr1.
+      IF wa_cdhdr1-change_ind = 'U'.
+        MOVE-CORRESPONDING wa_cdhdr1 TO wa_cdhdr.
+        APPEND wa_cdhdr TO it_cdhdr.
+        CLEAR : wa_cdhdr,wa_cdhdr1.
+      ENDIF.
+    ENDLOOP.
+  ENDIF.
+
+  REFRESH : it_cdhdr1.
+  CLEAR : wa_cdhdr1.
+  CALL FUNCTION 'CHANGEDOCUMENT_READ_ALL'
+    EXPORTING
+      i_objectclass              = 'ADRESSE'
+      i_date_of_change           = reqpr_date
+      i_time_until               = '235959'
+      i_tcode                    = 'FK02'
+      i_time_zone                = 'UTC'
+    CHANGING
+      ct_cdhdr                   = it_cdhdr1
+    EXCEPTIONS
+      missing_input_objectclass  = 1
+      missing_input_header       = 2
+      no_position_found          = 3
+      wrong_access_to_archive    = 4
+      time_zone_conversion_error = 5
+      read_too_many_entries      = 6
+      OTHERS                     = 7.
+  IF sy-subrc &lt;&gt; 0.
+
+<font color ="#0000FF">*    MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno</font>
+<font color ="#0000FF">*            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.</font>
+  ELSEIF sy-subrc = 0.
+    LOOP AT it_cdhdr1 INTO wa_cdhdr1.
+      SELECT SINGLE lifnr
+        FROM lfa1
+        INTO lv_lifnr
+       WHERE adrnr = wa_cdhdr1-objectid+4(10).
+      CLEAR wa_cdhdr1-objectid.
+      wa_cdhdr1-objectid = lv_lifnr.
+      MODIFY it_cdhdr1 FROM wa_cdhdr1.
+      CLEAR : lv_lifnr,wa_cdhdr1.
+    ENDLOOP.
+
+    LOOP AT it_cdhdr1 INTO wa_cdhdr1.
+      IF wa_cdhdr1-change_ind = 'U'.
+        MOVE-CORRESPONDING wa_cdhdr1 TO wa_cdhdr.
+        APPEND wa_cdhdr TO it_cdhdr.
+        CLEAR : wa_cdhdr,wa_cdhdr1.
+      ENDIF.
+    ENDLOOP.
+  ENDIF.
+
+<font color ="#0000FF">****For MK03</font>
+  REFRESH it_cdhdr1.
+  CLEAR wa_cdhdr1.
+  CALL FUNCTION 'CHANGEDOCUMENT_READ_ALL'
+    EXPORTING
+      i_objectclass              = 'KRED'
+      i_date_of_change           = reqpr_date
+      i_time_until               = '235959'
+      i_tcode                    = 'MK03'
+      i_time_zone                = 'UTC'
+    CHANGING
+      ct_cdhdr                   = it_cdhdr1
+    EXCEPTIONS
+      missing_input_objectclass  = 1
+      missing_input_header       = 2
+      no_position_found          = 3
+      wrong_access_to_archive    = 4
+      time_zone_conversion_error = 5
+      read_too_many_entries      = 6
+      OTHERS                     = 7.
+  IF sy-subrc &lt;&gt; 0.
+<font color ="#0000FF">*    MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno</font>
+<font color ="#0000FF">*            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.</font>
+  ELSEIF sy-subrc = 0.
+    LOOP AT it_cdhdr1 INTO wa_cdhdr1.
+      IF wa_cdhdr1-change_ind = 'U'.
+        MOVE-CORRESPONDING wa_cdhdr1 TO wa_cdhdr.
+        APPEND wa_cdhdr TO it_cdhdr.
+        CLEAR : wa_cdhdr,wa_cdhdr1.
+      ENDIF.
+    ENDLOOP.
+  ENDIF.
+
+  REFRESH : it_cdhdr1.
+  CLEAR : wa_cdhdr1.
+  CALL FUNCTION 'CHANGEDOCUMENT_READ_ALL'
+    EXPORTING
+      i_objectclass              = 'ADRESSE'
+      i_date_of_change           = reqpr_date
+      i_time_until               = '235959'
+      i_tcode                    = 'MK03'
+      i_time_zone                = 'UTC'
+    CHANGING
+      ct_cdhdr                   = it_cdhdr1
+    EXCEPTIONS
+      missing_input_objectclass  = 1
+      missing_input_header       = 2
+      no_position_found          = 3
+      wrong_access_to_archive    = 4
+      time_zone_conversion_error = 5
+      read_too_many_entries      = 6
+      OTHERS                     = 7.
+  IF sy-subrc &lt;&gt; 0.
+
+<font color ="#0000FF">*    MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno</font>
+<font color ="#0000FF">*            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.</font>
+  ELSEIF sy-subrc = 0.
+    LOOP AT it_cdhdr1 INTO wa_cdhdr1.
+      SELECT SINGLE lifnr
+        FROM lfa1
+        INTO lv_lifnr
+       WHERE adrnr = wa_cdhdr1-objectid+4(10).
+      CLEAR wa_cdhdr1-objectid.
+      wa_cdhdr1-objectid = lv_lifnr.
+      MODIFY it_cdhdr1 FROM wa_cdhdr1.
+      CLEAR : lv_lifnr,wa_cdhdr1.
+    ENDLOOP.
+
+    LOOP AT it_cdhdr1 INTO wa_cdhdr1.
+      IF wa_cdhdr1-change_ind = 'U'.
+        MOVE-CORRESPONDING wa_cdhdr1 TO wa_cdhdr.
+        APPEND wa_cdhdr TO it_cdhdr.
+        CLEAR : wa_cdhdr,wa_cdhdr1.
+      ENDIF.
+    ENDLOOP.
+  ENDIF.
+
+<font color ="#0000FF">****For FK03</font>
+  REFRESH it_cdhdr1.
+  CLEAR wa_cdhdr1.
+  CALL FUNCTION 'CHANGEDOCUMENT_READ_ALL'
+    EXPORTING
+      i_objectclass              = 'KRED'
+      i_date_of_change           = reqpr_date
+      i_time_until               = '235959'
+      i_tcode                    = 'FK03'
+      i_time_zone                = 'UTC'
+    CHANGING
+      ct_cdhdr                   = it_cdhdr1
+    EXCEPTIONS
+      missing_input_objectclass  = 1
+      missing_input_header       = 2
+      no_position_found          = 3
+      wrong_access_to_archive    = 4
+      time_zone_conversion_error = 5
+      read_too_many_entries      = 6
+      OTHERS                     = 7.
+  IF sy-subrc &lt;&gt; 0.
+<font color ="#0000FF">*    MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno</font>
+<font color ="#0000FF">*            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.</font>
+  ELSEIF sy-subrc = 0.
+    LOOP AT it_cdhdr1 INTO wa_cdhdr1.
+      IF wa_cdhdr1-change_ind = 'U'.
+        MOVE-CORRESPONDING wa_cdhdr1 TO wa_cdhdr.
+        APPEND wa_cdhdr TO it_cdhdr.
+        CLEAR : wa_cdhdr,wa_cdhdr1.
+      ENDIF.
+    ENDLOOP.
+  ENDIF.
+
+  REFRESH : it_cdhdr1.
+  CLEAR : wa_cdhdr1.
+  CALL FUNCTION 'CHANGEDOCUMENT_READ_ALL'
+    EXPORTING
+      i_objectclass              = 'ADRESSE'
+      i_date_of_change           = reqpr_date
+      i_time_until               = '235959'
+      i_tcode                    = 'FK03'
+      i_time_zone                = 'UTC'
+    CHANGING
+      ct_cdhdr                   = it_cdhdr1
+    EXCEPTIONS
+      missing_input_objectclass  = 1
+      missing_input_header       = 2
+      no_position_found          = 3
+      wrong_access_to_archive    = 4
+      time_zone_conversion_error = 5
+      read_too_many_entries      = 6
+      OTHERS                     = 7.
+  IF sy-subrc &lt;&gt; 0.
+
+<font color ="#0000FF">*    MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno</font>
+<font color ="#0000FF">*            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.</font>
+  ELSEIF sy-subrc = 0.
+    LOOP AT it_cdhdr1 INTO wa_cdhdr1.
+      SELECT SINGLE lifnr
+        FROM lfa1
+        INTO lv_lifnr
+       WHERE adrnr = wa_cdhdr1-objectid+4(10).
+      CLEAR wa_cdhdr1-objectid.
+      wa_cdhdr1-objectid = lv_lifnr.
+      MODIFY it_cdhdr1 FROM wa_cdhdr1.
+      CLEAR : lv_lifnr,wa_cdhdr1.
+    ENDLOOP.
+
+    LOOP AT it_cdhdr1 INTO wa_cdhdr1.
+      IF wa_cdhdr1-change_ind = 'U'.
+        MOVE-CORRESPONDING wa_cdhdr1 TO wa_cdhdr.
+        APPEND wa_cdhdr TO it_cdhdr.
+        CLEAR : wa_cdhdr,wa_cdhdr1.
+      ENDIF.
+    ENDLOOP.
+  ENDIF.
+
+<font color ="#0000FF">*********XK03</font>
+  REFRESH it_cdhdr1.
+  CLEAR wa_cdhdr1.
+  CALL FUNCTION 'CHANGEDOCUMENT_READ_ALL'
+    EXPORTING
+      i_objectclass              = 'KRED'
+      i_date_of_change           = reqpr_date
+      i_time_until               = '235959'
+      i_tcode                    = 'XK03'
+      i_time_zone                = 'UTC'
+    CHANGING
+      ct_cdhdr                   = it_cdhdr1
+    EXCEPTIONS
+      missing_input_objectclass  = 1
+      missing_input_header       = 2
+      no_position_found          = 3
+      wrong_access_to_archive    = 4
+      time_zone_conversion_error = 5
+      read_too_many_entries      = 6
+      OTHERS                     = 7.
+  IF sy-subrc &lt;&gt; 0.
+<font color ="#0000FF">*    MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno</font>
+<font color ="#0000FF">*            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.</font>
+  ELSEIF sy-subrc = 0.
+    LOOP AT it_cdhdr1 INTO wa_cdhdr1.
+      IF wa_cdhdr1-change_ind = 'U'.
+        MOVE-CORRESPONDING wa_cdhdr1 TO wa_cdhdr.
+        APPEND wa_cdhdr TO it_cdhdr.
+        CLEAR : wa_cdhdr,wa_cdhdr1.
+      ENDIF.
+    ENDLOOP.
+  ENDIF.
+
+  REFRESH : it_cdhdr1.
+  CLEAR : wa_cdhdr1.
+  CALL FUNCTION 'CHANGEDOCUMENT_READ_ALL'
+    EXPORTING
+      i_objectclass              = 'ADRESSE'
+      i_date_of_change           = reqpr_date
+      i_time_until               = '235959'
+      i_tcode                    = 'XK03'
+      i_time_zone                = 'UTC'
+    CHANGING
+      ct_cdhdr                   = it_cdhdr1
+    EXCEPTIONS
+      missing_input_objectclass  = 1
+      missing_input_header       = 2
+      no_position_found          = 3
+      wrong_access_to_archive    = 4
+      time_zone_conversion_error = 5
+      read_too_many_entries      = 6
+      OTHERS                     = 7.
+  IF sy-subrc &lt;&gt; 0.
+
+<font color ="#0000FF">*    MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno</font>
+<font color ="#0000FF">*            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.</font>
+  ELSEIF sy-subrc = 0.
+    LOOP AT it_cdhdr1 INTO wa_cdhdr1.
+      SELECT SINGLE lifnr
+        FROM lfa1
+        INTO lv_lifnr
+       WHERE adrnr = wa_cdhdr1-objectid+4(10).
+      CLEAR wa_cdhdr1-objectid.
+      wa_cdhdr1-objectid = lv_lifnr.
+      MODIFY it_cdhdr1 FROM wa_cdhdr1.
+      CLEAR : lv_lifnr,wa_cdhdr1.
+    ENDLOOP.
+
+    LOOP AT it_cdhdr1 INTO wa_cdhdr1.
+      IF wa_cdhdr1-change_ind = 'U'.
+        MOVE-CORRESPONDING wa_cdhdr1 TO wa_cdhdr.
+        APPEND wa_cdhdr TO it_cdhdr.
+        CLEAR : wa_cdhdr,wa_cdhdr1.
+      ENDIF.
+    ENDLOOP.
+  ENDIF.
+
+<font color ="#0000FF">****************************************************************</font>
+  IF it_cdhdr[] IS NOT INITIAL.
+    SORT it_cdhdr BY objectid.
+    DELETE ADJACENT DUPLICATES FROM it_cdhdr COMPARING objectid.
+    LOOP AT it_cdhdr INTO wa_cdhdr.
+      IF wa_cdhdr-change_ind = 'U'.
+        SELECT SINGLE a~lifnr a~name1 a~land1 a~regio a~name2
+                      a~name3 a~name4 a~ort01 a~pstlz a~telf1
+                      a~telf2 a~stcd2 a~stcd3 a~brsch
+                 FROM lfa1 AS a
+                INNER JOIN lfb1 AS b
+                   ON a~lifnr = b~lifnr
+                 INTO (i_lfa1-lifnr,i_lfa1-name1,i_lfa1-land1,
+                       i_lfa1-regio,i_lfa1-name2,i_lfa1-name3,
+                       i_lfa1-name4,i_lfa1-ort01,i_lfa1-pstlz,
+                       i_lfa1-telf1,i_lfa1-telf2,i_lfa1-stcd2,
+                       i_lfa1-stcd3,i_lfa1-brsch)
+                WHERE a~lifnr = wa_cdhdr-objectid
+                  AND ( b~bukrs = 'IPL' OR b~bukrs = 'IP' OR b~bukrs = 'SMHL' ).
+
+        SELECT SINGLE adrnr
+          FROM lfa1
+          INTO i_adrnr
+         WHERE lifnr = i_lfa1-lifnr.
+
+        SELECT SINGLE tel_number
+          FROM adr2
+          INTO i_lfa1-telephone
+         WHERE addrnumber = i_adrnr
+           AND r3_user = '1'.
+
+<font color ="#0000FF">*        SELECT SINGLE smtp_addr</font>
+<font color ="#0000FF">*          FROM adr6</font>
+<font color ="#0000FF">*          INTO i_lfa1-email</font>
+<font color ="#0000FF">*         WHERE addrnumber = i_adrnr</font>
+<font color ="#0000FF">*           AND flgdefault = 'X'.</font>
+<font color ="#0000FF">*        IF sy-subrc &lt;&gt; 0.</font>
+<font color ="#0000FF">*          SELECT SINGLE smtp_addr</font>
+<font color ="#0000FF">*            FROM adr6</font>
+<font color ="#0000FF">*            INTO i_lfa1-email</font>
+<font color ="#0000FF">*           WHERE addrnumber = i_adrnr.</font>
+<font color ="#0000FF">*        ENDIF.</font>
+        SELECT smtp_addr
+          FROM adr6
+          INTO lv_smtp_addr
+         WHERE addrnumber = i_adrnr.
+          IF lv_smtp_addr CS 'intaspharma.com'.
+          ELSE.
+            CONCATENATE i_lfa1-email lv_smtp_addr
+                   INTO i_lfa1-email
+              SEPARATED BY ','.
+            SHIFT i_lfa1-email LEFT DELETING LEADING ','.
+            SHIFT i_lfa1-email LEFT DELETING LEADING space.
+          ENDIF.
+          CLEAR : lv_smtp_addr.
+        ENDSELECT.
+
+        SELECT SINGLE verkf
+          FROM lfm1
+          INTO i_lfa1-verkf
+         WHERE lifnr = i_lfa1-lifnr
+           AND verkf &lt;&gt; ' '.
+
+        SELECT SINGLE zterm
+          FROM lfm1
+          INTO i_lfa1-zterm
+         WHERE lifnr = i_lfa1-lifnr.
+
+        SELECT SINGLE text1
+          FROM t052u
+          INTO i_lfa1-payterm_text
+         WHERE zterm = i_lfa1-zterm
+           AND spras = 'EN'.
+
+        SELECT SINGLE bezei
+          FROM t005u
+          INTO i_lfa1-regio_desc
+         WHERE land1 = i_lfa1-land1
+           AND bland = i_lfa1-regio
+           AND spras = 'EN'.
+
+        SELECT SINGLE j_1ipanno ven_class
+          FROM j_1imovend
+          INTO (i_lfa1-panno,i_lfa1-ven_class)
+         WHERE lifnr = i_lfa1-lifnr.
+
+        IF i_lfa1-ven_class = ''.
+          i_lfa1-ven_class_text = 'Registered'.
+        ELSEIF i_lfa1-ven_class = '0'.
+          i_lfa1-ven_class_text = 'Not Registered'.
+        ELSEIF i_lfa1-ven_class = '1'.
+          i_lfa1-ven_class_text = 'Compounding Scheme'.
+        ELSEIF i_lfa1-ven_class = '2'.
+          i_lfa1-ven_class_text = 'Registered'.
+        ENDIF.
+
+        SELECT SINGLE landx
+          FROM t005t
+          INTO i_lfa1-landx
+         WHERE spras = 'EN'
+           AND land1 = i_lfa1-land1.
+
+        SELECT SINGLE namev name1
+          FROM knvk
+          INTO (i_lfa1-namev,i_lfa1-knvkname1)
+         WHERE lifnr = i_lfa1-lifnr.
+
+        CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'
+          EXPORTING
+            input  = i_lfa1-lifnr
+          IMPORTING
+            output = i_lfa1-lifnr.
+        APPEND i_lfa1.
+        CLEAR i_lfa1.
+      ENDIF.
+      SORT i_lfa1 BY lifnr.   " Added by Disha Joshi 05-10-2019"
+      DELETE ADJACENT DUPLICATES FROM i_lfa1
+          COMPARING lifnr.
+    ENDLOOP.   " End
+  ENDIF.
+<font color ="#0000FF">*****</font>
+
+ENDFUNCTION.
+
+
+<font color ="#0000FF">*Messages</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: ZM</font>
+<font color ="#0000FF">*004   Please enter Group in Selection Screen</font>
+<font color ="#0000FF">*005   Task list not available</font>
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

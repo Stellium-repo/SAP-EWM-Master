@@ -1,0 +1,921 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZINSD003FM_SODEL_TO_BODS</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for function: ZINSD003FM_SODEL_TO_BODS</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  SODEL Data Trans to BODS</b></font>
+<hr>
+<pre width="100">
+FUNCTION zinsd003fm_sodel_to_bods.
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+<font color ="#0000FF">*"*"Local Interface:</font>
+<font color ="#0000FF">*"  IMPORTING</font>
+<font color ="#0000FF">*"     VALUE(I_WERKS) TYPE  WERKS_D</font>
+<font color ="#0000FF">*"     VALUE(I_MATNR) TYPE  MATNR</font>
+<font color ="#0000FF">*"     VALUE(I_FROM_DATE) TYPE  DATUM</font>
+<font color ="#0000FF">*"     VALUE(I_TO_DATE) TYPE  DATUM</font>
+<font color ="#0000FF">*"     VALUE(I_VKBUR) TYPE  VKBUR</font>
+<font color ="#0000FF">*"  TABLES</font>
+<font color ="#0000FF">*"      E_SODEL STRUCTURE  ZINSD002STR_SODEL_TO_BODS</font>
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+
+<font color ="#0000FF">*       <a href ="global-zinsd003fm_sodel_to_bods.html">Global data declarations</a></font>
+  TYPE-POOLS : slis,abap.
+
+  TABLES : vbak,vbap,likp,lips,makt,kna1,vbkd,ausp,inob,
+           cabn,vbfa,s684,afpo,afru,afko,jcds,zexdochdr,
+           zexdocfl,t001w.
+
+<font color ="#0000FF">****Data Declaration</font>
+  DATA : datediff TYPE p,
+         timediff TYPE p,
+         earliest TYPE c.
+
+  DATA : BEGIN OF i_likp OCCURS 0,
+          vbeln LIKE likp-vbeln,
+          bldat LIKE likp-bldat,
+          wadat_ist LIKE likp-wadat_ist,
+         END OF i_likp.
+
+<font color ="#0000FF">*  DATA : wa_sodel TYPE zinsd006t_sodel.</font>
+  DATA : lv_lines TYPE i.
+
+  DATA : BEGIN OF i_lips OCCURS 0,
+          werks LIKE lips-werks,
+          vbeln LIKE likp-vbeln,
+          posnr LIKE lips-posnr,
+          vgbel LIKE lips-vgbel,
+          vgpos LIKE lips-vgpos,
+          kunnr LIKE vbak-kunnr,
+          name1 LIKE kna1-name1,
+          matnr LIKE vbap-matnr,
+          maktx LIKE makt-maktx,
+          charg LIKE vbap-charg,
+          vkgrp LIKE vbak-vkgrp,
+          grpdesc LIKE tvgrt-bezei,
+          vkbur LIKE vbak-vkbur,
+          dispo LIKE marc-dispo,
+          dsnam LIKE t024d-dsnam,
+          bezei LIKE tvkbt-bezei,
+          delqty LIKE vbfa-rfmng,
+<font color ="#0000FF">*          LFDAT LIKE LIKP-LFDAT,</font>
+          bldat LIKE likp-bldat,
+          wadat_ist LIKE likp-wadat_ist,
+          audat LIKE vbak-audat,
+          bsrdt LIKE s684-budat,
+          reldt LIKE s684-budat,
+          cuspo LIKE vbkd-bstkd,
+          cuspodt LIKE vbkd-bstdk,
+          potype LIKE vbkd-bsark,
+          fbuda LIKE vbkd-fbuda,
+          mfgdate(10),
+          edatu LIKE vbep-edatu,
+          invdt LIKE vbrk-fkdat,
+          vdatu LIKE vbak-vdatu,
+          confdt LIKE afru-budat,
+          posod(5) TYPE p DECIMALS 0,
+          sobsrd(5) TYPE p DECIMALS 0,
+          bsrreld(5) TYPE p DECIMALS 0,
+          relinvd(5) TYPE p DECIMALS 0,
+          poinvd(5) TYPE p DECIMALS 0,
+          reqdelinvd(5) TYPE p DECIMALS 0,
+          reqdelreld(5) TYPE p DECIMALS 0,
+          reqdelbsrd(5) TYPE p DECIMALS 0,
+          bsrconfd(5) TYPE p DECIMALS 0,
+          quoteno LIKE vbak-vbeln,
+          qcrtd LIKE jcds-udate,
+          qbusc LIKE jcds-udate,
+          qbuscdiff(5) TYPE p DECIMALS 0,
+          qfrt LIKE jcds-udate,
+          qfrtdiff(5) TYPE p DECIMALS 0,
+          qcogs LIKE jcds-udate,
+          qcogsdiff(5) TYPE p DECIMALS 0,
+          qfrel LIKE jcds-udate,
+          qfreldiff(5) TYPE p DECIMALS 0,
+          qfrelsodiff(5) TYPE p DECIMALS 0,
+          ihrez_e LIKE vbkd-ihrez_e,
+          delivery LIKE zexdochdr-docno,
+          awbno LIKE zan_bli_tracking-awb_no,
+          awbdate LIKE zan_bli_tracking-awb_date,
+          kwmeng LIKE vbap-kwmeng,
+          deluom LIKE vbfa-meins,
+          kbetr LIKE konv-kbetr,
+          kwert LIKE konv-kwert,
+          kmein LIKE konv-kmein,
+          kpein LIKE konv-kpein,
+          waers LIKE konv-waers,
+          disval LIKE vbak-netwr,
+         END OF i_lips.
+
+  DATA : i_objnr LIKE jcds-objnr.
+
+  DATA : mat_werks_batch(32).
+  DATA : i_mfgdate LIKE cawn-atwrt.
+  DATA : i_knumv TYPE konv-knumv.
+  DATA : i_umvkz TYPE vbap-umvkz.
+  DATA : i_afvc LIKE afvc OCCURS 0 WITH HEADER LINE.
+
+  DATA : BEGIN OF i_afru OCCURS 0,
+          rueck LIKE afru-rueck,
+          rmzhl LIKE afru-rmzhl,
+          budat LIKE afru-budat,
+          stokz LIKE afru-stokz,
+          stzhl LIKE afru-stzhl,
+          aufnr LIKE afru-aufnr,
+         END OF i_afru.
+
+  DATA : BEGIN OF i_delivery OCCURS 0,
+          docno LIKE zexproduct-docno,
+          refdocno LIKE zexdochdr-refdocno,
+          blino LIKE zexdocfl-docno,
+          awbno LIKE zan_bli_tracking-awb_no,
+          awbdate LIKE zan_bli_tracking-awb_date,
+         END OF i_delivery.
+
+  IF i_from_date &lt;&gt; '00000000' AND i_to_date &lt;&gt; '00000000'.
+    SELECT vbeln bldat wadat_ist
+      FROM likp
+      INTO CORRESPONDING FIELDS OF TABLE i_likp
+     WHERE lfart IN ('ZLF3','ZLF4','ZLFZ','ZLF6','ZLF9')
+       AND vbtyp = 'J'
+       AND wadat_ist BETWEEN i_from_date AND i_to_date. "IN i_date.
+<font color ="#0000FF">*    IF sy-subrc &lt;&gt; 0.</font>
+<font color ="#0000FF">*      MESSAGE 'No Data Found' TYPE 'I'.</font>
+<font color ="#0000FF">*      RETURN.</font>
+<font color ="#0000FF">*    ENDIF.</font>
+    IF i_likp[] IS NOT INITIAL.
+      IF i_matnr &lt;&gt; ' ' AND i_werks &lt;&gt; ' '.
+        SELECT vbeln posnr matnr werks charg vgbel vgpos
+          FROM lips
+          INTO CORRESPONDING FIELDS OF TABLE i_lips
+           FOR ALL ENTRIES IN i_likp
+         WHERE vbeln = i_likp-vbeln
+           AND matnr = i_matnr
+           AND werks = i_werks.
+      ELSEIF i_matnr = ' ' AND i_werks &lt;&gt; ' '.
+        SELECT vbeln posnr matnr werks charg vgbel vgpos
+          FROM lips
+          INTO CORRESPONDING FIELDS OF TABLE i_lips
+           FOR ALL ENTRIES IN i_likp
+         WHERE vbeln = i_likp-vbeln
+           AND werks = i_werks.
+      ELSEIF i_matnr &lt;&gt; ' ' AND i_werks = ' '.
+        SELECT vbeln posnr matnr werks charg vgbel vgpos
+          FROM lips
+          INTO CORRESPONDING FIELDS OF TABLE i_lips
+           FOR ALL ENTRIES IN i_likp
+         WHERE vbeln = i_likp-vbeln
+           AND matnr = i_matnr.
+      ELSEIF i_matnr = ' ' AND i_werks = ' '.
+        SELECT vbeln posnr matnr werks charg vgbel vgpos
+          FROM lips
+          INTO CORRESPONDING FIELDS OF TABLE i_lips
+           FOR ALL ENTRIES IN i_likp
+         WHERE vbeln = i_likp-vbeln.
+      ENDIF.
+    ENDIF.
+    LOOP AT i_lips.
+      READ TABLE i_likp WITH KEY vbeln = i_lips-vbeln.
+      IF sy-subrc = 0.
+        i_lips-bldat = i_likp-bldat.
+        i_lips-wadat_ist = i_likp-wadat_ist.
+        MODIFY i_lips.
+      ENDIF.
+    ENDLOOP.
+  ELSE.
+    IF i_matnr &lt;&gt; ' ' AND i_werks &lt;&gt; ' '.
+      SELECT vbeln posnr matnr werks charg vgbel vgpos
+        FROM lips
+        INTO CORRESPONDING FIELDS OF TABLE i_lips
+       WHERE matnr = i_matnr
+         AND werks = i_werks.
+    ELSEIF i_matnr &lt;&gt; ' ' AND i_werks = ' '.
+      SELECT vbeln posnr matnr werks charg vgbel vgpos
+        FROM lips
+        INTO CORRESPONDING FIELDS OF TABLE i_lips
+       WHERE matnr = i_matnr.
+    ELSEIF i_matnr = ' ' AND i_werks &lt;&gt; ' '.
+      SELECT vbeln posnr matnr werks charg vgbel vgpos
+        FROM lips
+        INTO CORRESPONDING FIELDS OF TABLE i_lips
+       WHERE werks = i_werks.
+    ENDIF.
+<font color ="#0000FF">*    IF sy-subrc &lt;&gt; 0.</font>
+<font color ="#0000FF">*      MESSAGE 'No Data Found' TYPE 'I'.</font>
+<font color ="#0000FF">*      RETURN.</font>
+<font color ="#0000FF">*    ENDIF.</font>
+    LOOP AT i_lips.
+      SELECT SINGLE bldat wadat_ist
+        FROM likp
+        INTO (i_lips-bldat,i_lips-wadat_ist)
+       WHERE vbeln = i_lips-vbeln.
+      MODIFY i_lips.
+    ENDLOOP.
+  ENDIF.
+
+  DELETE i_lips WHERE charg = ''.
+
+  LOOP AT i_lips.
+    SELECT SINGLE maktx FROM makt
+      INTO i_lips-maktx
+      WHERE matnr = i_lips-matnr
+      AND spras = 'EN'.
+    SELECT SINGLE audat vkgrp kunnr vdatu vkbur FROM vbak
+      INTO (i_lips-audat,i_lips-vkgrp,i_lips-kunnr,i_lips-vdatu,
+            i_lips-vkbur)
+      WHERE vbeln = i_lips-vgbel.
+    SELECT SINGLE bezei FROM tvgrt
+      INTO i_lips-grpdesc
+      WHERE vkgrp = i_lips-vkgrp
+        AND spras = 'EN'.
+    SELECT SINGLE bezei FROM tvkbt
+      INTO i_lips-bezei
+      WHERE vkbur = i_lips-vkbur
+        AND spras = 'EN'.
+    SELECT SINGLE budat FROM s684
+      INTO (i_lips-bsrdt)
+      WHERE werks = i_lips-werks
+        AND matnr = i_lips-matnr
+        AND charg = i_lips-charg
+        AND bwart = '101'.
+    SELECT SINGLE budat FROM s684
+      INTO (i_lips-reldt)
+      WHERE werks = i_lips-werks
+        AND matnr = i_lips-matnr
+        AND charg = i_lips-charg
+        AND bwart = '321'.
+    SELECT SINGLE bstkd bstdk bsark fbuda
+      FROM vbkd
+      INTO (i_lips-cuspo,i_lips-cuspodt,i_lips-potype,i_lips-fbuda)
+      WHERE vbeln = i_lips-vgbel
+        AND posnr = i_lips-vgpos.
+    IF sy-subrc &lt;&gt; 0.
+      SELECT SINGLE bstkd bstdk bsark fbuda
+        FROM vbkd
+        INTO (i_lips-cuspo,i_lips-cuspodt,i_lips-potype,i_lips-fbuda)
+       WHERE vbeln = i_lips-vgbel.
+    ENDIF.
+    IF i_lips-potype = ' '.
+      SELECT SINGLE bsark
+        FROM vbkd
+        INTO i_lips-potype
+        WHERE vbeln = i_lips-vgbel.
+<font color ="#0000FF">*        AND POSNR = I_LIPS-VGPOS.</font>
+    ENDIF.
+    SELECT SINGLE edatu
+      FROM vbep
+      INTO (i_lips-edatu)
+      WHERE vbeln = i_lips-vgbel
+        AND posnr = i_lips-vgpos.
+    SELECT SINGLE name1 FROM kna1
+      INTO i_lips-name1
+      WHERE kunnr = i_lips-kunnr.
+
+    CLEAR mat_werks_batch.
+
+    mat_werks_batch =  i_lips-matnr.
+    mat_werks_batch+18 = i_lips-werks.
+    mat_werks_batch+22 =  i_lips-charg.
+
+    SELECT SINGLE * FROM cabn WHERE atnam = 'MFG_DATE'.
+    SELECT SINGLE * FROM inob WHERE objek = mat_werks_batch.
+    SELECT SINGLE * FROM ausp WHERE objek = inob-cuobj AND
+                                    atinn = cabn-atinn.
+
+    CALL FUNCTION 'CTCV_CONVERT_FLOAT_TO_DATE'
+      EXPORTING
+        float = ausp-atflv
+      IMPORTING
+        date  = i_mfgdate.
+
+    CONCATENATE i_mfgdate+6(2) i_mfgdate+4(2) i_mfgdate+0(4)
+      INTO i_lips-mfgdate SEPARATED BY '.'.
+
+    SELECT SINGLE * FROM vbfa
+      WHERE vbelv = i_lips-vbeln
+        AND posnv = i_lips-posnr
+        AND vbtyp_n = 'M'.
+    IF sy-subrc = 0.
+      SELECT SINGLE fkdat FROM vbrk
+        INTO i_lips-invdt
+        WHERE vbeln = vbfa-vbeln.
+    ENDIF.
+
+    SELECT SUM( rfmng ) FROM vbfa INTO i_lips-delqty
+      WHERE vbelv = i_lips-vgbel
+        AND posnv = i_lips-vgpos
+        AND vbeln = i_lips-vbeln
+        AND posnn = i_lips-posnr
+        AND vbtyp_n = 'J'.
+
+    SELECT SINGLE meins
+      FROM vbfa INTO i_lips-deluom
+      WHERE vbelv = i_lips-vgbel
+        AND posnv = i_lips-vgpos
+        AND vbeln = i_lips-vbeln
+        AND posnn = i_lips-posnr
+        AND vbtyp_n = 'J'.
+
+    SELECT SINGLE kwmeng FROM vbap
+      INTO i_lips-kwmeng
+      WHERE vbeln = i_lips-vgbel
+        AND posnr = i_lips-vgpos.
+
+    SELECT SINGLE dispo FROM marc
+      INTO i_lips-dispo
+      WHERE matnr = i_lips-matnr
+        AND werks = i_lips-werks.
+
+    SELECT SINGLE dsnam FROM t024d
+      INTO i_lips-dsnam
+      WHERE dispo = i_lips-dispo AND werks = i_lips-werks.
+
+    SELECT SINGLE * FROM afpo WHERE dwerk = i_lips-werks
+      AND matnr = i_lips-matnr
+      AND charg = i_lips-charg.
+
+    CLEAR : i_afru[],i_afru.
+
+    IF sy-subrc = 0.
+
+<font color ="#0000FF">*      CALL FUNCTION 'CO_OCM_FA_AFRU_DATA_GET'</font>
+<font color ="#0000FF">*        EXPORTING</font>
+<font color ="#0000FF">*          I_AUFNR = AFPO-AUFNR</font>
+<font color ="#0000FF">*        TABLES</font>
+<font color ="#0000FF">*          ET_AFRU = I_AFRU.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      DELETE I_AFRU WHERE STOKZ &lt;&gt; ''.</font>
+<font color ="#0000FF">*      DELETE I_AFRU WHERE STZHL &lt;&gt; 0.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      SORT I_AFRU BY BUDAT DESCENDING.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      DELETE ADJACENT DUPLICATES FROM I_AFRU COMPARING AUFNR.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      LOOP AT I_AFRU.</font>
+<font color ="#0000FF">*        I_LIPS-CONFDT = I_AFRU-BUDAT.</font>
+<font color ="#0000FF">*      ENDLOOP.</font>
+      SELECT SINGLE * FROM afko WHERE aufnr = afpo-aufnr.
+
+      SELECT * FROM afvc INTO CORRESPONDING FIELDS OF TABLE i_afvc
+        WHERE aufpl = afko-aufpl.
+      IF sy-subrc = 0.
+
+        SELECT rueck rmzhl budat stokz stzhl FROM afru
+          INTO CORRESPONDING FIELDS OF TABLE i_afru
+          FOR ALL ENTRIES IN i_afvc
+          WHERE rueck = i_afvc-rueck
+            AND rmzhl = i_afvc-rmzhl.
+        IF sy-subrc = 0.
+          DELETE i_afru WHERE stokz &lt;&gt; ''.
+          DELETE i_afru WHERE stzhl &lt;&gt; 0.
+
+          SORT i_afru BY budat DESCENDING.
+
+          DELETE ADJACENT DUPLICATES FROM i_afru COMPARING aufnr.
+
+          LOOP AT i_afru.
+            i_lips-confdt = i_afru-budat.
+          ENDLOOP.
+
+        ENDIF.
+      ENDIF.
+
+<font color ="#0000FF">*      SELECT * FROM AFRU WHERE AUFNR = AFPO-AUFNR</font>
+<font color ="#0000FF">*        AND STOKZ = '' AND STZHL = 0.</font>
+<font color ="#0000FF">*        I_LIPS-CONFDT = AFRU-BUDAT.</font>
+<font color ="#0000FF">*      ENDSELECT.</font>
+    ENDIF.
+
+    CLEAR : i_objnr.
+
+<font color ="#0000FF">*    SELECT SINGLE * FROM VBFA</font>
+<font color ="#0000FF">*      WHERE VBELV IN S_VBELN</font>
+<font color ="#0000FF">*        AND POSNV IN S_POSNR</font>
+<font color ="#0000FF">*        AND VBELN = I_LIPS-VGBEL</font>
+<font color ="#0000FF">*        AND POSNN = I_LIPS-VGPOS</font>
+<font color ="#0000FF">*        AND VBTYP_N = 'C'.</font>
+    SELECT SINGLE * FROM vbap
+      WHERE vbeln = i_lips-vgbel
+        AND posnr = i_lips-vgpos.
+
+    IF sy-subrc = 0.
+      i_lips-quoteno = vbap-vgbel.
+
+      SELECT SINGLE objnr FROM vbap
+        INTO i_objnr
+        WHERE vbeln = vbap-vgbel
+          AND posnr = vbap-vgpos.
+
+      IF i_objnr IS NOT INITIAL.
+        SELECT * FROM jcds
+          WHERE objnr = i_objnr
+            AND stat BETWEEN 'E0001' AND 'E0005'
+            AND chgnr = '001'.
+
+          IF jcds-stat = 'E0001'.
+            i_lips-qcrtd = jcds-udate.
+          ELSEIF jcds-stat = 'E0002'.
+            i_lips-qbusc = jcds-udate.
+          ELSEIF jcds-stat = 'E0003'.
+            i_lips-qfrt = jcds-udate.
+          ELSEIF jcds-stat = 'E0004'.
+            i_lips-qcogs = jcds-udate.
+          ELSEIF jcds-stat = 'E0005'.
+            i_lips-qfrel = jcds-udate.
+          ENDIF.
+
+        ENDSELECT.
+      ENDIF.
+    ENDIF.
+
+    SELECT SINGLE ihrez_e FROM vbkd
+      INTO (i_lips-ihrez_e)
+      WHERE vbeln = i_lips-vgbel
+        AND posnr = i_lips-vgpos.
+
+    SELECT SINGLE knumv
+      FROM vbak
+      INTO i_knumv
+     WHERE vbeln = i_lips-vgbel.
+
+    IF i_knumv &lt;&gt; ' '.
+      SELECT SINGLE kbetr kwert kmein kpein waers
+        FROM konv
+        INTO (i_lips-kbetr,i_lips-kwert,i_lips-kmein,
+              i_lips-kpein,i_lips-waers)
+       WHERE knumv = i_knumv
+         AND kposn = i_lips-vgpos.
+    ENDIF.
+
+    SELECT SINGLE umvkz
+      FROM vbap
+      INTO i_umvkz
+     WHERE vbeln = i_lips-vgbel
+       AND posnr = i_lips-vgpos.
+    IF i_lips-deluom = i_lips-kmein.
+      IF i_lips-kpein &lt;&gt; '0'.
+        i_lips-disval = ( i_lips-delqty * i_lips-kbetr ) / i_lips-kpein.
+      ELSE.
+        i_lips-disval = ( i_lips-delqty * i_lips-kbetr ).
+      ENDIF.
+    ELSEIF i_lips-deluom &lt;&gt; i_lips-kmein.
+      IF i_umvkz &lt;&gt; '0'.
+        i_lips-disval = ( i_lips-delqty * i_lips-kbetr ) / i_umvkz.
+      ELSE.
+        i_lips-disval = ( i_lips-delqty * i_lips-kbetr ).
+      ENDIF.
+      IF i_lips-kpein &lt;&gt; '0'.
+        i_lips-disval = i_lips-disval / i_lips-kpein.
+      ELSE.
+        i_lips-disval = i_lips-disval.
+      ENDIF.
+    ENDIF.
+    MODIFY i_lips.
+    CLEAR : i_knumv.
+  ENDLOOP.
+
+  IF i_vkbur &lt;&gt; ' '.
+    DELETE i_lips WHERE vkbur &lt;&gt; i_vkbur.
+  ENDIF.
+  LOOP AT i_lips.
+<font color ="#0000FF">******** CUSTOMER PO TO SO DIFFERENCE</font>
+    IF i_lips-cuspodt &lt;&gt; '00000000' AND
+       i_lips-audat &lt;&gt; '00000000'.
+      CALL FUNCTION 'SD_DATETIME_DIFFERENCE'
+        EXPORTING
+          date1    = i_lips-cuspodt
+          time1    = '000001'
+          date2    = i_lips-audat
+          time2    = '000001'
+        IMPORTING
+          datediff = datediff
+          timediff = timediff
+          earliest = earliest.
+
+      i_lips-posod = datediff.
+      IF earliest = '2'.
+        i_lips-posod = i_lips-posod * -1.
+      ENDIF.
+    ENDIF.
+    CLEAR : datediff , timediff , earliest.
+
+<font color ="#0000FF">********SO TO BSR DIFFERENCE</font>
+    IF i_lips-audat &lt;&gt; '00000000' AND
+       i_lips-bsrdt &lt;&gt; '00000000'.
+      CALL FUNCTION 'SD_DATETIME_DIFFERENCE'
+        EXPORTING
+          date1    = i_lips-audat
+          time1    = '000001'
+          date2    = i_lips-bsrdt
+          time2    = '000001'
+        IMPORTING
+          datediff = datediff
+          timediff = timediff
+          earliest = earliest.
+
+      i_lips-sobsrd = datediff.
+      IF earliest = '2'.
+        i_lips-sobsrd = i_lips-sobsrd * -1.
+      ENDIF.
+    ENDIF.
+
+    CLEAR : datediff , timediff , earliest.
+
+<font color ="#0000FF">********BSR TO REL DIFFERENCE</font>
+    IF i_lips-bsrdt &lt;&gt; '00000000' AND
+       i_lips-reldt &lt;&gt; '00000000'.
+      CALL FUNCTION 'SD_DATETIME_DIFFERENCE'
+        EXPORTING
+          date1    = i_lips-bsrdt
+          time1    = '000001'
+          date2    = i_lips-reldt
+          time2    = '000001'
+        IMPORTING
+          datediff = datediff
+          timediff = timediff
+          earliest = earliest.
+
+      i_lips-bsrreld = datediff.
+      IF earliest = '2'.
+        i_lips-bsrreld = i_lips-bsrreld * -1.
+      ENDIF.
+    ENDIF.
+    CLEAR : datediff , timediff , earliest.
+
+<font color ="#0000FF">********REL TO INV DIFFERENCE</font>
+    IF i_lips-reldt &lt;&gt; '00000000' AND
+       i_lips-invdt &lt;&gt; '00000000'.
+      CALL FUNCTION 'SD_DATETIME_DIFFERENCE'
+        EXPORTING
+          date1    = i_lips-reldt
+          time1    = '000001'
+          date2    = i_lips-invdt
+          time2    = '000001'
+        IMPORTING
+          datediff = datediff
+          timediff = timediff
+          earliest = earliest.
+
+      i_lips-relinvd = datediff.
+      IF earliest = '2'.
+        i_lips-relinvd = i_lips-relinvd * -1.
+      ENDIF.
+    ENDIF.
+    CLEAR : datediff , timediff , earliest.
+
+<font color ="#0000FF">*********PO TO INV DIFFERENCE</font>
+    IF i_lips-cuspodt &lt;&gt; '00000000' AND
+       i_lips-invdt &lt;&gt; '00000000'.
+      CALL FUNCTION 'SD_DATETIME_DIFFERENCE'
+        EXPORTING
+          date1    = i_lips-cuspodt
+          time1    = '000001'
+          date2    = i_lips-invdt
+          time2    = '000001'
+        IMPORTING
+          datediff = datediff
+          timediff = timediff
+          earliest = earliest.
+
+      i_lips-poinvd = datediff.
+      IF earliest = '2'.
+        i_lips-poinvd = i_lips-poinvd * -1.
+      ENDIF.
+    ENDIF.
+    CLEAR : datediff , timediff , earliest.
+
+<font color ="#0000FF">*********REQDEL TO INV DIFFERENCE</font>
+    IF i_lips-vdatu &lt;&gt; '00000000' AND
+       i_lips-invdt &lt;&gt; '00000000'.
+      CALL FUNCTION 'SD_DATETIME_DIFFERENCE'
+        EXPORTING
+          date1    = i_lips-vdatu
+          time1    = '000001'
+          date2    = i_lips-invdt
+          time2    = '000001'
+        IMPORTING
+          datediff = datediff
+          timediff = timediff
+          earliest = earliest.
+
+      i_lips-reqdelinvd = datediff.
+      IF earliest = '2'.
+        i_lips-reqdelinvd = i_lips-reqdelinvd * -1.
+      ENDIF.
+    ENDIF.
+    CLEAR : datediff , timediff , earliest.
+
+<font color ="#0000FF">*********REQDEL TO REL DIFFERENCE</font>
+    IF i_lips-reldt &lt;&gt; '00000000' AND
+       i_lips-vdatu &lt;&gt; '00000000'.
+      CALL FUNCTION 'SD_DATETIME_DIFFERENCE'
+        EXPORTING
+          date1    = i_lips-vdatu
+          time1    = '000001'
+          date2    = i_lips-reldt
+          time2    = '000001'
+        IMPORTING
+          datediff = datediff
+          timediff = timediff
+          earliest = earliest.
+
+      i_lips-reqdelreld = datediff.
+      IF earliest = '2'.
+        i_lips-reqdelreld = i_lips-reqdelreld * -1.
+      ENDIF.
+    ENDIF.
+    CLEAR : datediff , timediff , earliest.
+
+<font color ="#0000FF">*********REQDEL TO BSR DIFFERENCE</font>
+    IF i_lips-vdatu &lt;&gt; '00000000' AND
+       i_lips-bsrdt &lt;&gt; '00000000'.
+      CALL FUNCTION 'SD_DATETIME_DIFFERENCE'
+        EXPORTING
+          date1    = i_lips-vdatu
+          time1    = '000001'
+          date2    = i_lips-bsrdt
+          time2    = '000001'
+        IMPORTING
+          datediff = datediff
+          timediff = timediff
+          earliest = earliest.
+
+      i_lips-reqdelbsrd = datediff.
+      IF earliest = '2'.
+        i_lips-reqdelbsrd = i_lips-reqdelbsrd * -1.
+      ENDIF.
+    ENDIF.
+    CLEAR : datediff , timediff , earliest.
+
+<font color ="#0000FF">*********BSR TO CONF Date DIFFERENCE</font>
+    IF i_lips-confdt &lt;&gt; '00000000' AND
+       i_lips-bsrdt &lt;&gt; '00000000'.
+      CALL FUNCTION 'SD_DATETIME_DIFFERENCE'
+        EXPORTING
+          date1    = i_lips-confdt
+          time1    = '000001'
+          date2    = i_lips-bsrdt
+          time2    = '000001'
+        IMPORTING
+          datediff = datediff
+          timediff = timediff
+          earliest = earliest.
+
+      i_lips-bsrconfd = datediff.
+      IF earliest = '2'.
+        i_lips-bsrconfd = i_lips-bsrconfd * -1.
+      ENDIF.
+    ENDIF.
+    CLEAR : datediff , timediff , earliest.
+
+    IF i_lips-qcrtd &lt;&gt; '00000000'.
+<font color ="#0000FF">********Quotation Business Contract date</font>
+      IF i_lips-qbusc &lt;&gt; '00000000'.
+        CALL FUNCTION 'SD_DATETIME_DIFFERENCE'
+          EXPORTING
+            date1    = i_lips-qcrtd
+            time1    = '000001'
+            date2    = i_lips-qbusc
+            time2    = '000001'
+          IMPORTING
+            datediff = datediff
+            timediff = timediff
+            earliest = earliest.
+
+        i_lips-qbuscdiff = datediff.
+        IF earliest = '2'.
+          i_lips-qbuscdiff = i_lips-qbuscdiff * -1.
+        ENDIF.
+      ENDIF.
+      CLEAR : datediff , timediff , earliest.
+
+<font color ="#0000FF">*********Quotation Freight date</font>
+      IF i_lips-qfrt &lt;&gt; '00000000'.
+        CALL FUNCTION 'SD_DATETIME_DIFFERENCE'
+          EXPORTING
+            date1    = i_lips-qcrtd
+            time1    = '000001'
+            date2    = i_lips-qfrt
+            time2    = '000001'
+          IMPORTING
+            datediff = datediff
+            timediff = timediff
+            earliest = earliest.
+
+        i_lips-qfrtdiff = datediff.
+        IF earliest = '2'.
+          i_lips-qfrtdiff = i_lips-qfrtdiff * -1.
+        ENDIF.
+      ENDIF.
+      CLEAR : datediff , timediff , earliest.
+
+<font color ="#0000FF">*********Quotation cogs date</font>
+      IF i_lips-qcogs &lt;&gt; '00000000'.
+        CALL FUNCTION 'SD_DATETIME_DIFFERENCE'
+          EXPORTING
+            date1    = i_lips-qcrtd
+            time1    = '000001'
+            date2    = i_lips-qcogs
+            time2    = '000001'
+          IMPORTING
+            datediff = datediff
+            timediff = timediff
+            earliest = earliest.
+
+        i_lips-qcogsdiff = datediff.
+        IF earliest = '2'.
+          i_lips-qcogsdiff = i_lips-qcogsdiff * -1.
+        ENDIF.
+      ENDIF.
+      CLEAR : datediff , timediff , earliest.
+
+<font color ="#0000FF">*********Quotation Finance Release date</font>
+      IF i_lips-qfrel &lt;&gt; '00000000'.
+        CALL FUNCTION 'SD_DATETIME_DIFFERENCE'
+          EXPORTING
+            date1    = i_lips-qcrtd
+            time1    = '000001'
+            date2    = i_lips-qfrel
+            time2    = '000001'
+          IMPORTING
+            datediff = datediff
+            timediff = timediff
+            earliest = earliest.
+
+        i_lips-qfreldiff = datediff.
+        IF earliest = '2'.
+          i_lips-qfreldiff = i_lips-qfreldiff * -1.
+        ENDIF.
+      ENDIF.
+      CLEAR : datediff , timediff , earliest.
+    ENDIF.
+
+<font color ="#0000FF">*********Quotation Finance Release date - Sales Order</font>
+    IF i_lips-qfrel &lt;&gt; '00000000' AND
+       i_lips-audat &lt;&gt; '00000000'.
+      CALL FUNCTION 'SD_DATETIME_DIFFERENCE'
+        EXPORTING
+          date1    = i_lips-qfrel
+          time1    = '000001'
+          date2    = i_lips-audat
+          time2    = '000001'
+        IMPORTING
+          datediff = datediff
+          timediff = timediff
+          earliest = earliest.
+
+      i_lips-qfrelsodiff = datediff.
+      IF earliest = '2'.
+        i_lips-qfrelsodiff = i_lips-qfrelsodiff * -1.
+      ENDIF.
+    ENDIF.
+    CLEAR : datediff , timediff , earliest.
+    i_lips-delivery = i_lips-vbeln.
+
+    MODIFY i_lips.
+  ENDLOOP.
+
+<font color ="#0000FF">*** DELIVERY NO BASE BLI</font>
+  IF i_lips[] IS NOT INITIAL.
+    SELECT docno refdocno
+      FROM zexdochdr
+      INTO CORRESPONDING FIELDS OF TABLE i_delivery
+       FOR ALL ENTRIES IN i_lips
+     WHERE doctyp IN ('ZLF3','ZLF4','ZLFZ','ZLF6','ZLF9')
+       AND docno = i_lips-delivery
+       AND refdoctyp = 'PSI'.
+  ENDIF.
+  LOOP AT i_delivery.
+    SELECT *
+      FROM zexdocfl
+     WHERE doctyp = 'BLI'
+       AND refdoctyp = 'PSI'
+       AND refdocno = i_delivery-refdocno.
+
+      SELECT SINGLE *
+        FROM zexdochdr
+       WHERE doctyp = 'BLI'
+         AND docno = zexdocfl-docno
+         AND loekz = ''.
+      IF sy-subrc = 0.
+        i_delivery-blino = zexdocfl-docno.
+
+        SELECT *
+          FROM zexdocfl
+         WHERE doctyp = 'BOL'
+           AND refdoctyp = 'BLI'
+           AND refdocno = i_delivery-blino.
+
+          SELECT SINGLE *
+            FROM zexdochdr
+           WHERE doctyp = zexdocfl-doctyp
+             AND docno = zexdocfl-docno
+             AND version = 0
+             AND docitmsrl = 0
+             AND loekz = ''.
+          IF sy-subrc = 0.
+            i_delivery-awbno = zexdochdr-exnlrefno.
+            i_delivery-awbdate = zexdochdr-docdate.
+            MODIFY i_delivery.
+          ENDIF.
+        ENDSELECT.
+      ENDIF.
+    ENDSELECT.
+  ENDLOOP.
+
+  LOOP AT i_lips.
+    READ TABLE i_delivery WITH KEY docno = i_lips-delivery.
+    IF sy-subrc = 0.
+<font color ="#0000FF">*      MOVE I_DELIVERY-BLINO TO I_LIPS-BLINO.</font>
+      MOVE i_delivery-awbno TO i_lips-awbno.
+      MOVE i_delivery-awbdate TO i_lips-awbdate.
+      MODIFY i_lips.
+    ENDIF.
+  ENDLOOP.
+
+  IF i_lips[] IS NOT INITIAL.
+    LOOP AT i_lips.
+      MOVE-CORRESPONDING i_lips TO e_sodel.
+      APPEND e_sodel.
+      CLEAR e_sodel.
+    ENDLOOP.
+  ENDIF.
+
+<font color ="#0000FF">*  DATA: lr_sodel TYPE REF TO data.</font>
+<font color ="#0000FF">*  DATA: lr_query TYPE REF TO data.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  FIELD-SYMBOLS:</font>
+<font color ="#0000FF">*     &lt;lt_sodel&gt; TYPE STANDARD TABLE,</font>
+<font color ="#0000FF">*     &lt;ls_sodel&gt; TYPE ANY,</font>
+<font color ="#0000FF">*     &lt;lv_field1&gt; TYPE ANY,</font>
+<font color ="#0000FF">*     &lt;lv_field&gt; TYPE ANY.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  FIELD-SYMBOLS:</font>
+<font color ="#0000FF">*     &lt;lt_query&gt; TYPE STANDARD TABLE,</font>
+<font color ="#0000FF">*     &lt;ls_query&gt; TYPE ANY,</font>
+<font color ="#0000FF">*     &lt;lv_field2&gt; TYPE ANY.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  DATA : gt_sodel TYPE STANDARD TABLE OF zstr_sodel,</font>
+<font color ="#0000FF">*         gs_sodel TYPE zstr_sodel.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  DATA list_tab TYPE TABLE OF abaplist.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  break sysadm.</font>
+<font color ="#0000FF">*  IF i_werks[] IS NOT INITIAL.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    cl_salv_bs_runtime_info=&gt;set(</font>
+<font color ="#0000FF">*              EXPORTING display  = abap_false</font>
+<font color ="#0000FF">*                        metadata = abap_false</font>
+<font color ="#0000FF">*                        data     = abap_true ).</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    SUBMIT zan_sales_delivery WITH p_werks IN i_werks</font>
+<font color ="#0000FF">*                              WITH s_matnr IN i_matnr</font>
+<font color ="#0000FF">*                              WITH s_date IN i_date</font>
+<font color ="#0000FF">*                              WITH s_vkbur = i_vkbur</font>
+<font color ="#0000FF">*                               AND RETURN.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    cl_salv_bs_runtime_info=&gt;get_data_ref(</font>
+<font color ="#0000FF">*           IMPORTING r_data = lr_sodel ).</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    IF lr_sodel IS NOT INITIAL.</font>
+<font color ="#0000FF">*      ASSIGN lr_sodel-&gt;* TO &lt;lt_sodel&gt;.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      IF &lt;lt_sodel&gt; IS NOT INITIAL.</font>
+<font color ="#0000FF">*        LOOP AT &lt;lt_sodel&gt; ASSIGNING &lt;ls_sodel&gt;.</font>
+<font color ="#0000FF">*          DO.</font>
+<font color ="#0000FF">*            ASSIGN COMPONENT sy-index OF STRUCTURE</font>
+<font color ="#0000FF">*                             &lt;ls_sodel&gt; TO &lt;lv_field&gt;.</font>
+<font color ="#0000FF">*            IF sy-subrc &lt;&gt; 0.</font>
+<font color ="#0000FF">*              EXIT.</font>
+<font color ="#0000FF">*            ELSE.</font>
+<font color ="#0000FF">*              " do your data validation here...</font>
+<font color ="#0000FF">*            ENDIF.</font>
+<font color ="#0000FF">*          ENDDO.</font>
+<font color ="#0000FF">*        ENDLOOP.</font>
+<font color ="#0000FF">*        APPEND LINES OF &lt;lt_sodel&gt; TO gt_sodel.</font>
+<font color ="#0000FF">*      ENDIF.</font>
+<font color ="#0000FF">*      cl_salv_bs_runtime_info=&gt;clear_all( ).</font>
+<font color ="#0000FF">*      UNASSIGN : &lt;lt_sodel&gt;.</font>
+<font color ="#0000FF">*      CLEAR : &lt;ls_sodel&gt;.</font>
+<font color ="#0000FF">*    ELSE.</font>
+<font color ="#0000FF">**    message 'No Data Found' type 'I'.</font>
+<font color ="#0000FF">*    ENDIF.</font>
+<font color ="#0000FF">*  ENDIF.</font>
+
+<font color ="#0000FF">*  IF gt_sodel[] IS NOT INITIAL.</font>
+<font color ="#0000FF">*    LOOP AT gt_sodel INTO gs_sodel.</font>
+<font color ="#0000FF">*      MOVE-CORRESPONDING gs_sodel TO e_sodel.</font>
+<font color ="#0000FF">*      APPEND e_sodel.</font>
+<font color ="#0000FF">*      CLEAR e_sodel.</font>
+<font color ="#0000FF">*    ENDLOOP.</font>
+<font color ="#0000FF">*  ENDIF.</font>
+ENDFUNCTION.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

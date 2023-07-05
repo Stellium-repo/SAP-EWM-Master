@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>SI_SYNCH_OUT_GREECE_SAP_TO_SNI</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: SI_SYNCH_OUT_GREECE_SAP_TO_SNI</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*   Method attributes.                                                   *</font>
+<font color ="#0000FF">**************************************************************************</font>
+Instantiation: Public
+<font color ="#0000FF">**************************************************************************</font>
+
+  method SI_SYNCH_OUT_GREECE_SAP_TO_SNI.
+
+  data:
+    ls_parmbind type abap_parmbind,
+    lt_parmbind type abap_parmbind_tab.
+
+  ls_parmbind-name = 'OUTPUT'.
+  ls_parmbind-kind = cl_abap_objectdescr=&gt;importing.
+  get reference of OUTPUT into ls_parmbind-value.
+  insert ls_parmbind into table lt_parmbind.
+
+  ls_parmbind-name = 'INPUT'.
+  ls_parmbind-kind = cl_abap_objectdescr=&gt;exporting.
+  get reference of INPUT into ls_parmbind-value.
+  insert ls_parmbind into table lt_parmbind.
+
+  if_proxy_client~execute(
+    exporting
+      method_name = 'SI_SYNCH_OUT_GREECE_SAP_TO_SNI'
+    changing
+      parmbind_tab = lt_parmbind
+  ).
+
+  endmethod.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

@@ -1,0 +1,2876 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZECC_PO_IBD_107_CREATE</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZECC_PO_IBD_107_CREATE</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Auto IBD and 107 for PO</b></font>
+<hr>
+<pre width="100">
+
+<font color ="#0000FF">*****************************************************************************************</font>
+<font color ="#0000FF">*                          INTAS PHARMA                                                 *</font>
+<font color ="#0000FF">*****************************************************************************************</font>
+<font color ="#0000FF">*  OBJECT INFORMATION                                                                   *</font>
+<font color ="#0000FF">*****************************************************************************************</font>
+<font color ="#0000FF">* Module             : ECC                                                            *</font>
+<font color ="#0000FF">* Developer          : Sailesh                                                          *</font>
+<font color ="#0000FF">* Requestor          : Shylaja                                                          *</font>
+<font color ="#0000FF">* Date Of Creation   : 01.02.2023                                                       *</font>
+<font color ="#0000FF">* Transport Request  : DEVK971639                                                      *</font>
+<font color ="#0000FF">* Development Object : ZECC_PO_IBD_107_CREATE                                           *</font>
+<font color ="#0000FF">* Description        : Auto PO Creation                                                 *</font>
+<font color ="#0000FF">*                                                                                       *</font>
+<font color ="#0000FF">*=======================================================================================*</font>
+<font color ="#0000FF">* MODIFICATION HISTORY                                                                  *</font>
+<font color ="#0000FF">*---------------------------------------------------------------------------------------*</font>
+<font color ="#0000FF">* Mod. No.  Date    Name        Transport Number        Change Desc.                    *</font>
+<font color ="#0000FF">*---------------------------------------------------------------------------------------*</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*---------------------------------------------------------------------------------------*</font>
+REPORT  zecc_po_ibd_107_create NO STANDARD PAGE HEADING.
+
+include <a href ="zecc_po_ibd_107_create_top.html">zecc_po_ibd_107_create_top</a>.  "Data Declaration
+include <a href ="zecc_po_ibd_107_create_f01.html">zecc_po_ibd_107_create_f01</a>.  "Subroutines
+
+AT SELECTION-SCREEN ON s_bsart.
+  PERFORM validate_bsart.
+
+AT SELECTION-SCREEN ON s_lifnr.
+  PERFORM validate_lifnr.
+
+AT SELECTION-SCREEN ON s_bukrs.
+  PERFORM validate_bukrs.
+
+AT SELECTION-SCREEN ON s_ekorg.
+  PERFORM validate_ekorg.
+
+AT SELECTION-SCREEN ON s_werks.
+  PERFORM validate_werks.
+
+START-OF-SELECTION.
+
+
+  PERFORM get_data.
+
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Form  DATA_SELECTION</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+<font color ="#0000FF">*  --&gt;  p1        text</font>
+<font color ="#0000FF">*  &lt;--  p2        text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+FORM get_data.
+  DATA: ls_vbsk              TYPE vbsk,
+        ls_vbsk_import       TYPE vbsk,
+        lt_komdlgn           TYPE TABLE OF komdlgn,
+        ls_komdlgn           TYPE komdlgn,
+        lt_vbfs              TYPE TABLE OF vbfs,
+        ls_vbls              TYPE vbls,
+        lt_vbls              TYPE TABLE OF vbls,
+        lt_lips              TYPE TABLE OF lips,
+        ls_lips              TYPE lips,
+        lv_msg               TYPE string,
+        lv_error             TYPE c,
+        lv_nothing_processed TYPE c VALUE 'X'.
+
+
+
+  SELECT ekko~ebeln, ekpo~ebelp, bsart, ekko~aedat,lifnr,submi, werks,
+         lgort, ekpo~matnr,charg, ekpo~menge, ekpo~meins, bednr, afnam
+    FROM ekko INNER JOIN ekpo
+      ON ekko~ebeln EQ ekpo~ebeln
+         LEFT OUTER JOIN eket
+      ON eket~ebeln EQ ekpo~ebeln
+     AND eket~ebelp EQ ekpo~ebelp
+    INTO TABLE @DATA(lt_ekko_ekpo)
+   WHERE ekko~ebeln IN @s_ebeln
+     AND bsart IN @s_bsart
+     AND lifnr IN @s_lifnr
+     AND ekko~aedat IN @s_aedat
+     AND ekko~bukrs IN @s_bukrs
+     AND ekorg IN @s_ekorg
+     AND werks IN @s_werks.
+  IF sy-subrc EQ 0.
+
+    SORT lt_ekko_ekpo BY ebeln ebelp.
+    DELETE ADJACENT DUPLICATES FROM lt_ekko_ekpo COMPARING ebeln ebelp.
+
+<font color ="#0000FF">***GET DATA FROM Z TABLE</font>
+    SELECT * FROM zia_bli_inv_map
+      INTO TABLE @it_bli_inv_map
+       FOR ALL ENTRIES IN @lt_ekko_ekpo
+     WHERE bukrs IN @s_bukrs
+       AND ebeln EQ @lt_ekko_ekpo-ebeln.
+    IF sy-subrc EQ 0.
+      SORT it_bli_inv_map[] BY bukrs ebeln.
+    ENDIF.
+
+<font color ="#0000FF">* create delviery for every line item of PO</font>
+    LOOP AT lt_ekko_ekpo INTO DATA(ls_ekko_ekpo).
+
+      CLEAR: gv_mblnr,gv_inb_del,gv_asnno,gv_bednr,gv_afnam,gv_charg,
+      gv_matnr.
+
+      SELECT SINGLE inb_del,docno_107 FROM zia_bli_ibd_map
+        INTO @DATA(ls_ibd_map)
+       WHERE ebeln EQ @ls_ekko_ekpo-ebeln
+         AND ebelp EQ @ls_ekko_ekpo-ebelp.
+      IF sy-subrc EQ 0 AND ls_ibd_map-inb_del IS NOT INITIAL
+         AND ls_ibd_map-docno_107 IS NOT INITIAL.
+        CLEAR ls_ibd_map.
+<font color ="#0000FF">*         PO line is already processed</font>
+        SKIP.
+        IF s_ebeln IS NOT INITIAL.
+          WRITE: / 'PO-Item:',ls_ekko_ekpo-ebeln,ls_ekko_ekpo-ebelp,' already processed'.
+        ENDIF.
+        CONTINUE.
+      ELSEIF sy-subrc NE 0.
+        CLEAR: gs_ibd_map, ls_ibd_map.
+<font color ="#0000FF">*      insert new record</font>
+        READ TABLE it_bli_inv_map INTO DATA(ls_inv_map)
+              WITH KEY bukrs = s_bukrs-low
+                       ebeln = ls_ekko_ekpo-ebeln
+                       BINARY SEARCH.
+        IF sy-subrc EQ 0.
+          MOVE-CORRESPONDING ls_inv_map  TO gs_ibd_map.
+        ELSE.
+          gs_ibd_map-ebeln = ls_ekko_ekpo-ebeln.
+          gs_ibd_map-bukrs = s_bukrs-low.
+          gs_ibd_map-lifnr = s_lifnr-low.
+        ENDIF.
+        gs_ibd_map-lifnr = ls_ekko_ekpo-lifnr.
+        gs_ibd_map-ebelp = ls_ekko_ekpo-ebelp.
+        INSERT zia_bli_ibd_map FROM gs_ibd_map.
+        COMMIT WORK AND WAIT.
+      ENDIF.
+      CLEAR lv_nothing_processed.
+
+      gv_ebeln = ls_ekko_ekpo-ebeln.
+      gv_ebelp = ls_ekko_ekpo-ebelp.
+      gv_asnno = ls_ekko_ekpo-submi.
+      gv_bednr = ls_ekko_ekpo-bednr.
+      gv_afnam = ls_ekko_ekpo-afnam.
+      gv_matnr = ls_ekko_ekpo-matnr.
+      gv_charg = ls_ekko_ekpo-charg.
+      gv_werks = ls_ekko_ekpo-werks.
+      IF ls_ibd_map-inb_del IS NOT INITIAL.
+        gv_inb_del = ls_ibd_map-inb_del.
+      ENDIF.
+
+      SKIP.
+      WRITE: / 'Processing PO-Item:',ls_ekko_ekpo-ebeln,ls_ekko_ekpo-ebelp.
+
+      CLEAR lv_error.
+      PERFORM extend_batch_plant CHANGING lv_error.
+      IF lv_error IS NOT INITIAL.
+        CONTINUE.
+      ENDIF.
+
+      PERFORM do_107_inb_del.
+
+      AT END OF ebeln.
+        IF gv_mblnr IS INITIAL.
+<font color ="#0000FF">*          Partial creation of Inb. Del. and 107 docs</font>
+          UPDATE zia_bli_inv_map SET inb_107_status = 'P'
+           WHERE bli_no = gv_asnno
+             AND ebeln = gv_ebeln.
+        ELSE.
+<font color ="#0000FF">*          all Inb. Del. and 107 Docs are created</font>
+          UPDATE zia_bli_inv_map SET inb_107_status = 'C'
+           WHERE bli_no = gv_asnno
+             AND ebeln = gv_ebeln.
+        ENDIF.
+        IF sy-subrc EQ 0.
+          COMMIT WORK AND WAIT.
+        ENDIF.
+      ENDAT.
+    ENDLOOP.
+    IF lv_nothing_processed IS NOT INITIAL.
+      WRITE : / 'No Purchase Orders Processed for selection criteria'.
+    ENDIF.
+  ELSE.
+    WRITE : / 'No Purchase Orders found for selecttion criteria'.
+  ENDIF.
+ENDFORM.
+
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Form  SEND_PLANT_NOT_EXT_MAIL</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+<font color ="#0000FF">*      --&gt;P_LWA_VBRP_MATNR  text</font>
+<font color ="#0000FF">*      --&gt;P_LWA_SO_PO_WERKS  text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+FORM send_plant_not_ext_mail  USING blino bukrs  matnr werks lgort.
+
+  ls_mailtxt-line  = 'Dear Facilitator,'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  = ''.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  IF syst-sysid = 'DEV'.
+    ls_mailtxt-line  =
+'We have an exception raised in SAP DEV system and thus need your imm' &
+'ediate attention for the below statement'
+    .
+  ELSEIF syst-sysid = 'QLS'.
+    ls_mailtxt-line  =
+'We have an exception raised in SAP QAS system and thus need your imm' &
+'ediate attention for the below statement'
+    .
+  ELSEIF syst-sysid = 'PIP'.
+    ls_mailtxt-line  =
+'We have an exception raised in SAP PRD system and thus need your imm' &
+'ediate attention for the below statement'
+    .
+  ENDIF.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  = ''.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  CONCATENATE 'Material:' matnr 'Not Extend in Plant:' werks 'for BLI'
+  blino INTO ls_mailtxt SEPARATED BY ' '.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  = ''.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  =
+'Please feel free to contact btc-sap@sarjen.com for any support you n' &
+'eed in this regard.'
+  .
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  = ''.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  = 'Regards,'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  = 'PNS Team'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  CLEAR l_tab_lines.
+  DESCRIBE TABLE lt_mailtxt LINES l_tab_lines.
+  READ TABLE lt_mailtxt INTO ls_mailtxt  INDEX l_tab_lines.
+  lt_mailsubject-doc_size = ( l_tab_lines - 1 ) * 255 + strlen(
+  ls_mailtxt ).
+  REFRESH: lt_obj_pack.
+  CLEAR: wa_obj_pack.
+  wa_obj_pack-head_start = 1.
+  wa_obj_pack-head_num   = 0.
+  wa_obj_pack-body_start = 1.
+  wa_obj_pack-body_num   = l_tab_lines.
+  wa_obj_pack-doc_type   = 'RAW'.
+  APPEND wa_obj_pack TO lt_obj_pack.
+
+  DATA: lwa_email_det TYPE zia_email.
+  DATA: lwa_email_ftp TYPE zia_ftp.
+
+  SELECT * FROM zia_email INTO lwa_email_det WHERE bukrs = bukrs AND
+  functionality = lc_func."AND LGORT = LGORT
+
+    ls_mailrecipients-rec_type  = 'U'.
+    ls_mailrecipients-receiver  = lwa_email_det-email.
+    APPEND ls_mailrecipients TO lt_mailrecipients.
+    CLEAR ls_mailrecipients .
+  ENDSELECT.
+
+  SELECT * FROM zia_ftp INTO lwa_email_ftp WHERE process_type = lc_func
+  AND th_param = bukrs AND sap_param = lgort. "AND LGORT = LGORT
+    ls_mailrecipients-rec_type  = 'U'.
+    ls_mailrecipients-receiver  = lwa_email_ftp-sap_param3.
+    APPEND ls_mailrecipients TO lt_mailrecipients.
+    CLEAR ls_mailrecipients .
+  ENDSELECT.
+
+  DELETE ADJACENT DUPLICATES FROM lt_mailrecipients COMPARING receiver.
+
+  ls_mailsubject-obj_langu = sy-langu.
+  ls_mailsubject-obj_descr = 'Material Extend Notification'.
+  IF lt_mailrecipients[] IS NOT INITIAL.
+
+    CALL FUNCTION 'SO_DOCUMENT_SEND_API1'
+      EXPORTING
+        document_data              = ls_mailsubject
+        sender_address             = c_sender_address
+        sender_address_type        = c_sender_address_type
+        commit_work                = 'X'
+      TABLES
+        packing_list               = lt_obj_pack
+        contents_txt               = lt_mailtxt
+        receivers                  = lt_mailrecipients
+      EXCEPTIONS
+        too_many_receivers         = 1
+        document_not_sent          = 2
+        document_type_not_exist    = 3
+        operation_no_authorization = 4
+        parameter_error            = 5
+        x_error                    = 6
+        enqueue_error              = 7
+        OTHERS                     = 8.
+
+    COMMIT WORK.
+  ENDIF.
+  REFRESH: lt_mailtxt,lt_mailrecipients,lt_obj_pack.
+  CLEAR    ls_mailsubject.
+ENDFORM.                    " SEND_PLANT_NOT_EXT_MAIL
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Form  NO_PRICNG_MAIL</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+<font color ="#0000FF">*      --&gt;P_LWA_VBRK_VBELN  text</font>
+<font color ="#0000FF">*      --&gt;P_LWA_VBRP_POSNR  text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+FORM no_pricng_mail  USING blino  bukrs  p_lwa_vbrk_vbeln
+                              p_lwa_vbrp_posnr lgort.
+
+  ls_mailtxt-line  = 'Dear Facilitator,'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  = ''.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  IF syst-sysid = 'DEV'.
+    ls_mailtxt-line  =
+'We have an exception raised in SAP DEV system and thus need your imm' &
+'ediate attention for the below statement:&lt;br/&gt;&lt;br/&gt;'
+    .
+  ELSEIF syst-sysid = 'QLS'.
+    ls_mailtxt-line  =
+'We have an exception raised in SAP QAS system and thus need your imm' &
+'ediate attention for the below statement:&lt;br/&gt;&lt;br/&gt;'
+    .
+  ELSEIF syst-sysid = 'PIP'.
+    ls_mailtxt-line  =
+'We have an exception raised in SAP PRD system and thus need your imm' &
+'ediate attention for the below statement:&lt;br/&gt;&lt;br/&gt;'
+    .
+  ENDIF.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  = ''.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  CONCATENATE 'Pricing data not found for Invoice' p_lwa_vbrk_vbeln
+  'and Item' p_lwa_vbrp_posnr 'for BLI' blino INTO ls_mailtxt SEPARATED
+  BY ' '.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  = ''.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  =
+'Please feel free to contact btc-sap@sarjen.com for any support you n' &
+'eed in this regard.'
+  .
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  = ''.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  = 'Regards,'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  = 'PNS Team'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  CLEAR l_tab_lines.
+  DESCRIBE TABLE lt_mailtxt LINES l_tab_lines.
+  READ TABLE lt_mailtxt INTO ls_mailtxt  INDEX l_tab_lines.
+  lt_mailsubject-doc_size = ( l_tab_lines - 1 ) * 255 + strlen(
+  ls_mailtxt ).
+  REFRESH: lt_obj_pack.
+  CLEAR: wa_obj_pack.
+  wa_obj_pack-head_start = 1.
+  wa_obj_pack-head_num   = 0.
+  wa_obj_pack-body_start = 1.
+  wa_obj_pack-body_num   = l_tab_lines.
+  wa_obj_pack-doc_type   = 'RAW'.
+  APPEND wa_obj_pack TO lt_obj_pack.
+
+  DATA: lwa_email_det TYPE zia_email.
+  DATA: lwa_email_ftp TYPE zia_ftp.
+  SELECT * FROM zia_email INTO lwa_email_det WHERE bukrs = bukrs AND
+  functionality = lc_func."AND LGORT = LGORT
+
+    ls_mailrecipients-rec_type  = 'U'.
+    ls_mailrecipients-receiver  = lwa_email_det-email.
+    APPEND ls_mailrecipients TO lt_mailrecipients.
+    CLEAR ls_mailrecipients .
+  ENDSELECT.
+
+  "Added By Vaibhav on 04.08.2020
+  SELECT * FROM zia_ftp INTO lwa_email_ftp WHERE process_type = lc_func
+  AND th_param = bukrs AND sap_param = lgort. "AND LGORT = LGORT
+    ls_mailrecipients-rec_type  = 'U'.
+    ls_mailrecipients-receiver  = lwa_email_ftp-sap_param3.
+    " LS_ADR6-SMTP_ADDR.   "Email Id
+    APPEND ls_mailrecipients TO lt_mailrecipients.
+    CLEAR ls_mailrecipients .
+  ENDSELECT.
+
+  DELETE ADJACENT DUPLICATES FROM lt_mailrecipients COMPARING receiver.
+  "Added By Vaibhav on 04.08.2020
+  """"""""""
+
+  ls_mailsubject-obj_langu = sy-langu.
+  ls_mailsubject-obj_descr = 'No Pricing data'.
+
+  IF lt_mailrecipients[] IS NOT INITIAL.
+<font color ="#0000FF">*----------------------------------ADD BY KARAN</font>
+<font color ="#0000FF">*02-05-2019----------------------------------*</font>
+    CALL FUNCTION 'SO_DOCUMENT_SEND_API1'
+      EXPORTING
+        document_data              = ls_mailsubject
+        sender_address             = c_sender_address
+        sender_address_type        = c_sender_address_type
+        commit_work                = 'X'
+      TABLES
+        packing_list               = lt_obj_pack
+        contents_txt               = lt_mailtxt
+        receivers                  = lt_mailrecipients
+      EXCEPTIONS
+        too_many_receivers         = 1
+        document_not_sent          = 2
+        document_type_not_exist    = 3
+        operation_no_authorization = 4
+        parameter_error            = 5
+        x_error                    = 6
+        enqueue_error              = 7
+        OTHERS                     = 8.
+
+    COMMIT WORK.
+  ENDIF.
+  REFRESH: lt_mailtxt,lt_mailrecipients,lt_obj_pack.
+  CLEAR    ls_mailsubject.
+ENDFORM.                    " NO_PRICNG_MAIL
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Form  SEND_NO_PO_FOR_BLI</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+<font color ="#0000FF">*      --&gt;P_LWA_BLI_BLINO  text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+FORM send_no_po_for_bli TABLES return TYPE lty_return USING bukrs
+p_lwa_bli_blino lgort.
+
+  DATA: lwa_return TYPE bapiret2.
+
+  ls_mailtxt-line  = 'Dear Facilitator,'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  = ''.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  IF syst-sysid = 'DEV'.
+    ls_mailtxt-line  =
+'We have an exception raised in SAP DEV system and thus need your imm' &
+'ediate attention for the below statement'
+    .
+  ELSEIF syst-sysid = 'QLS'.
+    ls_mailtxt-line  =
+'We have an exception raised in SAP QAS system and thus need your imm' &
+'ediate attention for the below statement'
+    .
+  ELSEIF syst-sysid = 'PIP'.
+    ls_mailtxt-line  =
+'We have an exception raised in SAP PRD system and thus need your imm' &
+'ediate attention for the below statement'
+    .
+  ENDIF.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  = ''.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  LOOP AT return INTO lwa_return WHERE type = 'E' OR type = 'A'.
+    ls_mailtxt = lwa_return-message.
+    APPEND ls_mailtxt TO lt_mailtxt.
+    CLEAR:ls_mailtxt.
+  ENDLOOP.
+
+  ls_mailtxt-line  = ''.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  =
+'Please feel free to contact btc-sap@sarjen.com for any support you n' &
+'eed in this regard.'
+  .
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  = ''.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  = 'Regards,'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  = 'PNS Team'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  CLEAR l_tab_lines.
+  DESCRIBE TABLE lt_mailtxt LINES l_tab_lines.
+  READ TABLE lt_mailtxt INTO ls_mailtxt  INDEX l_tab_lines.
+  lt_mailsubject-doc_size = ( l_tab_lines - 1 ) * 255 + strlen(
+  ls_mailtxt ).
+  REFRESH: lt_obj_pack.
+  CLEAR: wa_obj_pack.
+  wa_obj_pack-head_start = 1.
+  wa_obj_pack-head_num   = 0.
+  wa_obj_pack-body_start = 1.
+  wa_obj_pack-body_num   = l_tab_lines.
+  wa_obj_pack-doc_type   = 'RAW'.
+  APPEND wa_obj_pack TO lt_obj_pack.
+
+  DATA: lwa_email_det TYPE zia_email.
+  DATA: lwa_email_ftp TYPE zia_ftp.
+
+  SELECT * FROM zia_email INTO lwa_email_det WHERE bukrs = bukrs AND
+  functionality = lc_func."AND LGORT = LGORT
+
+    ls_mailrecipients-rec_type  = 'U'.
+    ls_mailrecipients-receiver  = lwa_email_det-email.
+    APPEND ls_mailrecipients TO lt_mailrecipients.
+    CLEAR ls_mailrecipients .
+  ENDSELECT.
+
+  SELECT * FROM zia_ftp INTO lwa_email_ftp WHERE process_type = lc_func
+  AND th_param = bukrs AND sap_param = lgort. "AND LGORT = LGORT
+    ls_mailrecipients-rec_type  = 'U'.
+    ls_mailrecipients-receiver  = lwa_email_ftp-sap_param3.
+    APPEND ls_mailrecipients TO lt_mailrecipients.
+    CLEAR ls_mailrecipients .
+  ENDSELECT.
+
+  DELETE ADJACENT DUPLICATES FROM lt_mailrecipients COMPARING receiver.
+
+  ls_mailsubject-obj_langu = sy-langu.
+  CONCATENATE 'PO not created for BLI -' p_lwa_bli_blino INTO
+  ls_mailsubject-obj_descr SEPARATED BY space.
+
+  IF lt_mailrecipients[] IS NOT INITIAL.
+    CALL FUNCTION 'SO_DOCUMENT_SEND_API1'
+      EXPORTING
+        document_data              = ls_mailsubject
+        sender_address             = c_sender_address
+        sender_address_type        = c_sender_address_type
+        commit_work                = 'X'
+      TABLES
+        packing_list               = lt_obj_pack
+        contents_txt               = lt_mailtxt
+        receivers                  = lt_mailrecipients
+      EXCEPTIONS
+        too_many_receivers         = 1
+        document_not_sent          = 2
+        document_type_not_exist    = 3
+        operation_no_authorization = 4
+        parameter_error            = 5
+        x_error                    = 6
+        enqueue_error              = 7
+        OTHERS                     = 8.
+
+    COMMIT WORK.
+  ENDIF.
+  REFRESH: lt_mailtxt,lt_mailrecipients.
+  CLEAR    ls_mailsubject.
+
+ENDFORM.                    " SEND_NO_PO_FOR_BLI
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Form  107_CREATED_EMAIL</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+<font color ="#0000FF">*  --&gt;  p1        text</font>
+<font color ="#0000FF">*  &lt;--  p2        text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+FORM 107_created_email USING p_lwa_bli_blino pono ebelp lifnr matnr
+charg bednr menge meins maktx.
+
+  DATA: i_quantity TYPE char17,
+        i_meins    TYPE char3,
+        i_price    TYPE char14..
+
+  DATA : i_tempmatnr LIKE mara-matnr.
+  DATA : v_govtcode   TYPE zan_upid_locsku-govt_code,
+         v_localmaktx TYPE zan_upid_locsku-localmaktx.
+
+  ls_mailtxt = '&lt;tr&gt;'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  CONCATENATE '&lt;td&gt;' '&lt;small&gt;' p_lwa_bli_blino '&lt;/small&gt;' '&lt;/td&gt;' INTO
+  ls_mailtxt SEPARATED BY ' '.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  CONCATENATE '&lt;td&gt;' '&lt;small&gt;' pono '&lt;/small&gt;' '&lt;/td&gt;' INTO ls_mailtxt
+  SEPARATED BY ' '.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  CONCATENATE '&lt;td&gt;' '&lt;small&gt;' ebelp '&lt;/small&gt;' '&lt;/td&gt;' INTO ls_mailtxt
+  SEPARATED BY ' '.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  CONCATENATE '&lt;td&gt;' '&lt;small&gt;' lifnr '&lt;/small&gt;' '&lt;/td&gt;' INTO ls_mailtxt
+  SEPARATED BY ' '.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  CLEAR : i_tempmatnr.
+
+  i_tempmatnr = matnr.
+  CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'
+    EXPORTING
+      input  = i_tempmatnr
+    IMPORTING
+      output = i_tempmatnr.
+
+  CONCATENATE '&lt;td&gt;' '&lt;small&gt;' i_tempmatnr'&lt;/small&gt;' '&lt;/td&gt;' INTO
+  ls_mailtxt SEPARATED BY ' '.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  CONCATENATE '&lt;td&gt;' '&lt;small&gt;' maktx'&lt;/small&gt;' '&lt;/td&gt;' INTO ls_mailtxt
+  SEPARATED BY ' '.      "aDDED BY CR mAT dESC 20.07.2021
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  CONCATENATE '&lt;td&gt;' '&lt;small&gt;' charg '&lt;/small&gt;' '&lt;/td&gt;' INTO ls_mailtxt
+  SEPARATED BY ' '.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  CONCATENATE '&lt;td&gt;' '&lt;small&gt;' bednr '&lt;/small&gt;' '&lt;/td&gt;' INTO ls_mailtxt
+  SEPARATED BY ' '.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  CLEAR i_quantity.
+  i_quantity = menge.
+
+  IF meins = 'PAK'.
+    i_meins = 'PAC'.
+  ELSE.
+    i_meins = meins.
+  ENDIF.
+  CONCATENATE '&lt;td&gt;' '&lt;small&gt;' i_quantity i_meins '&lt;/small&gt;' '&lt;/td&gt;'
+  INTO ls_mailtxt SEPARATED BY ' '.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt = '&lt;/tr&gt;'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+  CLEAR:i_quantity, i_tempmatnr.
+
+ENDFORM.                    " 107_CREATED_EMAIL
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Form  NO_107_EMAIL</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+<font color ="#0000FF">*  --&gt;  p1        text</font>
+<font color ="#0000FF">*  &lt;--  p2        text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+FORM no_107_email TABLES lt_return TYPE lty_return USING bukrs
+p_lwa_bli_blino lgort.
+
+  DATA: v_message  TYPE string,
+        lwa_return TYPE bapiret2.
+
+  CLEAR:v_message.
+
+  CONCATENATE 'BLI No.:' p_lwa_bli_blino INTO ls_mailtxt-line SEPARATED
+  BY ' '.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  LOOP AT lt_return INTO lwa_return WHERE type = 'E' OR type = 'A'.
+    ls_mailtxt-line  = lwa_return-message.
+    APPEND ls_mailtxt TO lt_mailtxt.
+    CLEAR:ls_mailtxt.
+  ENDLOOP.
+
+  CLEAR l_tab_lines.
+  DESCRIBE TABLE lt_mailtxt LINES l_tab_lines.
+  READ TABLE lt_mailtxt INTO ls_mailtxt  INDEX l_tab_lines.
+  lt_mailsubject-doc_size = ( l_tab_lines - 1 ) * 255 + strlen(
+  ls_mailtxt ).
+  REFRESH: lt_obj_pack.
+  CLEAR: wa_obj_pack.
+  wa_obj_pack-head_start = 1.
+  wa_obj_pack-head_num   = 0.
+  wa_obj_pack-body_start = 1.
+  wa_obj_pack-body_num   = l_tab_lines.
+  wa_obj_pack-doc_type   = 'RAW'.
+  APPEND wa_obj_pack TO lt_obj_pack.
+
+  DATA: lwa_email_det TYPE zia_email.
+  DATA: lwa_email_ftp TYPE zia_ftp.
+
+  SELECT * FROM zia_email INTO lwa_email_det
+           WHERE bukrs = bukrs AND functionality = lc_func.
+    "AND LGORT = LGORT
+
+    ls_mailrecipients-rec_type  = 'U'.
+    ls_mailrecipients-receiver  = lwa_email_det-email.
+    " LS_ADR6-SMTP_ADDR.   "Email Id
+    APPEND ls_mailrecipients TO lt_mailrecipients.
+    CLEAR ls_mailrecipients .
+  ENDSELECT.
+
+  "Added By Vaibhav on 04.08.2020
+  SELECT * FROM zia_ftp INTO lwa_email_ftp WHERE process_type = lc_func
+  AND th_param = bukrs AND sap_param = lgort. "AND LGORT = LGORT
+    ls_mailrecipients-rec_type  = 'U'.
+    ls_mailrecipients-receiver  = lwa_email_ftp-sap_param3.
+    " LS_ADR6-SMTP_ADDR.   "Email Id
+    APPEND ls_mailrecipients TO lt_mailrecipients.
+    CLEAR ls_mailrecipients .
+  ENDSELECT.
+
+  DELETE ADJACENT DUPLICATES FROM lt_mailrecipients COMPARING receiver.
+  "Added By Vaibhav on 04.08.2020
+  """"""""""
+
+  ls_mailsubject-obj_name = 'Goods Shipment(GIT) Error'.
+  ls_mailsubject-obj_langu = sy-langu.
+  CONCATENATE 'Goods Shipment(GIT-107) Error for BLI -' p_lwa_bli_blino
+                                INTO ls_mailsubject-obj_descr SEPARATED
+                                BY space.
+
+  IF lt_mailrecipients[] IS NOT INITIAL.
+<font color ="#0000FF">*----------------------------------ADD BY KARAN</font>
+<font color ="#0000FF">*02-05-2019----------------------------------*</font>
+    CALL FUNCTION 'SO_DOCUMENT_SEND_API1'
+      EXPORTING
+        document_data              = ls_mailsubject
+        sender_address             = c_sender_address
+        sender_address_type        = c_sender_address_type
+        commit_work                = 'X'
+      TABLES
+        packing_list               = lt_obj_pack
+        contents_txt               = lt_mailtxt
+        receivers                  = lt_mailrecipients
+      EXCEPTIONS
+        too_many_receivers         = 1
+        document_not_sent          = 2
+        document_type_not_exist    = 3
+        operation_no_authorization = 4
+        parameter_error            = 5
+        x_error                    = 6
+        enqueue_error              = 7
+        OTHERS                     = 8.
+<font color ="#0000FF">*----------------------------------END BY KARAN</font>
+<font color ="#0000FF">*02-05-2019----------------------------------*</font>
+
+<font color ="#0000FF">*    CALL FUNCTION 'SO_NEW_DOCUMENT_SEND_API1'</font>
+<font color ="#0000FF">*      EXPORTING</font>
+<font color ="#0000FF">*        DOCUMENT_DATA              = LS_MAILSUBJECT</font>
+<font color ="#0000FF">*        COMMIT_WORK                = 'X'</font>
+<font color ="#0000FF">*      TABLES</font>
+<font color ="#0000FF">*        OBJECT_CONTENT             = LT_MAILTXT</font>
+<font color ="#0000FF">*        RECEIVERS                  = LT_MAILRECIPIENTS</font>
+<font color ="#0000FF">*      EXCEPTIONS</font>
+<font color ="#0000FF">*        TOO_MANY_RECEIVERS         = 1</font>
+<font color ="#0000FF">*        DOCUMENT_NOT_SENT          = 2</font>
+<font color ="#0000FF">*        DOCUMENT_TYPE_NOT_EXIST    = 3</font>
+<font color ="#0000FF">*        OPERATION_NO_AUTHORIZATION = 4</font>
+<font color ="#0000FF">*        PARAMETER_ERROR            = 5</font>
+<font color ="#0000FF">*        X_ERROR                    = 6</font>
+<font color ="#0000FF">*        ENQUEUE_ERROR              = 7</font>
+<font color ="#0000FF">*        OTHERS                     = 8.</font>
+
+    COMMIT WORK.
+  ENDIF.
+  REFRESH:lt_mailtxt,lt_mailrecipients, lt_obj_pack.
+  " ADD BY KARAN 02-05-2019 "LT_OBJ_PACK
+  CLEAR:ls_mailsubject.
+
+ENDFORM.                    " NO_107_EMAIL
+
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Form  SEND_MAIL</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+<font color ="#0000FF">*      --&gt;BLINO      text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+FORM send_mail USING bukrs werks blino lv_name1 lgort.
+
+  DATA:w_tab_lines TYPE sopcklsti1-body_num.
+  DATA:lt_objpack TYPE STANDARD TABLE OF sopcklsti1, " Packing list
+       ls_objpack TYPE sopcklsti1. " Packing list.
+
+  ls_mailtxt = '&lt;/table&gt;'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt = '&lt;/body&gt;'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt = '&lt;/html&gt;'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  =
+'Please feel free to contact btc-sap@sarjen.com for any support you n' &
+'eed in this regard.&lt;br/&gt;&lt;br/&gt;'
+  .
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  = 'Regards,&lt;br/&gt;&lt;br/&gt;'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  = 'PNS Team&lt;br/&gt;&lt;br/&gt;'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  DESCRIBE TABLE lt_mailtxt LINES w_tab_lines.
+  CLEAR ls_objpack-transf_bin.
+  ls_objpack-head_start = 1.
+  ls_objpack-head_num   = 0.
+  ls_objpack-body_start = 1.
+  ls_objpack-body_num   = w_tab_lines.
+<font color ="#0000FF">*   we will pass the HTML, since we have created the message</font>
+<font color ="#0000FF">*   body in the HTML</font>
+  ls_objpack-doc_type   = 'HTML'.
+  APPEND ls_objpack TO lt_objpack.
+  CLEAR : ls_objpack.
+  DATA: lwa_email_det TYPE zia_email.
+  DATA: lwa_email_ftp TYPE zia_ftp.
+
+  IF bukrs = 'SE10'.
+    SELECT * FROM zia_email
+             INTO lwa_email_det
+             WHERE bukrs = bukrs
+               AND werks = werks
+               AND functionality = lc_func.
+
+      ls_mailrecipients-rec_type = 'U'.
+      ls_mailrecipients-receiver = lwa_email_det-email.
+      APPEND: ls_mailrecipients TO lt_mailrecipients.
+      CLEAR: ls_mailrecipients.
+    ENDSELECT.
+
+  ELSE.
+    SELECT * FROM zia_email INTO lwa_email_det WHERE bukrs = bukrs AND
+    functionality = lc_func."AND LGORT = LGORT
+      ls_mailrecipients-rec_type  = 'U'.
+      ls_mailrecipients-receiver  = lwa_email_det-email.
+      " LS_ADR6-SMTP_ADDR.   "Email Id
+      APPEND ls_mailrecipients TO lt_mailrecipients.
+      CLEAR ls_mailrecipients .
+    ENDSELECT.
+
+    "Added By Vaibhav on 04.08.2020
+    SELECT * FROM zia_ftp INTO lwa_email_ftp WHERE process_type =
+    lc_func AND th_param = bukrs AND sap_param = lgort.
+      "AND LGORT = LGORT
+      ls_mailrecipients-rec_type  = 'U'.
+      ls_mailrecipients-receiver  = lwa_email_ftp-sap_param3.
+      " LS_ADR6-SMTP_ADDR.   "Email Id
+      APPEND ls_mailrecipients TO lt_mailrecipients.
+      CLEAR ls_mailrecipients .
+    ENDSELECT.
+
+    DELETE ADJACENT DUPLICATES FROM lt_mailrecipients COMPARING receiver
+    . "Added By Vaibhav on 04.08.2020
+
+  ENDIF.
+<font color ="#0000FF">*CONCATENATE 'Goods Shipment BLI number' BLINO INTO</font>
+<font color ="#0000FF">*LS_MAILSUBJECT-OBJ_NAME SEPARATED BY ' '.</font>
+  CONCATENATE 'GIT from IPL' blino 'to' werks INTO
+  ls_mailsubject-obj_name SEPARATED BY ' '.
+
+<font color ="#0000FF">*    LS_MAILSUBJECT-OBJ_NAME = 'PO Created based on SO'.</font>
+  ls_mailsubject-obj_langu = sy-langu.
+  CONCATENATE 'GIT from' lv_name1 blino 'to' werks INTO
+  ls_mailsubject-obj_descr SEPARATED BY ' '.
+
+  IF lt_mailrecipients[] IS NOT INITIAL.
+<font color ="#0000FF">*----------------------------------ADD BY KARAN</font>
+<font color ="#0000FF">*02-05-2019----------------------------------*</font>
+    CALL FUNCTION 'SO_DOCUMENT_SEND_API1'
+      EXPORTING
+        document_data              = ls_mailsubject
+        put_in_outbox              = 'X'
+        sender_address             = c_sender_address
+        sender_address_type        = c_sender_address_type
+        commit_work                = 'X'
+      TABLES
+        packing_list               = lt_objpack
+        contents_txt               = lt_mailtxt
+        receivers                  = lt_mailrecipients
+      EXCEPTIONS
+        too_many_receivers         = 1
+        document_not_sent          = 2
+        document_type_not_exist    = 3
+        operation_no_authorization = 4
+        parameter_error            = 5
+        x_error                    = 6
+        enqueue_error              = 7
+        OTHERS                     = 8.
+<font color ="#0000FF">*----------------------------------END BY KARAN</font>
+<font color ="#0000FF">*02-05-2019----------------------------------*</font>
+<font color ="#0000FF">*    CALL FUNCTION 'SO_NEW_DOCUMENT_ATT_SEND_API1'</font>
+<font color ="#0000FF">*      EXPORTING</font>
+<font color ="#0000FF">*        DOCUMENT_DATA                    = LS_MAILSUBJECT</font>
+<font color ="#0000FF">*       PUT_IN_OUTBOX                    = 'X'</font>
+<font color ="#0000FF">*       COMMIT_WORK                      = 'X'</font>
+<font color ="#0000FF">*      TABLES</font>
+<font color ="#0000FF">*        PACKING_LIST                     = LT_OBJPACK</font>
+<font color ="#0000FF">**   OBJECT_HEADER                    =</font>
+<font color ="#0000FF">*       CONTENTS_TXT                     = LT_MAILTXT</font>
+<font color ="#0000FF">*       RECEIVERS                        = LT_MAILRECIPIENTS.</font>
+    COMMIT WORK.
+  ENDIF.
+
+  REFRESH:lt_mailtxt,lt_mailrecipients, lt_objpack.
+  " ADD BY KARAN 02-05-2019 "LT_OBJPACK
+  CLEAR:ls_mailsubject.
+<font color ="#0000FF">*  WAIT UP TO 2 SECONDS.</font>
+
+ENDFORM.                    " SEND_MAIL
+
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Form  MULTIPLE_INVOICE_CHECK</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+FORM multiple_invoice_check .
+  TYPES : BEGIN OF lst_vbfa,
+            vbelv    TYPE vbfa-vbelv,
+            vbeln    TYPE vbfa-vbeln,
+            vbtyp_n  TYPE vbfa-vbtyp_n,
+            refdocno TYPE zexdochdr-refdocno,
+            flg(1),
+          END OF lst_vbfa.
+
+  TYPES:rng_typ TYPE RANGE OF sfield.
+  DATA: rng_tbl TYPE rng_typ,
+        wa_rng  TYPE LINE OF rng_typ.
+
+  DATA : ls_vbfa TYPE lst_vbfa,
+         lt_vbfa TYPE STANDARD TABLE OF lst_vbfa.
+<font color ="#0000FF">*** Get Delivery no on the base of Invoice no</font>
+  SELECT vbeln posnr vgbel vgpos FROM vbrp
+    INTO CORRESPONDING FIELDS OF TABLE i_vbrp
+    FOR ALL ENTRIES IN it_bli_inv_map
+  WHERE vbeln = it_bli_inv_map-vbeln.
+  SORT i_vbrp BY vbeln vgbel.
+  DELETE ADJACENT DUPLICATES FROM i_vbrp COMPARING vbeln vgbel.
+
+
+
+  IF i_vbrp[] IS NOT INITIAL.
+    SELECT vbelv
+           vbeln
+           vbtyp_n INTO TABLE lt_vbfa FROM vbfa
+                   FOR ALL ENTRIES IN i_vbrp
+                   WHERE vbelv = i_vbrp-vgbel
+    AND vbtyp_n = 'M'.
+  ENDIF.
+  IF lt_vbfa[] IS NOT INITIAL.
+    SORT lt_vbfa BY vbelv vbeln.
+    DELETE ADJACENT DUPLICATES FROM lt_vbfa COMPARING vbelv vbeln.
+    DATA : lv_ind TYPE sy-tabix.
+
+    LOOP AT lt_vbfa INTO ls_vbfa.
+      CLEAR : lv_ind.
+      READ TABLE it_bli_inv_map INTO wa_bli_inv_map WITH KEY vbeln =
+      ls_vbfa-vbeln.
+      IF sy-subrc EQ 0.
+        lv_ind = sy-tabix.
+        wa_bli_inv_map-cancel_ind = 'X'.
+        MODIFY it_bli_inv_map FROM wa_bli_inv_map INDEX lv_ind
+        TRANSPORTING cancel_ind.
+        CLEAR : wa_bli_inv_map.
+      ENDIF.
+      CLEAR : ls_vbfa.
+    ENDLOOP.
+  ENDIF.
+  LOOP AT it_bli_inv_map INTO wa_bli_inv_map WHERE cancel_ind = ''.
+    wa_rng-sign = 'I'.
+    wa_rng-option = 'EQ'.
+    wa_rng-low = wa_bli_inv_map-bli_no.
+    APPEND wa_rng TO rng_tbl.
+    CLEAR : wa_rng,wa_bli_inv_map.
+  ENDLOOP.
+
+  IF rng_tbl[] IS NOT INITIAL.
+    DELETE it_bli_inv_map WHERE bli_no IN rng_tbl.
+  ENDIF.
+  LOOP AT it_bli_inv_map INTO wa_bli_inv_map WHERE cancel_ind = 'X'.
+    CLEAR : wa_bli_inv_map-cancel_ind.
+    MODIFY it_bli_inv_map FROM wa_bli_inv_map INDEX sy-tabix
+    TRANSPORTING cancel_ind.
+    CLEAR : wa_bli_inv_map.
+  ENDLOOP.
+
+<font color ="#0000FF">*** Get PSI no on the base of Delivery no</font>
+
+<font color ="#0000FF">**************  LOOP AT lt_vbfa INTO ls_vbfa.</font>
+<font color ="#0000FF">**************    LV_IND = SY-TABIX.</font>
+<font color ="#0000FF">**************    SELECT SINGLE * FROM zexdochdr</font>
+<font color ="#0000FF">**************      WHERE doctyp IN ('ZLFZ','ZLF4','ZLF9')</font>
+<font color ="#0000FF">**************      AND loekz &lt;&gt; 'X'</font>
+<font color ="#0000FF">**************      AND docno = i_vbfa-vbelv</font>
+<font color ="#0000FF">**************      AND refdoctyp = 'PSI'.</font>
+<font color ="#0000FF">**************    IF sy-subrc = 0.</font>
+<font color ="#0000FF">**************      i_vbFA-refdocno = zexdochdr-refdocno.</font>
+<font color ="#0000FF">**************      MODIFY LT_vbFA FROM LS_VBFA INDEX LV_IND</font>
+<font color ="#0000FF">*TRANSPORTING refdocno.</font>
+<font color ="#0000FF">**************    ENDIF.</font>
+<font color ="#0000FF">**************  ENDLOOP.</font>
+<font color ="#0000FF">**************</font>
+<font color ="#0000FF">***************** Check for delete indicator</font>
+<font color ="#0000FF">**************  LOOP AT i_vbrp.</font>
+<font color ="#0000FF">**************    SELECT SINGLE * FROM zexdochdr</font>
+<font color ="#0000FF">**************      WHERE doctyp = 'PSI'</font>
+<font color ="#0000FF">**************        AND docno = i_vbrp-refdocno.</font>
+<font color ="#0000FF">**************    IF zexdochdr-loekz = 'X'.</font>
+<font color ="#0000FF">**************      i_vbrp-flg = 'X'.</font>
+<font color ="#0000FF">**************      MODIFY i_vbrp.</font>
+<font color ="#0000FF">**************    ENDIF.</font>
+<font color ="#0000FF">**************  ENDLOOP.</font>
+<font color ="#0000FF">**************</font>
+<font color ="#0000FF">**************  DELETE i_vbrp WHERE flg = 'X'.</font>
+<font color ="#0000FF">**************</font>
+<font color ="#0000FF">***************** Get BLI data on the base of PSI</font>
+<font color ="#0000FF">**************  IF i_vbrp[] IS NOT INITIAL.</font>
+<font color ="#0000FF">**************    SELECT * FROM zexdocfl INTO CORRESPONDING FIELDS OF</font>
+<font color ="#0000FF">*TABLE i_docfl</font>
+<font color ="#0000FF">**************      FOR ALL ENTRIES IN i_vbrp</font>
+<font color ="#0000FF">**************      WHERE doctyp = 'BLI'</font>
+<font color ="#0000FF">**************        AND refdoctyp = 'PSI'</font>
+<font color ="#0000FF">**************        AND refdocno = i_vbrp-refdocno.</font>
+<font color ="#0000FF">**************  ENDIF.</font>
+<font color ="#0000FF">**************</font>
+<font color ="#0000FF">***************** Check for Additional PSI exist or not against BLI</font>
+<font color ="#0000FF">**************  IF i_docfl[] IS NOT INITIAL.</font>
+<font color ="#0000FF">**************    SELECT * FROM zexdocfl INTO CORRESPONDING FIELDS OF</font>
+<font color ="#0000FF">*TABLE i_docfl1</font>
+<font color ="#0000FF">**************      FOR ALL ENTRIES IN i_docfl</font>
+<font color ="#0000FF">**************      WHERE doctyp = 'BLI'</font>
+<font color ="#0000FF">**************        AND docno  = i_docfl-docno</font>
+<font color ="#0000FF">**************        AND refdoctyp = 'PSI'.</font>
+<font color ="#0000FF">***************        AND REFDOCNO &lt;&gt; I_DOCFL-REFDOCNO.</font>
+<font color ="#0000FF">**************  ENDIF.</font>
+<font color ="#0000FF">**************</font>
+<font color ="#0000FF">**************  LOOP AT i_docfl1.</font>
+<font color ="#0000FF">**************    READ TABLE i_docfl WITH KEY refdocno =</font>
+<font color ="#0000FF">*i_docfl1-refdocno.</font>
+<font color ="#0000FF">**************    IF sy-subrc = 0.</font>
+<font color ="#0000FF">**************      i_docfl1-flg = 'X'.</font>
+<font color ="#0000FF">**************      MODIFY i_docfl1.</font>
+<font color ="#0000FF">**************    ENDIF.</font>
+<font color ="#0000FF">**************  ENDLOOP.</font>
+<font color ="#0000FF">**************</font>
+<font color ="#0000FF">**************  DELETE i_docfl1 WHERE flg = 'X'.</font>
+<font color ="#0000FF">**************</font>
+<font color ="#0000FF">**************  LOOP AT i_docfl.</font>
+<font color ="#0000FF">**************    READ TABLE i_docfl1 WITH KEY docno = i_docfl-docno.</font>
+<font color ="#0000FF">**************    IF sy-subrc = 0.</font>
+<font color ="#0000FF">**************      i_docfl-flg = 'X'.</font>
+<font color ="#0000FF">**************      MODIFY i_docfl.</font>
+<font color ="#0000FF">**************    ENDIF.</font>
+<font color ="#0000FF">**************  ENDLOOP.</font>
+<font color ="#0000FF">**************</font>
+<font color ="#0000FF">**************  DELETE i_docfl WHERE flg = 'X'.</font>
+<font color ="#0000FF">**************</font>
+<font color ="#0000FF">***************** Transfer Invoice no in Doc fl table</font>
+<font color ="#0000FF">**************  LOOP AT i_docfl.</font>
+<font color ="#0000FF">**************    READ TABLE i_vbrp WITH KEY refdocno =</font>
+<font color ="#0000FF">*i_docfl-refdocno.</font>
+<font color ="#0000FF">**************    IF sy-subrc = 0.</font>
+<font color ="#0000FF">**************      i_docfl-vbeln = i_vbrp-vbeln.</font>
+<font color ="#0000FF">**************      MODIFY i_docfl.</font>
+<font color ="#0000FF">**************    ENDIF.</font>
+<font color ="#0000FF">**************  ENDLOOP.</font>
+<font color ="#0000FF">**************</font>
+<font color ="#0000FF">**************  LOOP AT it_bli_inv_map INTO wa_bli_inv_map.</font>
+<font color ="#0000FF">**************    READ TABLE i_docfl WITH KEY docno =</font>
+<font color ="#0000FF">*wa_bli_inv_map-bli_no</font>
+<font color ="#0000FF">**************                                vbeln =</font>
+<font color ="#0000FF">*wa_bli_inv_map-vbeln.</font>
+<font color ="#0000FF">**************    IF sy-subrc &lt;&gt; 0.</font>
+<font color ="#0000FF">**************      DELETE it_bli_inv_map.</font>
+<font color ="#0000FF">***************      WA_BLI_INV_MAP-DONE_107 = 'X'.</font>
+<font color ="#0000FF">***************      MODIFY IT_BLI_INV_MAP FROM WA_BLI_INV_MAP.</font>
+<font color ="#0000FF">**************    ENDIF.</font>
+<font color ="#0000FF">**************  ENDLOOP.</font>
+ENDFORM.                    " MULTIPLE_INVOICE_CHECK
+
+
+
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Form  PO_CREATE</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+<font color ="#0000FF">*FORM po_create.</font>
+<font color ="#0000FF">*  TYPES: BEGIN OF ty_vbrk,</font>
+<font color ="#0000FF">*         vbeln TYPE vbrk-vbeln,</font>
+<font color ="#0000FF">*         kunag TYPE vbrk-kunag,</font>
+<font color ="#0000FF">*         knumv TYPE vbrk-knumv,</font>
+<font color ="#0000FF">*         bukrs TYPE vbrk-bukrs,</font>
+<font color ="#0000FF">*         END OF ty_vbrk.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  TYPES: BEGIN OF ty_vbpa,</font>
+<font color ="#0000FF">*         vbeln TYPE vbpa-vbeln,</font>
+<font color ="#0000FF">*         posnr TYPE vbpa-posnr,</font>
+<font color ="#0000FF">*         parvw TYPE vbpa-parvw,</font>
+<font color ="#0000FF">*         kunnr TYPE vbpa-kunnr,</font>
+<font color ="#0000FF">*         lifnr TYPE vbpa-lifnr,</font>
+<font color ="#0000FF">*         END OF ty_vbpa.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  DATA : poheader LIKE bapimepoheader OCCURS 0 WITH HEADER LINE.</font>
+<font color ="#0000FF">*  DATA : poheaderx LIKE bapimepoheaderx OCCURS 0 WITH HEADER LINE.</font>
+<font color ="#0000FF">*  DATA : poitem LIKE bapimepoitem OCCURS 0 WITH HEADER LINE.</font>
+<font color ="#0000FF">*  DATA : poitemx LIKE bapimepoitemx OCCURS 0 WITH HEADER LINE.</font>
+<font color ="#0000FF">*  DATA : pocond LIKE bapimepocond OCCURS 0 WITH HEADER LINE.</font>
+<font color ="#0000FF">*  DATA : pocondx LIKE bapimepocondx OCCURS 0 WITH HEADER LINE.</font>
+<font color ="#0000FF">*  DATA : poacc LIKE bapimepoaccount OCCURS 0 WITH HEADER LINE.</font>
+<font color ="#0000FF">*  DATA : poaccx LIKE bapimepoaccountx OCCURS 0 WITH HEADER LINE.</font>
+<font color ="#0000FF">*  DATA : pono LIKE bapiekkoc-po_number.</font>
+<font color ="#0000FF">*  DATA : return LIKE bapiret2 OCCURS 0 WITH HEADER LINE.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  DATA : v_lifnr LIKE lfa1-lifnr,</font>
+<font color ="#0000FF">*         v_ebelp LIKE ekpo-ebelp,</font>
+<font color ="#0000FF">*         v_basic LIKE vbap-netwr,</font>
+<font color ="#0000FF">*         v_werks LIKE t001w-werks,</font>
+<font color ="#0000FF">*         v_matnr LIKE mara-matnr,</font>
+<font color ="#0000FF">*         v_pouom LIKE mara-meins,</font>
+<font color ="#0000FF">*         v_souom LIKE mara-meins,</font>
+<font color ="#0000FF">*         v_checkwerks LIKE t001w-werks.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  DATA: v_invno TYPE vbak-vbeln.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  DATA: it_vbrk TYPE TABLE OF ty_vbrk,</font>
+<font color ="#0000FF">*        wa_vbrk TYPE ty_vbrk,</font>
+<font color ="#0000FF">*        it_konv TYPE TABLE OF konv,</font>
+<font color ="#0000FF">*        wa_konv TYPE konv,</font>
+<font color ="#0000FF">*        it_vbrp TYPE TABLE OF vbrp,</font>
+<font color ="#0000FF">*        wa_vbrp TYPE vbrp,</font>
+<font color ="#0000FF">*        wa_zan_so_po_auto   TYPE zan_so_po_auto,</font>
+<font color ="#0000FF">*        wa_zan_so_po_auto2  TYPE zan_so_po_auto,</font>
+<font color ="#0000FF">*        wa_zan_so_po_auto3  TYPE zan_so_po_auto,</font>
+<font color ="#0000FF">*        wa_zan_so_po_auto4  TYPE zan_so_po_auto,</font>
+<font color ="#0000FF">*        it_vbpa TYPE TABLE OF ty_vbpa,</font>
+<font color ="#0000FF">*        wa_vbpa TYPE ty_vbpa,</font>
+<font color ="#0000FF">*        wa_mara TYPE mara,</font>
+<font color ="#0000FF">*        wa_marm TYPE marm,</font>
+<font color ="#0000FF">*        wa_t001w TYPE t001w.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  READ TABLE it_po_create INTO wa_po_create INDEX 1.</font>
+<font color ="#0000FF">*  IF ( sy-subrc = 0 ) AND ( wa_po_create-refdocno IS NOT INITIAL ).</font>
+<font color ="#0000FF">*    SELECT SINGLE vbeln FROM vbfa</font>
+<font color ="#0000FF">*           INTO v_invno</font>
+<font color ="#0000FF">*           WHERE vbelv = wa_po_create-refdocno</font>
+<font color ="#0000FF">*           AND vbtyp_n = 'M'.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    IF v_invno IS NOT INITIAL.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      SELECT vbeln kunag knumv bukrs</font>
+<font color ="#0000FF">*             FROM vbrk</font>
+<font color ="#0000FF">*             INTO TABLE it_vbrk</font>
+<font color ="#0000FF">*             WHERE vbeln = v_invno.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      IF it_vbrk[] IS  NOT INITIAL.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*        SELECT * FROM konv</font>
+<font color ="#0000FF">*                 INTO TABLE it_konv</font>
+<font color ="#0000FF">*                 FOR ALL ENTRIES IN it_vbrk</font>
+<font color ="#0000FF">*                 WHERE knumv = it_vbrk-knumv.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*        READ TABLE it_vbrk INTO wa_vbrk INDEX 1.</font>
+<font color ="#0000FF">*        IF ( sy-subrc = 0 ) AND ( wa_vbrk-kunag IS NOT INITIAL ).</font>
+<font color ="#0000FF">*          SELECT SINGLE werks</font>
+<font color ="#0000FF">*                 FROM zan_so_po_auto</font>
+<font color ="#0000FF">*                 INTO v_checkwerks</font>
+<font color ="#0000FF">*                 WHERE kunnr = wa_vbrk-kunag.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*          IF v_checkwerks = 'US11' AND v_checkwerks = 'US21'.</font>
+<font color ="#0000FF">*            SELECT SINGLE * FROM zan_so_po_auto</font>
+<font color ="#0000FF">*                     INTO wa_zan_so_po_auto</font>
+<font color ="#0000FF">*                     WHERE kunnr = wa_vbrk-kunag.</font>
+<font color ="#0000FF">*            IF sy-subrc = 0.</font>
+<font color ="#0000FF">*              SELECT * FROM vbrp</font>
+<font color ="#0000FF">*                       INTO TABLE it_vbrp</font>
+<font color ="#0000FF">*                       WHERE vbeln = v_invno.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*              LOOP AT it_vbrp INTO wa_vbrp.</font>
+<font color ="#0000FF">*                IF wa_vbrp-lgort = ''.</font>
+<font color ="#0000FF">*                  MESSAGE 'Enter storage location' TYPE 'E'.</font>
+<font color ="#0000FF">*                ENDIF.</font>
+<font color ="#0000FF">*                CLEAR: wa_vbrp.</font>
+<font color ="#0000FF">*              ENDLOOP.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*              SELECT vbeln posnr parvw kunnr lifnr</font>
+<font color ="#0000FF">*                       FROM vbpa</font>
+<font color ="#0000FF">*                       INTO TABLE it_vbpa</font>
+<font color ="#0000FF">*                       WHERE vbeln = wa_po_create-refdocno.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*LOOP AT it_vbpa INTO wa_vbpa WHERE posnr = '' AND parvw = 'LF'.</font>
+<font color ="#0000FF">*                v_lifnr = wa_vbpa-lifnr.</font>
+<font color ="#0000FF">*                CLEAR: wa_vbpa.</font>
+<font color ="#0000FF">*              ENDLOOP.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*LOOP AT it_vbpa INTO wa_vbpa WHERE posnr = '' AND parvw = 'WE'.</font>
+<font color ="#0000FF">*                SELECT SINGLE * FROM zan_so_po_auto</font>
+<font color ="#0000FF">*                         INTO wa_zan_so_po_auto2</font>
+<font color ="#0000FF">*                         WHERE kunrg = wa_vbpa-kunnr.</font>
+<font color ="#0000FF">*IF ( sy-subrc = 0 ) AND ( wa_zan_so_po_auto-werks IS NOT INITIAL ).</font>
+<font color ="#0000FF">*                  v_werks = wa_zan_so_po_auto-werks.</font>
+<font color ="#0000FF">*                ELSE.</font>
+<font color ="#0000FF">*MESSAGE 'No plant found against ship to party' TYPE 'E'.</font>
+<font color ="#0000FF">*                ENDIF.</font>
+<font color ="#0000FF">*              ENDLOOP.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">**** CHECK PLANT CODE EXIST OR NOT</font>
+<font color ="#0000FF">*SELECT SINGLE * FROM t001w INTO wa_t001w WHERE werks = v_werks.</font>
+<font color ="#0000FF">*              IF sy-subrc &lt;&gt; 0.</font>
+<font color ="#0000FF">*                MESSAGE 'Plant code not found' TYPE 'E'.</font>
+<font color ="#0000FF">*              ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*              SELECT SINGLE * FROM zan_so_po_auto</font>
+<font color ="#0000FF">*                       INTO wa_zan_so_po_auto3</font>
+<font color ="#0000FF">*                       WHERE bukrs = wa_vbrk-bukrs</font>
+<font color ="#0000FF">*                       AND kunnr = wa_vbrk-kunag</font>
+<font color ="#0000FF">*                       AND werks = v_werks.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*              IF sy-subrc &lt;&gt; 0.</font>
+<font color ="#0000FF">*                MESSAGE 'PO creation data not found' TYPE 'E'.</font>
+<font color ="#0000FF">*              ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*              IF v_lifnr &lt;&gt; wa_zan_so_po_auto3-lifnr.</font>
+<font color ="#0000FF">*                MESSAGE 'Vendor mismatch' TYPE 'E'.</font>
+<font color ="#0000FF">*              ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">**** APPEND HEADER TABLE</font>
+<font color ="#0000FF">*              poheader-comp_code = wa_vbrk-bukrs.</font>
+<font color ="#0000FF">*              poheader-vendor = v_lifnr.</font>
+<font color ="#0000FF">*              poheader-purch_org = wa_zan_so_po_auto3-ekorg.</font>
+<font color ="#0000FF">*              poheader-pur_group = wa_zan_so_po_auto3-ekgrp.</font>
+<font color ="#0000FF">*              poheader-doc_type = wa_zan_so_po_auto3-bsart.</font>
+<font color ="#0000FF">*              poheader-item_intvl =  '00010'.</font>
+<font color ="#0000FF">*              poheader-collect_no = wa_vbrk-vbeln.</font>
+<font color ="#0000FF">*              APPEND poheader.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*              poheaderx-comp_code = 'X'.</font>
+<font color ="#0000FF">*              poheaderx-vendor = 'X'.</font>
+<font color ="#0000FF">*              poheaderx-purch_org = 'X'.</font>
+<font color ="#0000FF">*              poheaderx-pur_group = 'X'.</font>
+<font color ="#0000FF">*              poheaderx-doc_type = 'X'.</font>
+<font color ="#0000FF">*              poheaderx-item_intvl =  'X'.</font>
+<font color ="#0000FF">*              poheaderx-collect_no = 'X'.</font>
+<font color ="#0000FF">*              APPEND poheaderx.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">**** APPEND ITEM TABLE</font>
+<font color ="#0000FF">*              LOOP AT it_vbrp INTO wa_vbrp.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*                CLEAR : v_matnr.</font>
+<font color ="#0000FF">*                v_ebelp = v_ebelp + 10.</font>
+<font color ="#0000FF">*                v_matnr = wa_vbrp-matnr.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*                CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'</font>
+<font color ="#0000FF">*                  EXPORTING</font>
+<font color ="#0000FF">*                    input  = v_matnr</font>
+<font color ="#0000FF">*                  IMPORTING</font>
+<font color ="#0000FF">*                    output = v_matnr.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">**** CHECK MATERIAL EXIST OR NOT</font>
+<font color ="#0000FF">*SELECT SINGLE * FROM mara INTO wa_mara WHERE matnr = v_matnr.</font>
+<font color ="#0000FF">*                IF sy-subrc &lt;&gt; 0.</font>
+<font color ="#0000FF">*                  MESSAGE 'Material code not found' TYPE 'E'.</font>
+<font color ="#0000FF">*                ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*                SELECT SINGLE * FROM zan_so_po_matmap</font>
+<font color ="#0000FF">*                 INTO wa_zan_so_po_auto4</font>
+<font color ="#0000FF">*                  WHERE sowerks = wa_vbrp-werks</font>
+<font color ="#0000FF">*                    AND somatnr = wa_vbrp-matnr</font>
+<font color ="#0000FF">*                    AND powerks = v_werks</font>
+<font color ="#0000FF">*                    AND pomatnr = v_matnr.</font>
+<font color ="#0000FF">*                IF sy-subrc &lt;&gt; 0.</font>
+<font color ="#0000FF">*                  MESSAGE 'Material mapping is not done' TYPE 'E'.</font>
+<font color ="#0000FF">*                ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">**** CHECK FOR UNIT CONVERSION</font>
+<font color ="#0000FF">*SELECT SINGLE meins FROM mara INTO v_souom WHERE matnr = wa_vbrp-matnr.</font>
+<font color ="#0000FF">*SELECT SINGLE meins FROM mara INTO v_pouom WHERE matnr = v_matnr.</font>
+<font color ="#0000FF">*                IF v_souom &lt;&gt; v_pouom.</font>
+<font color ="#0000FF">*SELECT SINGLE * FROM marm INTO wa_marm WHERE matnr = v_matnr AND meinh</font>
+<font color ="#0000FF">*= v_souom.</font>
+<font color ="#0000FF">*                  IF sy-subrc &lt;&gt; 0.</font>
+<font color ="#0000FF">*                    MESSAGE 'Unit conversion not maintained' TYPE 'E'.</font>
+<font color ="#0000FF">*                  ENDIF.</font>
+<font color ="#0000FF">*                ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*                CALL FUNCTION 'ZAN_SO_PRICE'</font>
+<font color ="#0000FF">*                  EXPORTING</font>
+<font color ="#0000FF">*                    i_qty   = wa_vbrp-fkimg</font>
+<font color ="#0000FF">*                    i_value = wa_vbrp-netwr</font>
+<font color ="#0000FF">*                    i_tax   = wa_vbrp-mwsbp</font>
+<font color ="#0000FF">*                    taxincl = wa_zan_so_po_auto3-taxincl</font>
+<font color ="#0000FF">*                  IMPORTING</font>
+<font color ="#0000FF">*                    i_basic = v_basic.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">**** ITEM TABLE APPEND</font>
+<font color ="#0000FF">*                poitem-po_item = v_ebelp.</font>
+<font color ="#0000FF">*                poitem-material = v_matnr.</font>
+<font color ="#0000FF">*                poitem-plant = v_werks.</font>
+<font color ="#0000FF">*                poitem-stge_loc = wa_zan_so_po_auto4-lgort.</font>
+<font color ="#0000FF">*                poitem-quantity = wa_vbrp-fkimg.</font>
+<font color ="#0000FF">*                poitem-tax_code = wa_zan_so_po_auto4-mwskz.</font>
+<font color ="#0000FF">*                poitem-po_unit = wa_vbrp-meins.</font>
+<font color ="#0000FF">*                poitem-orderpr_un = wa_vbrp-meins.</font>
+<font color ="#0000FF">*                poitem-over_dlv_tol = 0.</font>
+<font color ="#0000FF">*                poitem-under_dlv_tol = 0.</font>
+<font color ="#0000FF">*                APPEND poitem.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*                poitemx-po_item = v_ebelp.</font>
+<font color ="#0000FF">*                poitemx-material = 'X'.</font>
+<font color ="#0000FF">*                poitemx-plant = 'X'.</font>
+<font color ="#0000FF">*                poitemx-stge_loc = 'X'.</font>
+<font color ="#0000FF">*                poitemx-quantity = 'X'.</font>
+<font color ="#0000FF">*                poitemx-tax_code = 'X'.</font>
+<font color ="#0000FF">*                poitemx-po_unit = 'X'.</font>
+<font color ="#0000FF">*                poitemx-orderpr_un = 'X'.</font>
+<font color ="#0000FF">*                poitemx-over_dlv_tol = 'X'.</font>
+<font color ="#0000FF">*                poitemx-under_dlv_tol = 'X'.</font>
+<font color ="#0000FF">*                APPEND poitemx.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">**** CONDITION TABLE APPEND</font>
+<font color ="#0000FF">*                pocond-condition_no = '1'.</font>
+<font color ="#0000FF">*                pocond-itm_number = v_ebelp.</font>
+<font color ="#0000FF">*                pocond-cond_type  = wa_zan_so_po_auto4-kschl.</font>
+<font color ="#0000FF">*                pocond-cond_value = v_basic.</font>
+<font color ="#0000FF">*                pocond-cond_value = pocond-cond_value * 1000000.</font>
+<font color ="#0000FF">*                pocond-change_id  = 'U'.</font>
+<font color ="#0000FF">*                APPEND pocond.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*                pocond-condition_no = '1'.</font>
+<font color ="#0000FF">*                pocondx-itm_number = v_ebelp.</font>
+<font color ="#0000FF">*                pocondx-cond_type  = 'X'.</font>
+<font color ="#0000FF">*                pocondx-cond_value = 'X'.</font>
+<font color ="#0000FF">*                pocondx-change_id  = 'X'.</font>
+<font color ="#0000FF">*                APPEND pocondx.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*LOOP AT it_konv INTO wa_konv WHERE kposn = wa_vbrp-posnr AND kschl =</font>
+<font color ="#0000FF">*'PR00'.</font>
+<font color ="#0000FF">*                  pocond-condition_no = '1'.</font>
+<font color ="#0000FF">*                  pocond-itm_number = v_ebelp.</font>
+<font color ="#0000FF">*                  pocond-cond_type  = 'ZPR0'.</font>
+<font color ="#0000FF">*                  pocond-cond_value = wa_konv-kbetr.</font>
+<font color ="#0000FF">*                  pocond-cond_value = pocond-cond_value * 1000000.</font>
+<font color ="#0000FF">*                  pocond-change_id  = 'U'.</font>
+<font color ="#0000FF">*                  APPEND pocond.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*                  pocond-condition_no = '1'.</font>
+<font color ="#0000FF">*                  pocondx-itm_number = v_ebelp.</font>
+<font color ="#0000FF">*                  pocondx-cond_type  = 'X'.</font>
+<font color ="#0000FF">*                  pocondx-cond_value = 'X'.</font>
+<font color ="#0000FF">*                  pocondx-change_id  = 'X'.</font>
+<font color ="#0000FF">*                  APPEND pocondx.</font>
+<font color ="#0000FF">*                  CLEAR: wa_konv.</font>
+<font color ="#0000FF">*                ENDLOOP.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*                poacc-po_item = v_ebelp.</font>
+<font color ="#0000FF">*                poacc-tax_code  = wa_zan_so_po_auto4-mwskz.</font>
+<font color ="#0000FF">*                APPEND poacc.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*                poaccx-po_item = v_ebelp.</font>
+<font color ="#0000FF">*                poaccx-tax_code  = 'X'.</font>
+<font color ="#0000FF">*                APPEND poaccx.</font>
+<font color ="#0000FF">*                CLEAR: wa_vbrp.</font>
+<font color ="#0000FF">*              ENDLOOP.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">**************** PO BAPI</font>
+<font color ="#0000FF">*              IF wa_zan_so_po_auto4-po = 'X'.</font>
+<font color ="#0000FF">*                CALL FUNCTION 'BAPI_PO_CREATE1'</font>
+<font color ="#0000FF">*                  EXPORTING</font>
+<font color ="#0000FF">*                    poheader         = poheader</font>
+<font color ="#0000FF">*                    poheaderx        = poheaderx</font>
+<font color ="#0000FF">*                  IMPORTING</font>
+<font color ="#0000FF">*                    exppurchaseorder = pono</font>
+<font color ="#0000FF">*                  TABLES</font>
+<font color ="#0000FF">*                    return           = return</font>
+<font color ="#0000FF">*                    poitem           = poitem</font>
+<font color ="#0000FF">*                    poitemx          = poitemx</font>
+<font color ="#0000FF">*                    poaccount        = poacc</font>
+<font color ="#0000FF">*                    poaccountx       = poaccx</font>
+<font color ="#0000FF">*                    pocond           = pocond</font>
+<font color ="#0000FF">*                    pocondx          = pocondx.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*                IF pono IS NOT INITIAL.</font>
+<font color ="#0000FF">*                  CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'</font>
+<font color ="#0000FF">*                    EXPORTING</font>
+<font color ="#0000FF">*                      wait = 'X'.</font>
+<font color ="#0000FF">*                  WAIT UP TO 5 SECONDS.</font>
+<font color ="#0000FF">*                ELSE.</font>
+<font color ="#0000FF">*                  LOOP AT return WHERE type = 'E'.</font>
+<font color ="#0000FF">*                    MESSAGE return-message TYPE 'I'.</font>
+<font color ="#0000FF">*                  ENDLOOP.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*                ENDIF.</font>
+<font color ="#0000FF">*              ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*            ENDIF.</font>
+<font color ="#0000FF">*          ENDIF.</font>
+<font color ="#0000FF">*        ENDIF.</font>
+<font color ="#0000FF">*      ENDIF.</font>
+<font color ="#0000FF">*    ENDIF.</font>
+<font color ="#0000FF">*  ENDIF.</font>
+<font color ="#0000FF">*ENDFORM.                    "PO_CREATE</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Form  SEND_MAIL</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+<font color ="#0000FF">*  --&gt;  p1        text</font>
+<font color ="#0000FF">*  &lt;--  p2        text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Form  EMAIL_HEAD</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+<font color ="#0000FF">*  --&gt;  p1        text</font>
+<font color ="#0000FF">*  &lt;--  p2        text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+FORM email_head USING materialdocument blino lv_name1 lv_name2.
+
+
+  ls_mailtxt-line  = 'Dear Facilitator,&lt;br/&gt;&lt;br/&gt;'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  CONCATENATE 'Below mentioned material codes are shipped from' lv_name1
+  lv_name2 'with respect to GIT number :'
+  blino '&lt;br/&gt;&lt;br/&gt;' INTO ls_mailtxt SEPARATED BY ''.
+
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt =
+'&lt;table style="MARGIN: 10px" bordercolor="black" cellspacing="0" cell' &
+'padding="12" width="400" border="1"&gt;'
+  .
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt = '&lt;tr&gt;'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt = '&lt;th&gt;&lt;b&gt;&lt;small&gt;BLI/Invoice #.&lt;/small&gt;&lt;/b&gt;&lt;/th&gt;'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt = '&lt;th&gt;&lt;b&gt;&lt;small&gt;PO Number&lt;/small&gt;&lt;/b&gt;&lt;/th&gt;'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt = '&lt;th&gt;&lt;b&gt;&lt;small&gt;Item No.&lt;/small&gt;&lt;/b&gt;&lt;/th&gt;'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt = '&lt;th&gt;&lt;b&gt;&lt;small&gt;Vendor&lt;/small&gt;&lt;/b&gt;&lt;/th&gt;'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt = '&lt;th&gt;&lt;b&gt;&lt;small&gt;Material Code&lt;/small&gt;&lt;/b&gt;&lt;/th&gt;'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt = '&lt;th&gt;&lt;b&gt;&lt;small&gt;Material Description&lt;/small&gt;&lt;/b&gt;&lt;/th&gt;'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt = '&lt;th&gt;&lt;b&gt;&lt;small&gt;Batch&lt;/small&gt;&lt;/b&gt;&lt;/th&gt;'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt = '&lt;th&gt;&lt;b&gt;&lt;small&gt;Expiry Date&lt;/small&gt;&lt;/b&gt;&lt;/th&gt;'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt = '&lt;th&gt;&lt;b&gt;&lt;small&gt;PO Quantity&lt;/small&gt;&lt;/b&gt;&lt;/th&gt;'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt = '&lt;/tr&gt;'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+ENDFORM.                    " EMAIL_HEAD
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Form  PRICE_QTY_MISMATCH</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+<font color ="#0000FF">*      --&gt;P_BUKRS  text</font>
+<font color ="#0000FF">*      --&gt;P_P_LWA_BLI_BLINO  text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+FORM price_qty_mismatch  USING    bukrs
+                                  p_lwa_bli_blino lgort.
+  DATA: v_message  TYPE string,
+        lwa_return TYPE bapiret2.
+  CLEAR:v_message.
+
+  CONCATENATE 'BLI No.:'
+                         p_lwa_bli_blino INTO ls_mailtxt-line SEPARATED
+                         BY ' '.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+<font color ="#0000FF">*  LOOP AT lt_return INTO lwa_return WHERE type = 'E' OR type = 'A'.</font>
+  ls_mailtxt-line  =
+  'Qty/Price mismatch between Invoice and PO during 107 GRN'..
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+<font color ="#0000FF">*  ENDLOOP.</font>
+
+  CLEAR l_tab_lines.
+  DESCRIBE TABLE lt_mailtxt LINES l_tab_lines.
+  READ TABLE lt_mailtxt INTO ls_mailtxt  INDEX l_tab_lines.
+  lt_mailsubject-doc_size = ( l_tab_lines - 1 ) * 255 + strlen(
+  ls_mailtxt ).
+  REFRESH: lt_obj_pack.
+  CLEAR: wa_obj_pack.
+  wa_obj_pack-head_start = 1.
+  wa_obj_pack-head_num   = 0.
+  wa_obj_pack-body_start = 1.
+  wa_obj_pack-body_num   = l_tab_lines.
+  wa_obj_pack-doc_type   = 'RAW'.
+  APPEND wa_obj_pack TO lt_obj_pack.
+
+  DATA: lwa_email_det TYPE zia_email.
+  DATA: lwa_email_ftp TYPE zia_ftp.
+
+  SELECT * FROM zia_email INTO lwa_email_det
+    WHERE bukrs = bukrs AND functionality = lc_func."AND LGORT = LGORT
+
+    ls_mailrecipients-rec_type  = 'U'.
+    ls_mailrecipients-receiver  = lwa_email_det-email.
+    " LS_ADR6-SMTP_ADDR.   "Email Id
+    APPEND ls_mailrecipients TO lt_mailrecipients.
+    CLEAR ls_mailrecipients .
+  ENDSELECT.
+
+  "Added By Vaibhav on 04.08.2020
+  SELECT * FROM zia_ftp INTO lwa_email_ftp WHERE process_type = lc_func
+  AND th_param = bukrs AND sap_param = lgort. "AND LGORT = LGORT
+    ls_mailrecipients-rec_type  = 'U'.
+    ls_mailrecipients-receiver  = lwa_email_ftp-sap_param3.
+    " LS_ADR6-SMTP_ADDR.   "Email Id
+    APPEND ls_mailrecipients TO lt_mailrecipients.
+    CLEAR ls_mailrecipients .
+  ENDSELECT.
+
+  DELETE ADJACENT DUPLICATES FROM lt_mailrecipients COMPARING receiver.
+  "Added By Vaibhav on 04.08.2020
+  """"""""""
+
+  ls_mailsubject-obj_name = 'Goods Shipment(GIT) Error'.
+  ls_mailsubject-obj_langu = sy-langu.
+  CONCATENATE 'Goods Shipment(GIT-107) Error for BLI -' p_lwa_bli_blino
+                                INTO ls_mailsubject-obj_descr SEPARATED
+                                BY space.
+
+  IF lt_mailrecipients[] IS NOT INITIAL.
+<font color ="#0000FF">*----------------------------------ADD BY KARAN</font>
+<font color ="#0000FF">*02-05-2019----------------------------------*</font>
+    CALL FUNCTION 'SO_DOCUMENT_SEND_API1'
+      EXPORTING
+        document_data              = ls_mailsubject
+        sender_address             = c_sender_address
+        sender_address_type        = c_sender_address_type
+        commit_work                = 'X'
+      TABLES
+        packing_list               = lt_obj_pack
+        contents_txt               = lt_mailtxt
+        receivers                  = lt_mailrecipients
+      EXCEPTIONS
+        too_many_receivers         = 1
+        document_not_sent          = 2
+        document_type_not_exist    = 3
+        operation_no_authorization = 4
+        parameter_error            = 5
+        x_error                    = 6
+        enqueue_error              = 7
+        OTHERS                     = 8.
+
+<font color ="#0000FF">*----------------------------------END BY KARAN</font>
+<font color ="#0000FF">*02-05-2019----------------------------------*</font>
+<font color ="#0000FF">*    CALL FUNCTION 'SO_NEW_DOCUMENT_SEND_API1'</font>
+<font color ="#0000FF">*      EXPORTING</font>
+<font color ="#0000FF">*        DOCUMENT_DATA              = LS_MAILSUBJECT</font>
+<font color ="#0000FF">*        COMMIT_WORK                = 'X'</font>
+<font color ="#0000FF">*      TABLES</font>
+<font color ="#0000FF">*        OBJECT_CONTENT             = LT_MAILTXT</font>
+<font color ="#0000FF">*        RECEIVERS                  = LT_MAILRECIPIENTS</font>
+<font color ="#0000FF">*      EXCEPTIONS</font>
+<font color ="#0000FF">*        TOO_MANY_RECEIVERS         = 1</font>
+<font color ="#0000FF">*        DOCUMENT_NOT_SENT          = 2</font>
+<font color ="#0000FF">*        DOCUMENT_TYPE_NOT_EXIST    = 3</font>
+<font color ="#0000FF">*        OPERATION_NO_AUTHORIZATION = 4</font>
+<font color ="#0000FF">*        PARAMETER_ERROR            = 5</font>
+<font color ="#0000FF">*        X_ERROR                    = 6</font>
+<font color ="#0000FF">*        ENQUEUE_ERROR              = 7</font>
+<font color ="#0000FF">*        OTHERS                     = 8.</font>
+
+    COMMIT WORK.
+  ENDIF.
+  REFRESH:lt_mailtxt,lt_mailrecipients, lt_obj_pack.
+  " ADD BY KARAN 02-05-2019 " LT_OBJ_PACK
+  CLEAR:ls_mailsubject.
+
+ENDFORM.                    " PRICE_QTY_MISMATCH
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Form  NO_KAR_MAIL</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+<font color ="#0000FF">*      --&gt;P_LWA_BLI_BLI_NO  text</font>
+<font color ="#0000FF">*      --&gt;P_LWA_BLI_BUKRS  text</font>
+<font color ="#0000FF">*      --&gt;P_LWA_VBRK_VBELN  text</font>
+<font color ="#0000FF">*      --&gt;P_LWA_VBRP_POSNR  text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+FORM no_kar_mail  USING blino  bukrs  p_lwa_vbrk_vbeln
+                              p_lwa_vbrp_posnr lgort.
+
+  ls_mailtxt-line  = 'Dear Facilitator,'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  = ''.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  IF syst-sysid = 'DEV'.
+    ls_mailtxt-line  =
+'We have an exception raised in SAP DEV system and thus need your imm' &
+'ediate attention for the below statement:&lt;br/&gt;&lt;br/&gt;'
+    .
+  ELSEIF syst-sysid = 'QLS'.
+    ls_mailtxt-line  =
+'We have an exception raised in SAP QAS system and thus need your imm' &
+'ediate attention for the below statement:&lt;br/&gt;&lt;br/&gt;'
+    .
+  ELSEIF syst-sysid = 'PIP'.
+    ls_mailtxt-line  =
+'We have an exception raised in SAP PRD system and thus need your imm' &
+'ediate attention for the below statement:&lt;br/&gt;&lt;br/&gt;'
+    .
+  ENDIF.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  = ''.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  CONCATENATE 'Material not maintained for UOM as Carton for invoice'
+  p_lwa_vbrk_vbeln 'and Item' p_lwa_vbrp_posnr 'of BLI'
+                blino INTO ls_mailtxt SEPARATED BY ' '.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  = ''.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  =
+'Please feel free to contact btc-sap@sarjen.com for any support you n' &
+'eed in this regard.'
+  .
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  = ''.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  = 'Regards,'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  ls_mailtxt-line  = 'PNS Team'.
+  APPEND ls_mailtxt TO lt_mailtxt.
+  CLEAR:ls_mailtxt.
+
+  CLEAR l_tab_lines.
+  DESCRIBE TABLE lt_mailtxt LINES l_tab_lines.
+  READ TABLE lt_mailtxt INTO ls_mailtxt  INDEX l_tab_lines.
+  lt_mailsubject-doc_size = ( l_tab_lines - 1 ) * 255 + strlen(
+  ls_mailtxt ).
+  REFRESH: lt_obj_pack.
+  CLEAR: wa_obj_pack.
+  wa_obj_pack-head_start = 1.
+  wa_obj_pack-head_num   = 0.
+  wa_obj_pack-body_start = 1.
+  wa_obj_pack-body_num   = l_tab_lines.
+  wa_obj_pack-doc_type   = 'RAW'.
+  APPEND wa_obj_pack TO lt_obj_pack.
+
+  DATA: lwa_email_det TYPE zia_email.
+  DATA: lwa_email_ftp TYPE zia_ftp.
+  SELECT * FROM zia_email INTO lwa_email_det WHERE bukrs = bukrs AND
+  functionality = lc_func."AND LGORT = LGORT
+
+    ls_mailrecipients-rec_type  = 'U'.
+    ls_mailrecipients-receiver  = lwa_email_det-email.
+    APPEND ls_mailrecipients TO lt_mailrecipients.
+    CLEAR ls_mailrecipients .
+  ENDSELECT.
+
+  "Added By Vaibhav on 04.08.2020
+  SELECT * FROM zia_ftp INTO lwa_email_ftp WHERE process_type = lc_func
+  AND th_param = bukrs AND sap_param = lgort. "AND LGORT = LGORT
+    ls_mailrecipients-rec_type  = 'U'.
+    ls_mailrecipients-receiver  = lwa_email_ftp-sap_param3.
+    " LS_ADR6-SMTP_ADDR.   "Email Id
+    APPEND ls_mailrecipients TO lt_mailrecipients.
+    CLEAR ls_mailrecipients .
+  ENDSELECT.
+
+  DELETE ADJACENT DUPLICATES FROM lt_mailrecipients COMPARING receiver.
+  "Added By Vaibhav on 04.08.2020
+  """"""""""
+
+  ls_mailsubject-obj_langu = sy-langu.
+  ls_mailsubject-obj_descr = 'No Pricing data'.
+
+  IF lt_mailrecipients[] IS NOT INITIAL.
+<font color ="#0000FF">*----------------------------------ADD BY KARAN</font>
+<font color ="#0000FF">*02-05-2019----------------------------------*</font>
+    CALL FUNCTION 'SO_DOCUMENT_SEND_API1'
+      EXPORTING
+        document_data              = ls_mailsubject
+        sender_address             = c_sender_address
+        sender_address_type        = c_sender_address_type
+        commit_work                = 'X'
+      TABLES
+        packing_list               = lt_obj_pack
+        contents_txt               = lt_mailtxt
+        receivers                  = lt_mailrecipients
+      EXCEPTIONS
+        too_many_receivers         = 1
+        document_not_sent          = 2
+        document_type_not_exist    = 3
+        operation_no_authorization = 4
+        parameter_error            = 5
+        x_error                    = 6
+        enqueue_error              = 7
+        OTHERS                     = 8.
+<font color ="#0000FF">*----------------------------------END BY KARAN</font>
+<font color ="#0000FF">*02-05-2019----------------------------------*</font>
+
+<font color ="#0000FF">*    CALL FUNCTION 'SO_NEW_DOCUMENT_SEND_API1'</font>
+<font color ="#0000FF">*      EXPORTING</font>
+<font color ="#0000FF">*        DOCUMENT_DATA              = LS_MAILSUBJECT</font>
+<font color ="#0000FF">*        COMMIT_WORK                = 'X'</font>
+<font color ="#0000FF">*      TABLES</font>
+<font color ="#0000FF">*        OBJECT_CONTENT             = LT_MAILTXT</font>
+<font color ="#0000FF">*        RECEIVERS                  = LT_MAILRECIPIENTS</font>
+<font color ="#0000FF">*      EXCEPTIONS</font>
+<font color ="#0000FF">*        TOO_MANY_RECEIVERS         = 1</font>
+<font color ="#0000FF">*        DOCUMENT_NOT_SENT          = 2</font>
+<font color ="#0000FF">*        DOCUMENT_TYPE_NOT_EXIST    = 3</font>
+<font color ="#0000FF">*        OPERATION_NO_AUTHORIZATION = 4</font>
+<font color ="#0000FF">*        PARAMETER_ERROR            = 5</font>
+<font color ="#0000FF">*        X_ERROR                    = 6</font>
+<font color ="#0000FF">*        ENQUEUE_ERROR              = 7</font>
+<font color ="#0000FF">*        OTHERS                     = 8.</font>
+
+    COMMIT WORK.
+  ENDIF.
+  REFRESH: lt_mailtxt,lt_mailrecipients.
+  CLEAR    ls_mailsubject.
+
+
+ENDFORM.                    " NO_KAR_MAIL
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Form  DO_107_BLI_PO</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+<font color ="#0000FF">*      --&gt;P_LWA_BLI_BLINO  text</font>
+<font color ="#0000FF">*      --&gt;P_PONO  text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+FORM do_107_inb_del."  USING bukrs p_lwa_bli_blino.
+  TYPES: BEGIN OF ty_ekpo,
+           ebeln TYPE ekpo-ebeln,
+           ebelp TYPE ekpo-ebelp,
+           matnr TYPE ekpo-matnr,
+           werks TYPE ekpo-werks,
+           bednr TYPE ekpo-bednr,
+           menge TYPE ekpo-menge,
+           meins TYPE ekpo-meins,
+           netpr TYPE ekpo-netpr,
+           netwr TYPE ekpo-netwr,
+           labnr TYPE ekpo-labnr,
+           afnam TYPE ekpo-afnam,
+           lgort TYPE ekpo-lgort,
+           vbeln TYPE vbrk-vbeln,
+           posnr TYPE vbrp-posnr,
+           maktx TYPE makt-maktx,
+         END OF ty_ekpo.
+  TYPES: BEGIN OF ty_vbrp,
+           vbeln TYPE vbrk-vbeln,
+           posnr TYPE vbrp-posnr,
+           matnr TYPE vbrp-matnr,
+           fkimg TYPE vbrp-fkimg,
+           vrkme TYPE vbrp-vrkme,
+           netwr TYPE vbrp-netwr,
+           charg TYPE vbrp-charg,
+           lgort TYPE vbrp-lgort,
+         END OF ty_vbrp.
+
+  TYPES: BEGIN OF ty_eket,
+           ebeln TYPE eket-ebeln,
+           ebelp TYPE eket-ebelp,
+           charg TYPE eket-charg,
+         END OF ty_eket.
+  DATA: lt_ekpo      TYPE TABLE OF ty_ekpo,
+        lt_vbrp      TYPE TABLE OF ty_vbrp,
+        lt_vbrp_col  TYPE TABLE OF ty_vbrp,
+        it_eket      TYPE TABLE OF ty_eket,
+        wa_eket      TYPE ty_eket,
+        lwa_vbrp     TYPE ty_vbrp,
+        lwa_vbrp_col TYPE ty_vbrp,
+        lwa_ekpo     TYPE ty_ekpo.
+  DATA : count TYPE i.
+  TYPES : BEGIN OF lst_cl,
+            vbeln TYPE vbrp-vbeln,
+            matnr TYPE vbrp-matnr,
+            charg TYPE vbrp-charg,
+            fkimg TYPE vbrp-fkimg,
+            netwr TYPE vbrp-netwr,
+          END OF lst_cl.
+
+  DATA : ls_cl TYPE lst_cl,
+         lt_cl TYPE STANDARD TABLE OF lst_cl.
+
+  DATA: lifnr TYPE ekko-lifnr.
+
+  DATA: lv_netwr TYPE vbrp-netwr,
+        lv_fkimg TYPE vbrp-fkimg,
+        gv_menge TYPE ekpo-menge,
+        gv_netwr TYPE ekpo-netwr.
+
+  CLEAR lv_error.
+  CLEAR: ls_header,ls_item,ls_code,ls_headret.
+  REFRESH: lt_ekpo,lt_item,extensionin,lt_return,it_message[].
+
+  DATA(bukrs) = s_bukrs-low.
+
+  SELECT ebeln
+          ebelp
+          matnr
+          werks
+          bednr
+          menge
+          meins
+          netpr
+          netwr
+          labnr
+          afnam
+          lgort
+          FROM ekpo
+          INTO CORRESPONDING FIELDS OF TABLE lt_ekpo
+  WHERE ebeln = gv_ebeln
+    AND ebelp = gv_ebelp.
+
+  LOOP AT lt_ekpo ASSIGNING FIELD-SYMBOL(&lt;fs_ekpo&gt;).
+    CLEAR: v_werks.
+    &lt;fs_ekpo&gt;-vbeln = lwa_ekpo-labnr+0(10).
+    &lt;fs_ekpo&gt;-posnr = lwa_ekpo-labnr+10(6).
+    v_werks = lwa_ekpo-werks.
+  ENDLOOP.
+
+  CLEAR: multiple,wa_bli_inv_map,r_vbeln.
+  REFRESH: it_bli_map[],r_vbeln[].
+  it_bli_map[] = it_bli_inv_map[].
+  SORT it_bli_map BY ebeln.
+  DELETE it_bli_map WHERE ebeln NE gv_ebeln.
+
+  LOOP AT it_bli_map INTO wa_bli_inv_map WHERE ebeln = gv_ebeln.
+    IF sy-tabix GT 1.
+      multiple = 'X'.
+    ENDIF.
+    r_vbeln-sign = 'I'.
+    r_vbeln-option = 'EQ'.
+    r_vbeln-low = wa_bli_inv_map-vbeln.
+    APPEND r_vbeln.
+    CLEAR:wa_bli_inv_map.
+  ENDLOOP.
+
+
+  SORT lt_ekpo BY vbeln posnr.
+  SELECT * FROM  zia_bli_inv_map INTO lwa_bli
+   UP TO 1 ROWS
+   WHERE bukrs = bukrs
+     AND ebeln = gv_ebeln
+     AND bwart = '101'.
+  ENDSELECT.
+  IF sy-subrc = 0.
+    v_101 = 'X'.
+  ENDIF.
+
+  SELECT ebeln, ebelp, charg FROM eket
+    INTO TABLE @it_eket FOR ALL ENTRIES IN @lt_ekpo
+   WHERE ebeln = @lt_ekpo-ebeln
+     AND ebelp = @lt_ekpo-ebelp.
+
+  IF v_101 &lt;&gt; 'X'.
+    READ TABLE lt_ekpo INTO lwa_ekpo INDEX 1.
+    IF lwa_ekpo-lgort = 'IT11' OR lwa_ekpo-werks = 'ES11' OR
+    lwa_ekpo-werks = 'NL11' OR lwa_ekpo-werks = 'NL12'.
+      CLEAR : lwa_ekpo.
+      IF lt_ekpo[] IS NOT INITIAL.
+
+        IF r_vbeln IS NOT INITIAL.
+          SELECT vbeln
+                 posnr
+                 matnr
+                 fkimg
+                 vrkme
+                 netwr
+                 charg
+                 lgort
+                 FROM vbrp
+                 INTO TABLE lt_vbrp
+          WHERE vbeln IN r_vbeln.
+        ENDIF.
+
+        DELETE lt_vbrp WHERE fkimg = '0.000'.
+        CLEAR : lwa_ekpo.
+        IF lt_vbrp[] IS NOT INITIAL.
+          IF multiple = ''.
+            LOOP AT lt_vbrp INTO lwa_vbrp.
+              READ TABLE lt_ekpo INTO lwa_ekpo WITH KEY vbeln =
+              lwa_vbrp-vbeln.
+              IF sy-subrc EQ 0.
+                ls_cl-vbeln = lwa_vbrp-vbeln.
+                ls_cl-charg = lwa_vbrp-charg.
+                ls_cl-matnr = lwa_vbrp-matnr.
+                ls_cl-fkimg = lwa_vbrp-fkimg.
+                ls_cl-netwr = lwa_vbrp-netwr.
+                COLLECT ls_cl INTO lt_cl.
+                CLEAR : lwa_vbrp.
+              ENDIF.
+            ENDLOOP.
+
+            DATA: lv_menge TYPE ekpo-menge.
+            CLEAR : lwa_ekpo.
+            LOOP AT lt_ekpo INTO lwa_ekpo.
+              CLEAR : ls_cl.
+              READ TABLE lt_vbrp INTO lwa_vbrp WITH KEY vbeln =
+              lwa_ekpo-vbeln posnr = lwa_ekpo-posnr.
+              READ TABLE lt_cl INTO ls_cl WITH KEY vbeln =
+              lwa_ekpo-vbeln
+                                                   matnr =
+                                                   lwa_ekpo-matnr
+                                                   charg =
+                                                   lwa_vbrp-charg.
+              IF lwa_ekpo-netwr &lt;&gt; ls_cl-netwr.
+                lv_error = 'X'.
+
+              ELSEIF lwa_ekpo-menge &lt;&gt;  ls_cl-fkimg OR lwa_vbrp-vrkme
+              &lt;&gt; lwa_ekpo-meins.
+                CLEAR lv_menge.
+                CALL FUNCTION 'MD_CONVERT_MATERIAL_UNIT'
+                  EXPORTING
+                    i_matnr              = lwa_ekpo-matnr
+                    i_in_me              = lwa_ekpo-meins
+                    i_out_me             = lwa_vbrp-vrkme
+                    i_menge              = lwa_ekpo-menge
+                  IMPORTING
+                    e_menge              = lv_menge
+                  EXCEPTIONS
+                    error_in_application = 1
+                    error                = 2
+                    OTHERS               = 3.
+                IF lv_menge &lt;&gt; ls_cl-fkimg.
+                  lv_error = 'X'.
+                ENDIF.
+              ENDIF.
+            ENDLOOP.
+
+          ELSEIF multiple = 'X'.
+            CLEAR : lv_netwr,lv_fkimg,lv_menge,gv_menge,gv_netwr.
+            LOOP AT lt_vbrp INTO lwa_vbrp.
+              lv_netwr = lv_netwr + lwa_vbrp-netwr.
+              lv_fkimg = lv_fkimg + lwa_vbrp-fkimg.
+              CLEAR : lwa_vbrp.
+            ENDLOOP.
+
+            LOOP AT lt_ekpo INTO lwa_ekpo.
+              READ TABLE lt_vbrp INTO lwa_vbrp INDEX 1.
+              CALL FUNCTION 'MD_CONVERT_MATERIAL_UNIT'
+                EXPORTING
+                  i_matnr              = lwa_ekpo-matnr
+                  i_in_me              = lwa_ekpo-meins
+                  i_out_me             = lwa_vbrp-vrkme
+                  i_menge              = lwa_ekpo-menge
+                IMPORTING
+                  e_menge              = lv_menge
+                EXCEPTIONS
+                  error_in_application = 1
+                  error                = 2
+                  OTHERS               = 3.
+
+              gv_menge = lv_menge + gv_menge.
+              gv_netwr = lwa_ekpo-netwr + gv_netwr.
+              CLEAR: lwa_ekpo,lv_menge.
+            ENDLOOP.
+
+            IF gv_netwr &lt;&gt; lv_netwr.
+              lv_error = 'X'.
+            ELSEIF gv_menge &lt;&gt;  lv_fkimg .
+              lv_error = 'X'.
+            ENDIF.
+          ENDIF.
+        ENDIF.
+      ENDIF.
+
+    ELSEIF lwa_ekpo-werks = 'DK11' OR lwa_ekpo-werks = 'EE11' OR
+    lwa_ekpo-werks = 'SE11' OR lwa_ekpo-werks = 'FI11'.
+      CLEAR : lwa_ekpo.
+      IF lt_ekpo[] IS NOT INITIAL.
+        SELECT vbeln
+               posnr
+               matnr
+               fkimg
+               vrkme
+               netwr
+               charg
+               lgort
+               FROM vbrp
+               INTO TABLE lt_vbrp
+               FOR ALL ENTRIES IN lt_ekpo
+               WHERE vbeln = lt_ekpo-vbeln
+        AND posnr = lt_ekpo-posnr.
+
+        LOOP AT lt_ekpo INTO lwa_ekpo.
+          READ TABLE lt_vbrp INTO lwa_vbrp WITH KEY vbeln =
+          lwa_ekpo-vbeln posnr = lwa_ekpo-posnr.
+          IF sy-subrc = 0.
+            IF lwa_vbrp-netwr &lt;&gt; lwa_ekpo-netwr.
+              lv_error = 'X'.
+            ELSEIF lwa_vbrp-fkimg &lt;&gt; lwa_ekpo-menge.
+              lv_error = 'X'.
+            ENDIF.
+          ENDIF.
+          CLEAR:lwa_ekpo,lwa_vbrp.
+        ENDLOOP.  """""""""""
+      ENDIF.
+
+    ELSE.
+
+      CLEAR : lwa_ekpo.
+      IF lt_ekpo[] IS NOT INITIAL.
+        READ TABLE lt_ekpo INTO lwa_ekpo INDEX 1.
+        IF lwa_ekpo-werks NE  'GB02'.
+          SELECT vbeln
+                 posnr
+                 matnr
+                 fkimg
+                 vrkme
+                 netwr
+                 charg
+                 lgort
+                 FROM vbrp
+                 INTO TABLE lt_vbrp
+                 FOR ALL ENTRIES IN lt_ekpo
+                 WHERE vbeln = lt_ekpo-vbeln
+          AND posnr = lt_ekpo-posnr.
+
+        ELSE.
+          SELECT vbeln
+              posnr
+              matnr
+              fkimg
+              vrkme
+              netwr
+              charg
+              lgort
+              FROM vbrp
+              INTO TABLE lt_vbrp
+              FOR ALL ENTRIES IN lt_ekpo
+          WHERE vbeln = lt_ekpo-vbeln .
+        ENDIF.
+        LOOP AT lt_vbrp INTO lwa_vbrp.
+          lwa_vbrp_col-vbeln    =      lwa_vbrp-vbeln.
+          lwa_vbrp_col-matnr    =      lwa_vbrp-matnr.
+          lwa_vbrp_col-fkimg    =      lwa_vbrp-fkimg.
+          lwa_vbrp_col-vrkme    =      lwa_vbrp-vrkme.
+          lwa_vbrp_col-netwr    =      lwa_vbrp-netwr.
+          lwa_vbrp_col-charg    =      lwa_vbrp-charg.
+          lwa_vbrp_col-lgort    =      lwa_vbrp-lgort.
+
+          COLLECT  lwa_vbrp_col INTO lt_vbrp_col .
+          CLEAR : lwa_vbrp_col , lwa_vbrp.
+        ENDLOOP.
+
+        LOOP AT lt_vbrp_col INTO lwa_vbrp_col .
+          count = count + 10.
+          lwa_vbrp_col-posnr  =  count.
+          MODIFY lt_vbrp_col FROM lwa_vbrp_col TRANSPORTING posnr .
+          CLEAR : lwa_vbrp_col.
+        ENDLOOP.
+
+        LOOP AT lt_ekpo INTO lwa_ekpo. "Added by vaibhav
+          IF lwa_ekpo-werks = 'GB02'.
+            READ TABLE lt_vbrp_col INTO lwa_vbrp_col WITH KEY vbeln =
+            lwa_ekpo-vbeln posnr = lwa_ekpo-posnr .
+            IF sy-subrc = 0.
+
+              IF lwa_vbrp_col-netwr &lt;&gt; lwa_ekpo-netwr.
+                IF lwa_ekpo-werks NE 'KE11'.
+                  lv_error = 'X'.
+                ENDIF.
+              ELSEIF lwa_vbrp_col-fkimg &lt;&gt;  lwa_ekpo-menge OR
+              lwa_vbrp_col-vrkme  &lt;&gt; lwa_ekpo-meins.
+                CLEAR lv_menge.
+                CALL FUNCTION 'MD_CONVERT_MATERIAL_UNIT'
+                  EXPORTING
+                    i_matnr              = lwa_ekpo-matnr
+                    i_in_me              = lwa_ekpo-meins
+                    i_out_me             = lwa_vbrp_col-vrkme
+                    i_menge              = lwa_ekpo-menge
+                  IMPORTING
+                    e_menge              = lv_menge
+                  EXCEPTIONS
+                    error_in_application = 1
+                    error                = 2
+                    OTHERS               = 3.
+                IF lv_menge &lt;&gt; lwa_vbrp_col-fkimg.
+                  lv_error = 'X'.
+                ENDIF.
+              ENDIF.
+            ENDIF.
+          ELSE.
+            READ TABLE lt_vbrp INTO lwa_vbrp WITH KEY vbeln =
+            lwa_ekpo-vbeln posnr = lwa_ekpo-posnr.
+            IF sy-subrc = 0.
+
+              IF lwa_vbrp-netwr &lt;&gt; lwa_ekpo-netwr.
+                IF lwa_ekpo-werks NE 'KE11'." add by nirav 13.04.2021
+                  lv_error = 'X'.
+                ENDIF." add by nirav 13.04.2021
+
+              ELSEIF lwa_vbrp-fkimg &lt;&gt;  lwa_ekpo-menge OR lwa_vbrp-vrkme
+              &lt;&gt; lwa_ekpo-meins.
+                CLEAR lv_menge.
+                CALL FUNCTION 'MD_CONVERT_MATERIAL_UNIT'
+                  EXPORTING
+                    i_matnr              = lwa_ekpo-matnr
+                    i_in_me              = lwa_ekpo-meins
+                    i_out_me             = lwa_vbrp-vrkme
+                    i_menge              = lwa_ekpo-menge
+                  IMPORTING
+                    e_menge              = lv_menge
+                  EXCEPTIONS
+                    error_in_application = 1
+                    error                = 2
+                    OTHERS               = 3.
+                IF lv_menge &lt;&gt; lwa_vbrp-fkimg.
+                  lv_error = 'X'.
+                ENDIF.
+              ENDIF.
+            ENDIF.
+          ENDIF.
+          CLEAR:lwa_ekpo,lwa_vbrp.
+        ENDLOOP.  """""""""""
+
+      ENDIF.
+    ENDIF.
+  ENDIF.
+  IF lv_error &lt;&gt; 'X'.
+    TYPES: BEGIN OF ty_mara,
+             matnr TYPE mara-matnr,
+             mtart TYPE mara-mtart,
+             meins TYPE mara-meins,
+           END OF ty_mara.
+    TYPES: BEGIN OF ty_mbew,
+             matnr TYPE mbew-matnr,
+             bwkey TYPE mbew-bwkey,
+             bklas TYPE mbew-bklas,
+           END OF ty_mbew.
+
+    TYPES: BEGIN OF ty_upid_sku,
+             fgex       TYPE zan_upid_locsku-fgex,
+             whplant    TYPE zan_upid_locsku-whplant,
+             localmatnr TYPE zan_upid_locsku-localmatnr,
+           END OF ty_upid_sku.
+
+    DATA: lt_car_mat  TYPE TABLE OF zacc_car_mat,
+          lwa_car_mat TYPE zacc_car_mat,
+          lt_mara     TYPE TABLE OF ty_mara,
+          lt_mbew     TYPE TABLE OF ty_mbew,
+          it_upid_sku TYPE TABLE OF ty_upid_sku,
+          wa_upid_sku TYPE ty_upid_sku,
+          lwa_mbew    TYPE ty_mbew,
+          lwa_mara    TYPE ty_mara.
+    IF lt_ekpo[] IS NOT INITIAL.
+
+      SELECT matnr
+             mtart
+             meins
+             FROM mara
+             INTO TABLE lt_mara
+             FOR ALL ENTRIES IN lt_ekpo
+             WHERE matnr = lt_ekpo-matnr
+               AND ( mtart = 'FGEX' OR mtart = 'AUFG' OR mtart = 'ZFRT'
+      OR mtart = 'HAWA' ).
+
+      SELECT matnr
+              bwkey
+              bklas
+              FROM mbew
+              INTO  TABLE lt_mbew
+              FOR ALL ENTRIES IN lt_ekpo
+              WHERE matnr = lt_ekpo-matnr
+      AND bwkey = lt_ekpo-werks.
+
+      IF v_101 = 'X'.
+        SELECT fgex
+               whplant
+               localmatnr FROM zan_upid_locsku INTO TABLE it_upid_sku
+               FOR ALL ENTRIES IN lt_ekpo WHERE fgex = lt_ekpo-matnr
+        AND whplant = lt_ekpo-werks.
+      ENDIF.
+
+      SELECT * FROM zacc_car_mat INTO TABLE lt_car_mat.
+      SORT lt_mara BY matnr.
+      SORT lt_car_mat BY matnr.
+<font color ="#0000FF">*      SORT IT_UPID_SKU BY FGEX WHPLANT LOCALMATNR.</font>
+    ENDIF.
+    SORT lt_ekpo BY ebeln ebelp.
+    SORT lt_mbew BY matnr bwkey.
+
+<font color ="#0000FF">*********BOC for Posting date from ZIA_MM042 DT:22-03-2021 by</font>
+<font color ="#0000FF">*DMODI**********</font>
+<font color ="#0000FF">***    IF s_aedat-low IS NOT INITIAL.</font>
+<font color ="#0000FF">***      LS_HEADER-PSTNG_DATE = s_aedat-low.</font>
+<font color ="#0000FF">***      LS_HEADER-DOC_DATE = s_aedat-low.</font>
+<font color ="#0000FF">***    ELSE.</font>
+<font color ="#0000FF">***      LS_HEADER-PSTNG_DATE = SY-DATUM.</font>
+<font color ="#0000FF">***      LS_HEADER-DOC_DATE = SY-DATUM.</font>
+<font color ="#0000FF">***    ENDIF.</font>
+
+    CLEAR wa_bli_inv_map.
+    IF gv_inb_del IS INITIAL.
+<font color ="#0000FF">*    Call the VL31N for Inbound Delivery Creation</font>
+      PERFORM bdc_vl31n.
+    ENDIF.
+    IF gv_inb_del IS NOT INITIAL.
+
+
+      READ TABLE it_bli_inv_map INTO wa_bli_inv_map WITH KEY  bli_no =
+      lwa_bli-bli_no.
+      IF sy-subrc = 0 AND wa_bli_inv_map-cancel_ind &lt;&gt; 'X'.
+
+        ls_header-pstng_date  = wa_bli_inv_map-actual_posting_date.
+        ls_header-doc_date    = wa_bli_inv_map-actual_posting_date.
+
+      ENDIF.
+
+<font color ="#0000FF">*    IF wa_bli_inv_map-actual_posting_date IS INITIAL OR</font>
+<font color ="#0000FF">*       wa_bli_inv_map-actual_posting_date = '00000000'.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      ls_header-pstng_date = s_aedat-low.</font>
+<font color ="#0000FF">*      ls_header-doc_date   = s_aedat-low.</font>
+<font color ="#0000FF">*    ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    IF s_aedat-low IS INITIAL AND s_aedat-low = '00000000'.</font>
+      ls_header-pstng_date = sy-datum.
+      ls_header-doc_date = sy-datum.
+<font color ="#0000FF">*    ENDIF.</font>
+<font color ="#0000FF">*********EOC for Posting date from ZIA_MM042 DT:22-03-2021 by</font>
+<font color ="#0000FF">*DMODI**********</font>
+
+      DATA:po_number1 TYPE ekpo-ebeln,
+           plant1     TYPE ekpo-werks.
+      CLEAR:po_number1,plant1.
+
+      ls_header-pr_uname = sy-uname.
+      IF gv_asnno IS INITIAL.
+        ls_header-ref_doc_no = gv_inb_del.
+        ls_header-bill_of_lading = gv_inb_del.
+      ELSE.
+        ls_header-ref_doc_no = gv_asnno.
+        ls_header-bill_of_lading = gv_asnno.
+      ENDIF.
+      ls_code-gm_code = '01'.
+      CLEAR  line_id.
+
+      LOOP AT lt_ekpo INTO lwa_ekpo.
+        ADD 1 TO  line_id.
+
+<font color ="#0000FF">*        ls_item-po_number = lwa_ekpo-ebeln.</font>
+<font color ="#0000FF">*        po_number1        = lwa_ekpo-ebeln.</font>
+<font color ="#0000FF">*        ls_item-po_item   = lwa_ekpo-ebelp.</font>
+<font color ="#0000FF">*        ls_item-material  = lwa_ekpo-matnr.</font>
+<font color ="#0000FF">*        ls_item-plant     = lwa_ekpo-werks.</font>
+<font color ="#0000FF">*        plant1            = lwa_ekpo-werks.</font>
+
+        IF v_101 = 'X'.
+          IF lwa_ekpo-werks = 'IT11'.
+            READ TABLE it_upid_sku INTO wa_upid_sku WITH KEY fgex =
+            lwa_ekpo-matnr whplant = lwa_ekpo-werks localmatnr+0(1) = '8'
+            .
+            IF sy-subrc = 0.
+              ls_item-unload_pt = wa_upid_sku-localmatnr.
+            ENDIF.
+
+          ELSEIF lwa_ekpo-werks = 'EE11' OR lwa_ekpo-werks = 'LV11'.
+            ls_item-unload_pt = ''.
+
+          ELSE.
+            READ TABLE it_upid_sku INTO wa_upid_sku WITH KEY fgex =
+            lwa_ekpo-matnr whplant = lwa_ekpo-werks.
+            IF sy-subrc = 0.
+              ls_item-unload_pt = wa_upid_sku-localmatnr.
+            ENDIF.
+          ENDIF.
+
+          ls_item-move_type = '101'.
+<font color ="#0000FF">********************************ADDED BY JASH ON 3.8.2019 FOR 101</font>
+<font color ="#0000FF">*POSTING FOR INTERCOMPANY***********************</font>
+          READ TABLE it_eket INTO wa_eket WITH KEY ebeln = lwa_ekpo-ebeln
+          ebelp = lwa_ekpo-ebelp.
+          IF sy-subrc = 0.
+            ls_item-batch = wa_eket-charg.
+          ENDIF.
+          ls_item-expirydate = lwa_ekpo-bednr.
+          ls_item-prod_date = lwa_ekpo-afnam.
+          ls_item-stck_type = 'X'.
+<font color ="#0000FF">********************************ENDED***********************</font>
+        ELSE.
+          ls_item-move_type = '107'.
+        ENDIF.
+        CLEAR ls_item-plant.
+        ls_item-mvt_ind = 'B'.
+        ls_item-deliv_numb_to_search = gv_inb_del.
+        ls_item-deliv_item_to_search = line_id.
+        ls_item-entry_qnt = lwa_ekpo-menge.
+        ls_item-entry_uom = lwa_ekpo-meins.
+
+        CLEAR lwa_mbew.
+        READ TABLE lt_mbew INTO lwa_mbew WITH KEY matnr = lwa_ekpo-matnr
+        bwkey = lwa_ekpo-werks BINARY SEARCH.
+
+
+<font color ="#0000FF">*IF BUKRS &lt;&gt; 'FI10' AND BUKRS &lt;&gt; 'FR10' AND BUKRS &lt;&gt; 'AE10' AND BUKRS &lt;&gt;</font>
+<font color ="#0000FF">*'MX10' AND</font>
+<font color ="#0000FF">*BUKRS &lt;&gt; 'MX20' AND BUKRS &lt;&gt; 'US10' AND BUKRS &lt;&gt; 'US20' AND BUKRS &lt;&gt;</font>
+<font color ="#0000FF">*'US30' AND BUKRS &lt;&gt; 'PL10'.</font>
+<font color ="#0000FF">*IF ( LWA_MARA-MTART = 'FGEX' OR LWA_MARA-MTART = 'AUFG' OR</font>
+<font color ="#0000FF">*LWA_MARA-MTART = 'ZFRT' OR  LWA_MARA-MTART = 'HAWA' ).</font>
+<font color ="#0000FF">*          IF LS_ITEM-ENTRY_UOM &lt;&gt; 'PAK'.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*            CALL FUNCTION 'MD_CONVERT_MATERIAL_UNIT'</font>
+<font color ="#0000FF">*              EXPORTING</font>
+<font color ="#0000FF">*                I_MATNR              = LWA_EKPO-MATNR</font>
+<font color ="#0000FF">*                I_IN_ME              = LS_ITEM-ENTRY_UOM</font>
+<font color ="#0000FF">*                I_OUT_ME             = 'PAK'</font>
+<font color ="#0000FF">*                I_MENGE              = LWA_EKPO-MENGE</font>
+<font color ="#0000FF">*              IMPORTING</font>
+<font color ="#0000FF">*                E_MENGE              = LS_ITEM-ENTRY_QNT</font>
+<font color ="#0000FF">*              EXCEPTIONS</font>
+<font color ="#0000FF">*                ERROR_IN_APPLICATION = 1</font>
+<font color ="#0000FF">*                ERROR                = 2</font>
+<font color ="#0000FF">*                OTHERS               = 3.</font>
+<font color ="#0000FF">*            IF SY-SUBRC &lt;&gt; 0.</font>
+<font color ="#0000FF">**            MESSAGE E000(ZDEV_MSG) WITH 'Please maintain the Converion</font>
+<font color ="#0000FF">*of PAC in Material Master for' LWA_I-MATERIALCODE.</font>
+<font color ="#0000FF">*            ENDIF.</font>
+<font color ="#0000FF">*            LS_ITEM-ENTRY_UOM = 'PAK'.</font>
+<font color ="#0000FF">*          ENDIF.</font>
+<font color ="#0000FF">*        ELSE.</font>
+<font color ="#0000FF">*          LS_ITEM-ENTRY_UOM = LWA_MARA-MEINS.</font>
+<font color ="#0000FF">*        ENDIF.</font>
+<font color ="#0000FF">*      ENDIF.</font>
+        IF  ( ( bukrs = 'MX10' OR bukrs = 'MX20' ) AND ls_item-entry_uom
+        &lt;&gt; 'PAK' )
+          OR ( ( bukrs = 'GB50' OR bukrs = 'DE10' OR bukrs = 'CZ10' OR
+          bukrs = 'RO10' OR
+              bukrs = 'AT10' OR bukrs = 'CH10' OR bukrs = 'GB10' OR bukrs
+              = 'NL10'  OR bukrs = 'SG10')" ADD SG10 BY NIRAV 28.08.2020
+            AND lwa_mbew-bklas = '9910' AND ls_item-entry_uom &lt;&gt; 'PAK' ).
+<font color ="#0000FF">*( LWA_MARA-MTART = 'FGEX' OR LWA_MARA-MTART = 'AUFG'  OR LWA_MARA-MTART</font>
+<font color ="#0000FF">*= 'ZFRT' )</font>
+          READ TABLE lt_mara INTO lwa_mara WITH KEY matnr = lwa_ekpo-matnr
+          BINARY SEARCH.
+          IF sy-subrc = 0.
+            CALL FUNCTION 'MD_CONVERT_MATERIAL_UNIT'
+              EXPORTING
+                i_matnr              = lwa_ekpo-matnr
+                i_in_me              = ls_item-entry_uom
+                i_out_me             = 'PAK'
+                i_menge              = lwa_ekpo-menge
+              IMPORTING
+                e_menge              = ls_item-entry_qnt
+              EXCEPTIONS
+                error_in_application = 1
+                error                = 2
+                OTHERS               = 3.
+            IF sy-subrc &lt;&gt; 0.
+              CLEAR: ls_item-entry_qnt.
+<font color ="#0000FF">*                MESSAGE e000(zdev_msg) WITH</font>
+<font color ="#0000FF">*'Please maintain the Converion of PAC in Material Master for'</font>
+<font color ="#0000FF">*                lwa_ekpo-matnr.</font>
+            ELSE.
+<font color ="#0000FF">*                ls_item-entry_qnt = ls_item-quantity.</font>
+              ls_item-entry_uom = 'PAK'.
+
+            ENDIF.
+          ENDIF.
+
+        ELSEIF bukrs = 'US10' OR bukrs = 'US20'.
+          READ TABLE lt_car_mat INTO lwa_car_mat WITH KEY matnr =
+          lwa_ekpo-matnr BINARY SEARCH.
+          IF sy-subrc = 0 AND ls_item-entry_uom &lt;&gt; 'KAR'.
+
+            CALL FUNCTION 'MD_CONVERT_MATERIAL_UNIT'
+              EXPORTING
+                i_matnr              = lwa_ekpo-matnr
+                i_in_me              = ls_item-entry_uom
+                i_out_me             = 'KAR'
+                i_menge              = lwa_ekpo-menge
+              IMPORTING
+                e_menge              = ls_item-entry_qnt
+              EXCEPTIONS
+                error_in_application = 1
+                error                = 2
+                OTHERS               = 3.
+            IF sy-subrc &lt;&gt; 0.
+              CLEAR: ls_item-entry_qnt.
+<font color ="#0000FF">*                MESSAGE e000(zdev_msg) WITH</font>
+<font color ="#0000FF">*'Please maintain the Converion of PAC in Material Master for'</font>
+<font color ="#0000FF">*                lwa_ekpo-matnr.</font>
+            ELSE.
+<font color ="#0000FF">*                ls_item-entry_qnt = ls_item-quantity.</font>
+              ls_item-entry_uom = 'KAR'.
+
+            ENDIF.
+          ENDIF.
+<font color ="#0000FF">*        elseif bukrs = 'PL10' and lwa_mbew-bklas &lt;&gt; '9910'.</font>
+<font color ="#0000FF">*        LS_ITEM-ENTRY_UOM = lwa_mara-meins.</font>
+
+        ENDIF.
+
+<font color ="#0000FF">*        update the custom table</font>
+        DATA(ls_bli_ibd) = VALUE zia_bli_ibd_map( ebeln = gv_ebeln
+                       ebelp = gv_ebelp
+                       bli_no = gv_asnno
+                       matnr = lwa_ekpo-matnr
+                       menge = lwa_ekpo-menge
+                       meins = lwa_ekpo-meins
+                       inb_del = gv_inb_del
+                       bwart   = '109'
+                       created_on = sy-datum
+                       time  = sy-uzeit
+                       created_by = sy-uname ).
+        READ TABLE it_eket INTO wa_eket WITH KEY ebeln = gv_ebeln
+                                                 ebelp = gv_ebelp.
+        IF sy-subrc = 0.
+          ls_bli_ibd-charg = wa_eket-charg.
+        ENDIF.
+<font color ="#0000FF">*      update the PO record in custom table</font>
+        UPDATE zia_bli_ibd_map SET bli_no = gv_asnno
+                       matnr = lwa_ekpo-matnr
+                       menge = lwa_ekpo-menge
+                       meins = lwa_ekpo-meins
+                       inb_del = gv_inb_del
+                       bwart   = '109'
+                       created_on = sy-datum
+                       time  = sy-uzeit
+                       created_by = sy-uname
+                       charg = ls_bli_ibd-charg
+                WHERE ebeln = gv_ebeln
+                  AND ebelp = gv_ebelp.
+        IF sy-subrc EQ 0.
+          COMMIT WORK AND WAIT.
+        ENDIF.
+<font color ="#0000FF">*        ls_item-quantity = ls_item-entry_qnt.</font>
+<font color ="#0000FF">*        ls_item-base_uom = lwa_ekpo-meins.</font>
+        ls_item-line_id = line_id.
+<font color ="#0000FF">*            I_WERKS = LS_ITEM-PLANT.</font>
+        APPEND ls_item TO lt_item.
+        CLEAR ls_item.
+<font color ="#0000FF">*</font>
+        CLEAR extensionin.
+        MOVE 'BAPI_TE_XMSEG' TO extensionin-structure.
+        MOVE line_id+2(4) TO extensionin-valuepart1.
+        MOVE lwa_ekpo-menge TO extensionin-valuepart2.
+        APPEND extensionin.
+        CLEAR : extensionin.
+<font color ="#0000FF">*</font>
+      ENDLOOP.
+<font color ="#0000FF">*    CLEAR: v_101.</font>
+      DATA : materialdocument TYPE mkpf-mblnr,
+             matdocumentyear  TYPE mkpf-mjahr.
+      DO 3 TIMES.
+        DATA(lv_tabix) = sy-index.
+<font color ="#0000FF">*      Do the 107 for the shipping notification / Inb.Del.</font>
+        CALL FUNCTION 'BAPI_GOODSMVT_CREATE'
+          EXPORTING
+            goodsmvt_header  = ls_header
+            goodsmvt_code    = ls_code
+          IMPORTING
+            goodsmvt_headret = ls_headret
+            materialdocument = materialdocument
+            matdocumentyear  = matdocumentyear
+          TABLES
+            goodsmvt_item    = lt_item
+            return           = lt_return
+            extensionin      = extensionin.
+        WRITE: / '107 Material Doc. Creation for Inb.Del.',gv_inb_del,'. Atempt -', lv_tabix.
+        IF materialdocument IS NOT INITIAL.
+          CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'.
+          gv_mblnr = materialdocument.
+          lwa_107-mblnr = materialdocument.
+          lwa_107-mjahr = matdocumentyear.
+          lwa_107-ebeln = po_number1.
+          lwa_107-werks = plant1.
+          APPEND lwa_107 TO lt_107.
+          CLEAR lwa_107.
+          WRITE: / 'Material Doc. for 107:',gv_mblnr, ' Created'.
+          EXIT.
+        ELSE.
+<font color ="#0000FF">*          Display all meesages</font>
+          LOOP AT lt_return INTO DATA(ls_return).
+            MESSAGE ID ls_return-id TYPE 'S' NUMBER ls_return-number
+            INTO DATA(lv_msgtxt)
+            WITH ls_return-message_v1 ls_return-message_v2 ls_return-message_v3 ls_return-message_v4.
+            WRITE: / ls_return-type,':',lv_msgtxt.
+          ENDLOOP.
+          WAIT UP TO 1 SECONDS.
+        ENDIF.
+      ENDDO.
+<font color ="#0000FF">*      UPDATE zia_bli_inv_map</font>
+<font color ="#0000FF">*         SET mat_doc_107 = materialdocument</font>
+<font color ="#0000FF">*             mat_yr_107  = matdocumentyear</font>
+<font color ="#0000FF">*       WHERE bli_no = p_lwa_bli_blino.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      COMMIT WORK AND WAIT.</font>
+<font color ="#0000FF">*      WAIT UP TO 2 SECONDS.</font>
+<font color ="#0000FF">*</font>
+    ENDIF.
+    IF gv_mblnr IS NOT INITIAL.
+      UPDATE zia_bli_ibd_map SET docno_107 = materialdocument
+                                 docyear_107 = matdocumentyear
+                                 bwart = '107'
+      WHERE ebeln EQ gv_ebeln
+        AND ebelp EQ gv_ebelp.
+      IF sy-subrc EQ 0.
+        COMMIT WORK AND WAIT.
+        WAIT UP TO 1 SECONDS.
+      ENDIF.
+    ELSE.
+<font color ="#0000FF">*    Update PI Log Table</font>
+      SELECT SINGLE MAX( sr_no ) INTO @DATA(lv_srno) FROM zacc_pi_log.
+      lv_srno = lv_srno + 1.
+      zacc_pi_log-sr_no = lv_srno.
+      zacc_pi_log-scenario  = 'AUTOIBD'.
+      zacc_pi_log-werks     = s_werks-low.
+<font color ="#0000FF">*    zacc_pi_log-refdocno  = inventoryno.</font>
+      zacc_pi_log-po_number  = gv_ebeln.
+      CONCATENATE sy-datum+6(2) sy-datum+4(2) sy-datum+0(4) INTO zacc_pi_log-post_date SEPARATED BY '.'.
+      zacc_pi_log-pi_status    = 'E'.
+      zacc_pi_log-sys_time   = sy-uzeit.
+      zacc_pi_log-createdon  = sy-datum.
+      zacc_pi_log-message   = lv_msgtxt.
+      INSERT zacc_pi_log.
+      COMMIT WORK AND WAIT.
+    ENDIF.
+<font color ="#0000FF">*      IF bukrs = 'SE10'.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*        UPDATE zsc_po_bli_doc</font>
+<font color ="#0000FF">*           SET doc_107      = materialdocument</font>
+<font color ="#0000FF">*               doc_107_year = matdocumentyear</font>
+<font color ="#0000FF">*         WHERE ebeln     = gv_ebeln</font>
+<font color ="#0000FF">*           AND bli_ukdoc = p_lwa_bli_blino.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      ENDIF.</font>
+
+    "Added By vaibhav on 03.07.2020
+    IF bukrs = 'DE10' OR bukrs = 'AT10' OR bukrs = 'FI10' OR bukrs =
+    'FR10' OR bukrs = 'NL10'.
+      "For ASN
+      DATA : wa_mseg TYPE mseg.
+      DATA : lv_bsart TYPE ekko-bsart,
+             lv_retpo TYPE ekpo-retpo.
+      CLEAR wa_mseg.
+      SELECT  * FROM mseg INTO wa_mseg
+        UP TO 1 ROWS
+        WHERE mblnr = gv_mblnr AND bwart = '107'
+        ORDER BY mjahr ASCENDING.
+      ENDSELECT .
+
+      IF sy-subrc = 0.
+        zia_po_bli_doc-plant        = v_werks.
+        zia_po_bli_doc-ebeln        = wa_mseg-ebeln.
+        zia_po_bli_doc-bli_ukdoc    = lwa_bli-bli_no.
+        zia_po_bli_doc-doc_107      = gv_mblnr.
+        zia_po_bli_doc-doc_107_year = wa_mseg-mjahr.
+        zia_po_bli_doc-scenario     = '107_GRN'.
+        zia_po_bli_doc-created_date = sy-datum.
+        zia_po_bli_doc-created_time = sy-uzeit.
+        zia_po_bli_doc-created_by   = sy-uname.
+        INSERT zia_po_bli_doc.
+        COMMIT WORK AND WAIT.
+
+        EXPORT materialdocument TO MEMORY ID 'ABAP1'.
+        EXPORT matdocumentyear  TO MEMORY ID 'ABAP2'.
+
+        PERFORM send_asn IN PROGRAM zia_r_manual_send_asn USING
+        wa_mseg-ebeln.
+      ENDIF.
+    ENDIF.
+    """""""""
+
+
+    DATA: lv_name1 TYPE lfa1-name1,
+          lv_name2 TYPE lfa1-name2.
+    CLEAR: lifnr,lv_name1,lv_name2.
+    SELECT SINGLE lifnr FROM ekko INTO lifnr WHERE ebeln = po_number1.
+    IF lifnr = 'IN10'.
+      lv_name1 = 'IPL'.
+    ELSE.
+      SELECT SINGLE name1 name2 FROM lfa1 INTO (lv_name1,lv_name2)
+      WHERE lifnr = lifnr.
+    ENDIF.
+    PERFORM email_head USING materialdocument gv_asnno lv_name1
+    lv_name2.
+
+<font color ="#0000FF">********"aDDED BY CR mAT dESC</font>
+<font color ="#0000FF">*20.07.2021****************************************</font>
+    IF lt_ekpo[] IS NOT INITIAL.
+      "aDDED BY CR mAT dESC 20.07.2021
+      LOOP AT lt_ekpo INTO lwa_ekpo.
+        SELECT SINGLE maktx FROM makt
+                 INTO lwa_ekpo-maktx
+                WHERE matnr = lwa_ekpo-matnr
+        AND spras = 'E'.
+        MODIFY lt_ekpo FROM lwa_ekpo TRANSPORTING maktx.
+        CLEAR lwa_ekpo.
+      ENDLOOP.
+    ENDIF.
+<font color ="#0000FF">***************"End BY CR mAT dESC</font>
+<font color ="#0000FF">*20.07.2021******************************************</font>
+
+    LOOP AT lt_ekpo INTO lwa_ekpo.
+      READ TABLE lt_vbrp INTO lwa_vbrp WITH KEY vbeln = lwa_ekpo-vbeln
+      posnr = lwa_ekpo-posnr.
+
+      PERFORM 107_created_email USING gv_asnno
+                                      lwa_ekpo-ebeln
+                                      lwa_ekpo-ebelp
+                                      lifnr
+                                      lwa_ekpo-matnr
+                                      lwa_vbrp-charg
+                                      lwa_ekpo-bednr
+                                      lwa_ekpo-menge
+                                      lwa_ekpo-meins
+                                      lwa_ekpo-maktx.
+      "aDDED BY CR mAT dESC 20.07.2021
+    ENDLOOP.
+
+    IF v_werks IS INITIAL.
+      v_werks  = lwa_ekpo-werks.
+    ENDIF.
+    PERFORM send_mail USING bukrs v_werks gv_asnno lv_name1
+    lwa_so_po-lgort.
+  ENDIF.
+  IF lv_error EQ abap_true.
+
+    LOOP AT lt_return INTO ls_return WHERE type = 'E'.
+
+      CALL FUNCTION 'FORMAT_MESSAGE'
+        EXPORTING
+          id        = ls_return-id
+          lang      = sy-langu
+          no        = ls_return-number
+          v1        = ls_return-message_v1
+          v2        = ls_return-message_v2
+          v3        = ls_return-message_v3
+          v4        = ls_return-message_v4
+        IMPORTING
+          msg       = wa_message-message
+        EXCEPTIONS
+          not_found = 1
+          OTHERS    = 2.
+<font color ="#0000FF">*message i000 with wa_message-MESSAGE.</font>
+      wa_message-status = '1'.
+      wa_message-docno = gv_asnno.
+      APPEND wa_message TO it_message.
+      CLEAR wa_message.
+    ENDLOOP.
+
+    READ TABLE lt_ekpo INTO lwa_ekpo INDEX 1.
+
+    SELECT SINGLE bukrs INTO wa_pilog-comp_code FROM t001k WHERE bwkey
+    = lwa_ekpo-werks.
+    CLEAR wa_pilog.
+    wa_pilog-process_type   = lc_func.
+    wa_pilog-comp_code      = bukrs.
+    wa_pilog-tx_date        = sy-datum.
+    wa_pilog-doc_no         = gv_asnno.
+<font color ="#0000FF">*    zia_pilog-ref_no         = p_lwa_bli_doc_ebeln."GT_INTF-DOC_NO.</font>
+    wa_pilog-reference_no   = gv_ebeln.
+    wa_pilog-plant          = lwa_ekpo-werks.
+    wa_pilog-status         = 'E'.
+<font color ="#0000FF">*      wa_pilog-message        = ls_return-message.</font>
+    wa_pilog-created_on     = sy-datum.
+    wa_pilog-time           = sy-uzeit.
+    wa_pilog-created_by     = sy-uname.
+
+    IF it_message[] IS NOT INITIAL.
+      PERFORM pi_log IN PROGRAM zia_pilog_and_email
+                      TABLES  it_message
+                        USING wa_pilog.
+    ENDIF.
+    READ TABLE lt_return INTO ls_return WITH KEY type = 'E'.
+    IF sy-subrc = 0.
+      PERFORM no_107_email TABLES lt_return USING bukrs
+      gv_asnno lwa_so_po-lgort.
+    ELSE.
+      READ TABLE lt_return INTO ls_return WITH KEY type = 'A'.
+      IF sy-subrc = 0.
+        PERFORM no_107_email TABLES lt_return USING bukrs
+        gv_asnno lwa_so_po-lgort.
+      ENDIF.
+    ENDIF.
+
+  ELSE.
+
+    READ TABLE lt_ekpo INTO lwa_ekpo INDEX 1.
+
+    REFRESH it_message[].CLEAR wa_message.CLEAR lv_error.
+    wa_message-status = '1'.
+    wa_message-docno = gv_asnno.
+    wa_message-message =
+    'Qty/Price mismatch between Invoice and PO during 107 GRN'.
+    APPEND wa_message TO it_message.
+    CLEAR wa_message.
+    CLEAR wa_pilog.
+    wa_pilog-process_type   = lc_func.
+    wa_pilog-comp_code      = bukrs.
+    wa_pilog-tx_date        = sy-datum.
+    wa_pilog-doc_no         = gv_asnno.
+<font color ="#0000FF">*    zia_pilog-ref_no         = p_lwa_bli_doc_ebeln."GT_INTF-DOC_NO.</font>
+    wa_pilog-reference_no   = gv_ebeln.
+    wa_pilog-plant          = lwa_ekpo-werks.
+    wa_pilog-status         = 'E'.
+<font color ="#0000FF">*      wa_pilog-message        = ls_return-message.</font>
+    wa_pilog-created_on     = sy-datum.
+    wa_pilog-time           = sy-uzeit.
+    wa_pilog-created_by     = sy-uname.
+    IF it_message[] IS NOT INITIAL.
+      PERFORM pi_log IN PROGRAM zia_pilog_and_email
+                      TABLES  it_message
+                        USING wa_pilog.
+    ENDIF.
+    PERFORM price_qty_mismatch USING bukrs gv_asnno
+    lwa_so_po-lgort.
+  ENDIF.
+
+ENDFORM.                    " DO_107_INB_DEL
+
+
+<font color ="#0000FF">*Selection texts</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">* S_AEDAT D       .</font>
+<font color ="#0000FF">* S_BSART D       .</font>
+<font color ="#0000FF">* S_BUKRS D       .</font>
+<font color ="#0000FF">* S_EBELN D       .</font>
+<font color ="#0000FF">* S_EKORG D       .</font>
+<font color ="#0000FF">* S_LIFNR D       .</font>
+<font color ="#0000FF">* S_WERKS         Receiving Plant</font>
+
+
+<font color ="#0000FF">*Messages</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: /ATL/GENERAL</font>
+<font color ="#0000FF">*124   Purchasing Organization & was not found</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: /OPT/VIM_701</font>
+<font color ="#0000FF">*025   Invalid Plant &</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: FIEU_SAFT</font>
+<font color ="#0000FF">*312   Company Code &1 is not valid</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: Hard coded</font>
+<font color ="#0000FF">*   Enter company code</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: LS_BAPIRET-ID</font>
+<font color ="#0000FF">*LS_</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: LS_RETURN-ID</font>
+<font color ="#0000FF">*LS_</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: MESSTAB-MSGID</font>
+<font color ="#0000FF">*MES</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: SEPM_FPM</font>
+<font color ="#0000FF">*029   Invalid supplier ID '&1'</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: VK</font>
+<font color ="#0000FF">*610   The purchasing document type & is not specified</font>
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>LZACC_GLOBALTOP</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: LZACC_GLOBALTOP</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  SO Creation From Portugal</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*    generated viewmaintenance function pool top</font>
+<font color ="#0000FF">*   generation date: 22.11.2018 at 13:29:13</font>
+<font color ="#0000FF">*   view maintenance generator version: #001407#</font>
+<font color ="#0000FF">*---------------------------------------------------------------------*</font>
+FUNCTION-POOL ZACC_GLOBAL                MESSAGE-ID SV.
+
+INCLUDE LSVIMDAT                                . "general data decl.
+INCLUDE LZACC_GLOBALT00                         . "view rel. data dcl.
+
+DATA : LS_MAILSUBJECT    TYPE SODOCCHGI1,
+   LT_MAILRECIPIENTS  TYPE SOMLREC90 OCCURS 0 WITH HEADER LINE,
+   LS_MAILRECIPIENTS TYPE SOMLREC90,
+   LS_MAILTXT        TYPE SOLI,
+   LT_MAILTXT         TYPE STANDARD TABLE OF SOLI.
+TYPES: BEGIN OF TY_MAIN,
+KAPPL TYPE KAPPL,
+KSCHL TYPE KSCHL,
+TABLE TYPE TABNAME,
+FLD1 TYPE FIELDNAME,
+FLD2 TYPE FIELDNAME,
+FLD3 TYPE FIELDNAME,
+FLD4 TYPE FIELDNAME,
+FLD5 TYPE FIELDNAME,
+FLD6 TYPE FIELDNAME,
+FLD7 TYPE FIELDNAME,
+FLD8 TYPE FIELDNAME,
+FLD9 TYPE FIELDNAME,
+FLD10 TYPE FIELDNAME,
+FLD11 TYPE FIELDNAME,
+DATAB TYPE CHAR10,"kodatab,
+DATBI TYPE CHAR10,"kodatbi,
+KBETR(13) TYPE C,
+KPEIN TYPE KPEIN,
+MEINS TYPE MEINS,
+KRECH TYPE KRECH,
+WAERS TYPE WAERS,
+END OF TY_MAIN.
+
+DATA: T_MAIN TYPE STANDARD TABLE OF TY_MAIN,
+      WA_MAIN TYPE TY_MAIN.
+
+CLASS LCL_COND DEFINITION FINAL.
+  PUBLIC SECTION.
+    METHODS: SOS,
+<font color ="#0000FF">*            EOS,</font>
+            UPLOAD_DATA,
+<font color ="#0000FF">*            GET_PARTNER_NUM,</font>
+            GET_CHECK_DATA,
+            PROCESS_DATA,
+            GET_TABLE_DETAILS,
+            VALIDATE_DATA,
+            POPULATE_IDOC_DATA,
+            APPEND_LOG IMPORTING IM_TABIX TYPE SYTABIX
+            IM_KEY TYPE FC_TEXT
+            IM_TYPE TYPE MSGTY
+            IM_MSG TYPE BAPI_MSG,
+CONVERSION_ROUTINE IMPORTING IM_CONVEXIT TYPE CONVEXIT
+IM_LENG TYPE DDLENG,
+PASS_ISOCODE_FOR_VRKME,
+PASS_VISTEX,
+PASS_CONTROL_RECORD,
+PASS_DATA_RECORD,
+POST_DATA,
+DIRECT_UPDATE,
+CALL_CONV_EXIT IMPORTING IM_FUNC TYPE RS38L_FNAM
+IM_LENG TYPE DDLENG.
+ENDCLASS.                    "lcl_cond DEFINITION
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

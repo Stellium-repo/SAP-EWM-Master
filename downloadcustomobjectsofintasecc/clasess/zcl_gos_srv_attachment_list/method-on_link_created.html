@@ -1,0 +1,63 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ON_LINK_CREATED</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ON_LINK_CREATED</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Attachment Generated</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*   Method attributes.                                                   *</font>
+<font color ="#0000FF">**************************************************************************</font>
+Instantiation: Public
+<font color ="#0000FF">**************************************************************************</font>
+
+METHOD ON_LINK_CREATED.
+
+  DATA:
+    li_link TYPE REF TO cl_obl_binrel,
+    li_model TYPE REF TO if_model_binrel,
+    lp_status TYPE sgs_status.
+
+  TRY.
+      li_link ?= ei_link.
+      li_model = li_link-&gt;get_model( ).
+    CATCH cx_os cx_sy_move_cast_error cx_obl_model_error .
+      RETURN.
+  ENDTRY.
+
+  IF li_model-&gt;go_role_b-&gt;gp_type = 'ATTACHMENT' OR
+     li_model-&gt;go_role_b-&gt;gp_type = 'ANNOTATION' OR
+     li_model-&gt;go_role_b-&gt;gp_type = 'WEB_SITE'.
+
+    IF li_link-&gt;get_instid_a( ) = gs_lporb-instid AND
+       li_link-&gt;get_typeid_a( ) = gs_lporb-typeid AND
+       li_link-&gt;get_catid_a( )  = gs_lporb-catid.
+
+      lp_status = mp_status_active.
+
+      IF lp_status &lt;&gt; gp_status.
+
+        gp_status = lp_status.
+
+        RAISE EVENT service_changed
+          EXPORTING
+            ep_status  = lp_status
+            eo_service = me
+            .
+        set handler:
+          on_link_created activation space.
+<font color ="#0000FF">*          on_link_deleted activation 'X'.</font>
+      ENDIF.
+    ENDIF.
+  ENDIF.
+ENDMETHOD.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZSF_OBD_TU_PACKING_FILLDATA</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZSF_OBD_TU_PACKING_FILLDATA</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZSF_OBD_TU_PACKING_FILLDATA</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&  Include           ZSF_OBD_TU_PACKING_FILLDATA</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+
+<font color ="#0000FF">* Fill the Highest level of HU with Same number if not provided</font>
+LOOP AT lt_vepo ASSIGNING FIELD-SYMBOL(&lt;fs_vepo&gt;).
+  IF &lt;fs_vepo&gt;-uevel IS INITIAL.
+    &lt;fs_vepo&gt;-uevel = &lt;fs_vepo&gt;-venum.
+  ENDIF.
+ENDLOOP.
+
+<font color ="#0000FF">*-Filling Data</font>
+LOOP AT lt_likp INTO DATA(wa_likp).
+  LOOP AT lt_vepo INTO DATA(wa_vepo) WHERE vbeln = wa_likp-vbeln.
+    IF lv_exidv2 NE  wa_vepo-uevel "exidv
+    OR lv_prod NE wa_vepo-matnr
+    OR lv_charg NE wa_vepo-charg.
+      lv_prod = wa_vepo-matnr.
+      lv_charg = wa_vepo-charg.
+      IF wa_vepo-uevel IS NOT INITIAL.
+        lv_exidv2 = wa_vepo-uevel.
+      ELSE.
+        lv_exidv2 = wa_vepo-exidv.
+      ENDIF.
+    ELSE.
+      CONTINUE.
+    ENDIF.
+    APPEND INITIAL LINE TO lt_table ASSIGNING FIELD-SYMBOL(&lt;fs_table&gt;) .
+    &lt;fs_table&gt;-matnr = wa_vepo-matnr.
+    &lt;fs_table&gt;-charg = wa_vepo-charg.
+    &lt;fs_table&gt;-exidv = wa_vepo-exidv.
+    READ TABLE lt_vepo_uevel INTO DATA(wa_vepo_uevel)
+                        WITH KEY venum = wa_vepo-uevel.
+    IF sy-subrc EQ 0 AND wa_vepo-uevel IS NOT INITIAL.
+      &lt;fs_table&gt;-exidv = wa_vepo_uevel-exidv .
+      &lt;fs_table&gt;-ntgew = wa_vepo_uevel-ntgew.
+      &lt;fs_table&gt;-brgew = wa_vepo_uevel-brgew.
+    ENDIF .
+
+    LOOP AT lt_vepo INTO DATA(wa_vepo2) WHERE "exidv = wa_vepo-exidv
+                                            uevel  = wa_vepo-uevel "uevel
+                                        AND matnr = wa_vepo-matnr
+                                        AND charg = wa_vepo-charg .
+
+      lx_menge = wa_vepo2-vemng .
+      DATA(lv_meinh) = lt_lips[ vbeln = wa_likp-vbeln matnr = wa_vepo2-matnr ]-vrkme.
+<font color ="#0000FF">*--FM Conversion of UOM from NOS to PAK</font>
+      CALL FUNCTION 'MD_CONVERT_MATERIAL_UNIT'
+        EXPORTING
+          i_matnr  = wa_vepo-matnr
+          i_in_me  = wa_vepo-vemeh
+          i_out_me = lv_meinh "'PAK'
+          i_menge  = lx_menge
+        IMPORTING
+          e_menge  = lo_menge.
+      IF sy-subrc IS INITIAL.
+        &lt;fs_table&gt;-vemng = &lt;fs_table&gt;-vemng + lo_menge .
+        wa_header-vrkme = lv_meinh.
+      ENDIF.
+<font color ="#0000FF">*        CLEAR:wa_vepo2,lv_meinh,lx_menge.</font>
+<font color ="#0000FF">*       addition</font>
+
+      lv_exidv = &lt;fs_table&gt;-exidv.
+      MOVE &lt;fs_table&gt;-vemng TO &lt;fs_table&gt;-vemng_txt.
+      DATA lv_fraction TYPE n LENGTH 2 .
+      SPLIT &lt;fs_table&gt;-vemng_txt AT '.' INTO &lt;fs_table&gt;-vemng_txt lv_fraction.
+
+      CONDENSE &lt;fs_table&gt;-vemng_txt .
+      &lt;fs_table&gt;-vemng =  &lt;fs_table&gt;-vemng_txt .
+      IF wa_vepo-venum NE wa_vepo-uevel.
+        &lt;fs_table&gt;-ntgew = &lt;fs_table&gt;-ntgew + wa_vepo2-ntgew .
+        MOVE &lt;fs_table&gt;-ntgew TO &lt;fs_table&gt;-ntgew_txt.
+        "changes
+<font color ="#0000FF">*        WRITE &lt;fs_table&gt;-ntgew TO &lt;fs_table&gt;-ntgew_txt .</font>
+<font color ="#0000FF">*      data lv_fraction type n LENGTH 3 .</font>
+        SPLIT &lt;fs_table&gt;-ntgew_txt AT '.' INTO &lt;fs_table&gt;-ntgew_txt lv_fraction.
+          &lt;fs_table&gt;-ntgew_txt = |{ &lt;fs_table&gt;-ntgew_txt }| && |{ '.' }| && |{ lv_fraction+0(2) }| .
+
+<font color ="#0000FF">*        MOVE &lt;fs_table&gt;-ntgew TO &lt;fs_table&gt;-ntgew_txt.</font>
+        CONDENSE &lt;fs_table&gt;-ntgew_txt .
+        &lt;fs_table&gt;-brgew = &lt;fs_table&gt;-brgew + wa_vepo2-brgew .
+        MOVE &lt;fs_table&gt;-brgew TO &lt;fs_table&gt;-brgew_txt.
+<font color ="#0000FF">*        WRITE &lt;fs_table&gt;-brgew TO &lt;fs_table&gt;-brgew_txt .</font>
+<font color ="#0000FF">*      data lv_fraction type n LENGTH 3 .</font>
+        SPLIT &lt;fs_table&gt;-brgew_txt AT '.' INTO &lt;fs_table&gt;-brgew_txt lv_fraction.
+          &lt;fs_table&gt;-brgew_txt = |{ &lt;fs_table&gt;-brgew_txt }| && |{ '.' }| && |{ lv_fraction }| .
+
+        CONDENSE &lt;fs_table&gt;-brgew_txt .
+      ENDIF.
+    ENDLOOP.
+
+    &lt;fs_table&gt;-vfdat = wa_vepo-vfdat .
+
+    READ TABLE lt_table WITH KEY exidv = &lt;fs_table&gt;-exidv
+                        TRANSPORTING NO FIELDS.
+    IF sy-subrc EQ 0 AND sy-tabix NE lines( lt_table ).
+<font color ="#0000FF">*        if record already exist then do not add net & gross weights again</font>
+      CLEAR: &lt;fs_table&gt;-ntgew,&lt;fs_table&gt;-ntgew_txt,&lt;fs_table&gt;-brgew,
+      &lt;fs_table&gt;-brgew_txt.
+    ELSEIF wa_vepo-venum EQ wa_vepo-uevel.
+      &lt;fs_table&gt;-ntgew = &lt;fs_table&gt;-ntgew + wa_vepo2-ntgew .
+      MOVE &lt;fs_table&gt;-ntgew TO &lt;fs_table&gt;-ntgew_txt.
+<font color ="#0000FF">*      WRITE &lt;fs_table&gt;-ntgew TO &lt;fs_table&gt;-ntgew_txt .</font>
+
+      SPLIT &lt;fs_table&gt;-ntgew_txt AT '.' INTO &lt;fs_table&gt;-ntgew_txt lv_fraction.
+        &lt;fs_table&gt;-ntgew_txt = |{ &lt;fs_table&gt;-ntgew_txt }| && |{ '.' }| && |{ lv_fraction }| .
+
+      CONDENSE &lt;fs_table&gt;-ntgew_txt .
+      &lt;fs_table&gt;-brgew = &lt;fs_table&gt;-brgew + wa_vepo2-brgew .
+      MOVE &lt;fs_table&gt;-brgew TO &lt;fs_table&gt;-brgew_txt.
+<font color ="#0000FF">*      WRITE &lt;fs_table&gt;-brgew TO &lt;fs_table&gt;-brgew_txt .</font>
+
+      SPLIT &lt;fs_table&gt;-brgew_txt AT '.' INTO &lt;fs_table&gt;-brgew_txt lv_fraction.
+        &lt;fs_table&gt;-brgew_txt = |{ &lt;fs_table&gt;-brgew_txt }| && |{ '.' }| && |{ lv_fraction }| .
+      CONDENSE &lt;fs_table&gt;-brgew_txt .
+    ENDIF.
+
+    &lt;fs_table&gt;-maktx = lt_makt[ matnr = wa_vepo-matnr ]-maktx .
+    TRY.
+        DATA(wa_kna1) = lt_kna1[ kunnr = wa_likp-kunnr ].
+        &lt;fs_table&gt;-name1 = wa_kna1-name1.
+        &lt;fs_table&gt;-name2 = wa_kna1-name2.
+        &lt;fs_table&gt;-ort01 = wa_kna1-ort01.
+        &lt;fs_table&gt;-pstlz = wa_kna1-pstlz.
+        &lt;fs_table&gt;-land1 = wa_kna1-land1.
+        &lt;fs_table&gt;-regio = wa_kna1-regio.
+        &lt;fs_table&gt;-stras = wa_kna1-stras.
+        &lt;fs_table&gt;-telf1 = wa_kna1-telf1.
+        &lt;fs_table&gt;-telfx = wa_kna1-telfx.
+        &lt;fs_table&gt;-stceg = wa_kna1-stceg.
+        &lt;fs_table&gt;-name4 = wa_kna1-name4.
+
+      CATCH cx_sy_itab_line_not_found.
+    ENDTRY.
+    CLEAR:lv_meinh ,lx_menge,lo_menge.
+  ENDLOOP .
+
+  wa_header-vbeln = wa_likp-vbeln .
+  wa_header-kunag = wa_likp-kunag .
+  wa_header-kunnr = wa_likp-kunnr .
+  wa_header-vstel = wa_likp-vstel .
+  wa_header-inco2 = wa_likp-inco2 .
+  wa_header-inco1 = wa_likp-inco1 .
+  wa_header-traid = wa_likp-traid .
+  wa_header-traty = wa_likp-traty .
+  wa_header-lfdat = wa_likp-lfdat .
+  wa_header-bldat = wa_likp-bldat  .
+  wa_header-perfk = wa_likp-perfk  .
+  wa_header-lifex = wa_likp-lifex  .
+  wa_header-anzpk = wa_likp-anzpk .
+  wa_header-name_first = lv_firstname .
+
+  TRY.
+      DATA(wa_tvtyt) = lt_tvtyt[ traty = wa_likp-traty ].
+      wa_header-modedesc = wa_tvtyt-vtext .
+    CATCH cx_sy_itab_line_not_found.
+  ENDTRY.
+
+  LOOP AT lt_kunnr INTO DATA(wa_kunnr) .
+    wa_header-shippername1 = wa_kunnr-name1 .
+    wa_header-shippername2 = wa_kunnr-name2 .
+
+    TRY.
+        DATA(wa_t005t) = lt_t005t[ land1 = wa_kna1-land1 ].
+        wa_header-landx = wa_t005t-landx .
+      CATCH cx_sy_itab_line_not_found.
+    ENDTRY.
+<font color ="#0000FF">**Begin of Changes on 14thMAR2023 , Changing INCO1 DESC to INCO2 VALUE</font>
+<font color ="#0000FF">*    TRY.</font>
+<font color ="#0000FF">*        DATA(wa_tinct) = lt_tinct[ inco1 = wa_likp-inco1 ].</font>
+<font color ="#0000FF">*        wa_header-inco1_desc = wa_tinct-bezei .</font>
+<font color ="#0000FF">*      CATCH cx_sy_itab_line_not_found.</font>
+<font color ="#0000FF">*    ENDTRY.</font>
+    wa_header-inco1_desc = wa_likp-inco2 .
+    CONDENSE wa_header-inco1_desc.
+<font color ="#0000FF">**End of Changes on 14thMAR2023 , Changing INCO1 DESC to INCO2 VALUE</font>
+
+
+    TRY.
+        DATA(wa_tvstt) = lt_tvstt[ vstel = wa_likp-vstel ].
+        wa_header-vtext = wa_tvstt-vtext .
+      CATCH cx_sy_itab_line_not_found.
+    ENDTRY.
+
+    TRY.
+        DATA(wa_lips) = lt_lips[ vbeln = wa_likp-vbeln ].
+        wa_header-vgbel = wa_lips-vgbel .
+      CATCH cx_sy_itab_line_not_found.
+    ENDTRY.
+
+    TRY.
+        DATA(wa_vbrp) = lt_vbrp[ vgbel = wa_likp-vbeln ].
+        wa_header-prsdt = wa_vbrp-prsdt .
+        wa_header-billno = wa_vbrp-vbeln .
+      CATCH cx_sy_itab_line_not_found.
+    ENDTRY.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

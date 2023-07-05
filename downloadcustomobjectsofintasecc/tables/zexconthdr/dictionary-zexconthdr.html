@@ -1,0 +1,725 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>Dictionary object- ZEXCONTHDR</title>
+</head>
+<body bgcolor="#FFFFE0">
+<h2>ZEXCONTHDR</h2>
+
+<h3>Container Information Header</h3>
+
+<table border="1">
+<tr>
+<th bgcolor="#000000"><font color ="#FFFF00">Row</font></th>
+<th bgcolor="#000000"><font color ="#FFFF00">Field name</font></th>
+<th bgcolor="#000000"><font color ="#FFFF00">Position</font></th>
+<th bgcolor="#000000"><font color ="#FFFF00">Key</font></th>
+<th bgcolor="#000000"><font color ="#FFFF00">Data element</font></th>
+<th bgcolor="#000000"><font color ="#FFFF00">Domain</font></th>
+<th bgcolor="#000000"><font color ="#FFFF00">Datatype</font></th>
+<th bgcolor="#000000"><font color ="#FFFF00">Length</font></th>
+<th bgcolor="#000000"><font color ="#FFFF00">Domain text</font></th>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CONTRNO</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CNTRNO</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CHAR30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Container Number</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">2 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CONTINDNR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">2</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CONDNR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_DOCNO</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">20</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Container Indent number</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">3 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">LOCKNO</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">3</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_LOCKNO</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CHAR15</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">15</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Lock Number</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">EXCSEALNO</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_EXSENO</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CHAR30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Excise seal number</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">5 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">SHIPSEALNO</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">5</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_SHSLN</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CHAR30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Shipping seal number</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">6 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">SHIPARRVDT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">6</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_ARRIVA</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DATS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DATS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">8</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Ship arrived on</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">7 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">SHIPFROM</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">7</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_SHPFRM</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_PORT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">shipment from</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">8 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">SHIPPORT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">8</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_SHIPOR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR35</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">35</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">SHIPMENT FROM PORT</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">9 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DISPORT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">9</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_DISPOR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR035</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">35</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Port of discharge</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">10 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ARRVDATE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">10</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_ARRVDT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DATS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DATS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">8</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Container Arrival date</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">11 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ARRVTIME</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">11</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_ARTIME</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_TIME</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TIMS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">6</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Container Arrival time</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">12 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DESPATCHDT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">12</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_DESPCH</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DATS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DATS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">8</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Despatched on</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">13 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DESPATCHTM</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">13</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_DESPTM</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TIMES</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TIMS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">6</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Desptach Time</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">14 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">REGION</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">14</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_REGIO</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TEXT20</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">20</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Region</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">15 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CONTINDDT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">15</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CONDAT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DATUM</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DATS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">8</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Container Indent date</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">16 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CONTITIME</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">16</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CONTTM</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TIMES</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TIMS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">6</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Container indent time</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">17 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TRUCKNR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">17</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_TRKNO</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CHAR30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Truck number</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">18 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TRUCKSTART</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">18</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_TRUCKS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR035</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">35</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Truck starting from</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">19 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TRUCKVIA</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">19</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_TRUCKV</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR035</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">35</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Truck via</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">20 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TRCKDESDEC</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">20</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_TRKDSC</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CHAR30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Truck destination description</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">21 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">LOADPORT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">21</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_LOADPR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CHAR30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Port Of loading</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">22 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">VIAPORT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">22</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_VIAPR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CHAR30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Via port</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">23 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">SHIPLINE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">23</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_SHIPLI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR035</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">35</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Shipping line</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">24 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CONTRSIZE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">24</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CONTRS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR035</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">35</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Container size</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">25 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CONTREQ</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">25</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CONTRE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DATS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DATS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">8</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Container required on</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">26 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">STSCONFIRM</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">26</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_STSCON</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR035</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">35</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Stock-status confirmed by</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">27 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">STAYHRS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">27</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_STAYHR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TIMES</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TIMS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">6</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Stay of container in the mills</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">28 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">LOADLABOUR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">28</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_LOADLB</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">NUMC5</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">NUMC</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">5</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Labour charges for loading</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">29 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">OTHERCHARG</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">29</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_OTHER</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">NUMC5</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">NUMC</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">5</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Other charges related to container loading</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">30 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CONTLOADDT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CONLDT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DATS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DATS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">8</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">container loading date</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">31 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CONTINSTR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">31</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CONTIN</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CHAR20</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">20</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Container Instruction Number(Hold,Divert,Release)</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">32 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">STOCKSTCON</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">32</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_STSTCO</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">NAME</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">35</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Stock status confirmed with</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">33 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">STINVOICE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">33</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_STINVO</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR5</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">5</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Stock status:Invoiced</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">34 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">STPACK</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">34</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_STPACK</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR5</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">5</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Stock staus-Packed Not Invoiced</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">35 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">STEXPECT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">35</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_STEXPE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR5</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">5</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Stock staus:Expected</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">36 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">VESSELNAME</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">36</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_VESLNM</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CHAR30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Name of the vessel</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">37 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">EXPDEPDATE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">37</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_EXDPDT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DATUM</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DATS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">8</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Expected date for departure</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">38 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TRANMODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">38</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_TRANM</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CHAR40</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">40</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Mode of Transport</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">39 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">FROMCNTRY</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">39</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_COUNTR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TEXT30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Country of origin</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">40 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">FRCITY</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">40</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_FRCITY</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CHAR30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">From city</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">41 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TOCITY</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">41</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_TOCITY</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CHAR30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">To city</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">42 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CNTRDES</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">42</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CNTRDS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TEXT30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Country Of Destination</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">43 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">LOADPORTCD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">43</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_PCDLDG</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Port code of loading</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">44 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DELPORTCD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">44</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_PCDDLV</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_PORT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Port code of delivery</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">45 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DISPORTCD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">45</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_PCDDIS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Port code of discharge</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">46 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DESTPORTCD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">46</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_PCDDES</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_PORT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Port code for destination</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">47 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">VIAPORTCD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">47</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_PCDVIA</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_PORT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Via port code</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">48 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">FINPORTCD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">48</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_PCDFIN</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_PORT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Final port code</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">49 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">INSPORTCD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">49</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_INSPOR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_PORT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Insurance Port Code</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">50 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">INSPORT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">50</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_INSPRT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CHAR30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Insurance Port description</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">51 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">VOYAGENO</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">51</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_VOYNO</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CHAR30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Voyage/Flight number</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">52 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">SHIPMARKS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">52</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_SHPMRK</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_SHMARK</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">72</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Shipping marks</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">53 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">SHPIMNTODT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">53</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_SHPTDT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_DATE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DATS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">8</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Shipment to date</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">54 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">SHIPBILLNO</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">54</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_SHBLNR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CHAR80</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">80</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">shipping bill number</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">55 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">SHBLDT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">55</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_SHBLDT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DATS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DATS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">8</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Shipping bill Date</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">56 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CONTAINTYP</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">56</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CONTYP</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CONTYP</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Container type</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">57 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">LRNO</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">57</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_LRNO</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CHAR30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">LR Number</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">58 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TRUCKDEST</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">58</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_TRKDES</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_PORT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Truck destination</font></td>
+</tr>
+</table>
+<br>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

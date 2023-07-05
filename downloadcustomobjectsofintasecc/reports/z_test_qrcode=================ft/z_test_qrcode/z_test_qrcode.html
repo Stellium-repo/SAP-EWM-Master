@@ -1,0 +1,69 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>Z_TEST_QRCODE</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for function: Z_TEST_QRCODE</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  asd</b></font>
+<hr>
+<pre width="100">
+FUNCTION Z_TEST_QRCODE.
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+<font color ="#0000FF">*"*"Local Interface:</font>
+<font color ="#0000FF">*"  IMPORTING</font>
+<font color ="#0000FF">*"     REFERENCE(VBELN) TYPE  VBELN</font>
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+
+<font color ="#0000FF">*       <a href ="global-z_test_qrcode.html">Global data declarations</a></font>
+DATA:  lo_map            TYPE REF TO cl_sipt_map_qrc_pt_sd,
+  ls_key            TYPE cl_rdsv_map_util_sd=&gt;keys_sd,
+  ls_source         TYPE cl_rdsv_map_util_sd=&gt;source_object_sd,
+  ls_source_pt      TYPE cl_sipt_qrcode_pt=&gt;source_object_pt,
+  ls_qrcode_param   TYPE cl_rdsv_qrcode=&gt;qrcode_get_param.
+
+              lo_map = NEW #( ).
+
+              ls_key-vbeln = vbeln.
+
+              TRY.
+                lo_map-&gt;if_rdsv_map_get~read_source_object(
+                  EXPORTING
+                    key           = ls_key
+                  IMPORTING
+                    source_object = ls_source ).
+
+                lo_map-&gt;if_rdsv_map_get~map(
+                 EXPORTING
+                   source_object = ls_source
+                 IMPORTING
+                   target_object = ls_source_pt ).
+
+                "here you can ADD your won logic to complement source_object_pt - Extension Option 2
+                IF ls_source_pt-header-buyer-tax_id IS INITIAL.
+                  ls_source_pt-header-buyer-tax_id = '999999990'.
+                ENDIF.
+
+                ls_qrcode_param-intca       = 'PT'.
+                ls_qrcode_param-source_type = 'BILLING_DOCUMENT'.
+
+                cl_rdsv_qrcode=&gt;get_qrcode(
+                  EXPORTING
+                    get_param     = ls_qrcode_param
+                    source_object = ls_source_pt
+                  IMPORTING
+                    qrcode        = DATA(ls_qrcode) ).
+
+              CATCH cx_rdsv_map INTO DATA(lo_rdsv_map).
+              CATCH cx_rdsv_qrcode INTO DATA(lo_rdsv_qrcode).
+              ENDTRY.
+
+
+ENDFUNCTION.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

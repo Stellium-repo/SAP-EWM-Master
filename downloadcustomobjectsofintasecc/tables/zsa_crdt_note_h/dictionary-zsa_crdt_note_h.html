@@ -1,0 +1,665 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>Dictionary object- ZSA_CRDT_NOTE_H</title>
+</head>
+<body bgcolor="#FFFFE0">
+<h2>ZSA_CRDT_NOTE_H</h2>
+
+<h3>SA: Credit Note Header Table</h3>
+
+<table border="1">
+<tr>
+<th bgcolor="#000000"><font color ="#FFFF00">Row</font></th>
+<th bgcolor="#000000"><font color ="#FFFF00">Field name</font></th>
+<th bgcolor="#000000"><font color ="#FFFF00">Position</font></th>
+<th bgcolor="#000000"><font color ="#FFFF00">Key</font></th>
+<th bgcolor="#000000"><font color ="#FFFF00">Data element</font></th>
+<th bgcolor="#000000"><font color ="#FFFF00">Domain</font></th>
+<th bgcolor="#000000"><font color ="#FFFF00">Datatype</font></th>
+<th bgcolor="#000000"><font color ="#FFFF00">Length</font></th>
+<th bgcolor="#000000"><font color ="#FFFF00">Domain text</font></th>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">MANDT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">X</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">MANDT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">MANDT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CLNT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">3</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Client</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">2 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">SD_NUMBER</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">2</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">X</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">20</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">SD Number</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">3 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">PLANTCODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">3</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">WERKS_D</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">WERKS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Plant</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">SHIP_TO_PARTY</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">KUNNR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">KUNNR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">10</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Customer Number</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">5 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">SOLD_TO_PARTY</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">5</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">KUNNR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">KUNNR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">10</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Customer Number</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">6 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">SALES_ORG</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">6</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">VKORG</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">VKORG</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Sales Organization</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">7 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DISTR_CHANNEL</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">7</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">VTWEG</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">VTWEG</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">2</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Distribution Channel</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">8 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DIVISION</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">8</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">SPART</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">SPART</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">2</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Division</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">9 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CUST_PURCH_NO</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">9</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">BSTKD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">BSTKD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">35</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Customer Purchase Order Number</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">10 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">BILLING_DATE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">10</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">BUDAT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DATUM</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DATS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">8</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Posting Date in the Document</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">11 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">PURCH_DATE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">11</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">BUDAT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DATUM</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DATS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">8</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Posting Date in the Document</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">12 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">REQ_DEL_DATE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">12</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">BUDAT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DATUM</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DATS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">8</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Posting Date in the Document</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">13 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">SO_NO</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">13</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">10</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">So Number</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">14 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DELV_NO</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">14</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">10</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Delivery Number</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">15 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">INV_NO</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">15</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">10</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Invoice Number</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">16 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">FI_DOC</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">16</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">10</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">FI Document</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">17 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CURRENCY</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">17</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">WAERS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">WAERS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CUKY</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">5</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Currency Key</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">18 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">INDI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">18</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Indicator</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">19 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CREATEDON</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">19</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DATUM</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DATUM</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DATS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">8</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Date</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">20 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">MESSAGE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">20</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">100</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Message</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">21 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">SCENARIO</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">21</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZACC_SCENARIO</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZACC_SCENARIO</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">10</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Functionality Scenario</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">22 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ORD_TYP</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">22</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">AUART</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">AUART</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Sales Document Type</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">23 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">GR_GI_NO</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">23</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">XABLN</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">BELNR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">10</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Goods Receipt/Issue Slip Number</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">24 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DISPATCHDONE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">24</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Dispatch Done</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">25 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">XML</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">25</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">XML</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">26 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">PRIORITY</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">26</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">20</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Priority</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">27 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">SO_NUMBER</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">27</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">20</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Order Number</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">28 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">QTYGT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">28</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Quantity Greater than Dispatch</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">29 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">QTYMESSAGE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">29</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">100</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Quantity Message</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">30 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">EMAIL</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Email</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">31 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">MULCONDITION</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">31</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Multi Condition</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">32 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DONE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">32</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Push To PNS Done</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">33 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DONE2</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">33</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Push To PNS Done After FI Entry (ZMSP)</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">34 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">COMP_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">34</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">BUKRS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">BUKRS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Company Code</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">35 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">PRICE_DATE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">35</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">BUDAT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DATUM</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DATS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">8</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Posting Date in the Document</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">36 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">BILL_TO_PARTY</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">36</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">KUNRG</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">KUNNR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">10</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Payer</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">37 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">PAY_TO_PARTY</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">37</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">KUNRG</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">KUNNR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">10</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Payer</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">38 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CUST_GROUP</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">38</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">KDGRP</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">KDGRP</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">2</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Customer group</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">39 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">PRICE_LIST</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">39</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">PLTYP</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">PLTYP</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">2</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Price list type</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">40 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TAX_CLASS1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">40</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TAXK1_AK</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TAXKD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Alternative tax classification</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">41 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TAX_CLASS2</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">41</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TAXK2</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TAXKD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Tax classification 2 for customer</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">42 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TAX_CLASS3</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">42</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TAXK3</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TAXKD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Tax classification 3 for customer</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">43 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TAX_CLASS4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">43</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TAXK4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TAXKD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Tax Classification 4 Customer</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">44 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TAX_CLASS5</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">44</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TAXK5</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TAXKD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Tax classification 5 for customer</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">45 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TAX_CLASS6</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">45</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TAXK6</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TAXKD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Tax classification 6 for customer</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">46 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TAX_CLASS7</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">46</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TAXK7</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TAXKD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Tax classification 7 for customer</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">47 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">INCIDENT_NO</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">47</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">XBLNR_V_LONG</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">XBLNR_LONG</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">35</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Reference Document Number (See long text for dependencies)</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">48 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">HEAD_REMARKS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">48</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">100</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Header Remarks</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">49 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">HEAD_TEXT1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">49</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">100</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Header Text 1</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">50 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">HEAD_TEXT2</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">50</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">100</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Header Text 2</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">51 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">HEAD_TEXT3</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">51</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">100</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Header Text 3</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">52 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">HEAD_TEXT4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">52</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">100</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Header Text 4</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">53 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">HEAD_TEXT5</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">53</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">100</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Header Text 5</font></td>
+</tr>
+</table>
+<br>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

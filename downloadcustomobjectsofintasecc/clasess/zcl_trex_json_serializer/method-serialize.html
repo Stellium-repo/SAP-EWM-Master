@@ -1,0 +1,27 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>SERIALIZE</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: SERIALIZE</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*   Method attributes.                                                   *</font>
+<font color ="#0000FF">**************************************************************************</font>
+Instantiation: Public
+<font color ="#0000FF">**************************************************************************</font>
+
+method SERIALIZE.
+  field-symbols &lt;data&gt; type data .
+
+  assign me-&gt;data_ref-&gt;* to &lt;data&gt; .
+  recurse( &lt;data&gt; ) .
+endmethod.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZQINSP_EWM</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZQINSP_EWM</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Inspection Lot UD 17</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*****************************************************************************************</font>
+<font color ="#0000FF">*                          INTAS PHARMA                                                 *</font>
+<font color ="#0000FF">*****************************************************************************************</font>
+<font color ="#0000FF">*  OBJECT INFORMATION                                                                   *</font>
+<font color ="#0000FF">*****************************************************************************************</font>
+<font color ="#0000FF">* Module             : EWM                                                              *</font>
+<font color ="#0000FF">* Developer          : Santhanatha Reddy                                                *</font>
+<font color ="#0000FF">* Requestor          : Shylaja                                                          *</font>
+<font color ="#0000FF">* Date Of Creation   : 08.01.2023                                                       *</font>
+<font color ="#0000FF">* Transport Request  : DEVK971638                                                       *</font>
+<font color ="#0000FF">* Development Object : ZQINSP_EWM                                                       *</font>
+<font color ="#0000FF">* Description        : Quality Inspection check in EWM                                  *</font>
+<font color ="#0000FF">*                                                                                       *</font>
+<font color ="#0000FF">*=======================================================================================*</font>
+<font color ="#0000FF">* MODIFICATION HISTORY                                                                  *</font>
+<font color ="#0000FF">*---------------------------------------------------------------------------------------*</font>
+<font color ="#0000FF">* Mod. No.  Date    Name        Transport Number        Change Desc.                    *</font>
+<font color ="#0000FF">*---------------------------------------------------------------------------------------*</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*---------------------------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Report  ZQINSP_EWM</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+REPORT zqinsp_ewm.
+TABLES: qals, rqeva.
+DATA:   go_subscr_1101_qeva  TYPE REF TO if_ex_qeva_subscreen_1101.
+include <a href ="zqinsp_ewm_d0010_inito01.html">zqinsp_ewm_d0010_inito01</a>.
+include <a href ="zqinsp_ewm_d0010_get_datao01.html">zqinsp_ewm_d0010_get_datao01</a>.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

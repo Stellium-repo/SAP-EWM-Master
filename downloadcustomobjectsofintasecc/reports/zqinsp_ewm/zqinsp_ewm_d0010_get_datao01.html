@@ -1,0 +1,31 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZQINSP_EWM_D0010_GET_DATAO01</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZQINSP_EWM_D0010_GET_DATAO01</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZQINSP_EWM_D0010_GET_DATAO01</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  D0010_GET_DATA  OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+MODULE d0010_get_data OUTPUT.
+<font color ="#0000FF">*-Get Data from the global attributes of adapter class</font>
+  CALL METHOD go_subscr_1101_qeva-&gt;get_data
+    EXPORTING
+      flt_val = '17'
+    IMPORTING
+      e_qals  = qals
+      e_rqeva = rqeva.
+ENDMODULE.                 " D0010_GET_DATA  OUTPUT
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

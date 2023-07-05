@@ -1,0 +1,247 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZVK11_CONDITION</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for function: ZVK11_CONDITION</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Condition Update</b></font>
+<hr>
+<pre width="100">
+FUNCTION zvk11_condition.
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+<font color ="#0000FF">*"*"Local Interface:</font>
+<font color ="#0000FF">*"  IMPORTING</font>
+<font color ="#0000FF">*"     VALUE(CTU) LIKE  APQI-PUTACTIVE DEFAULT 'X'</font>
+<font color ="#0000FF">*"     VALUE(MODE) LIKE  APQI-PUTACTIVE DEFAULT 'N'</font>
+<font color ="#0000FF">*"     VALUE(UPDATE) LIKE  APQI-PUTACTIVE DEFAULT 'L'</font>
+<font color ="#0000FF">*"     VALUE(GROUP) LIKE  APQI-GROUPID OPTIONAL</font>
+<font color ="#0000FF">*"     VALUE(USER) LIKE  APQI-USERID OPTIONAL</font>
+<font color ="#0000FF">*"     VALUE(KEEP) LIKE  APQI-QERASE OPTIONAL</font>
+<font color ="#0000FF">*"     VALUE(HOLDDATE) LIKE  APQI-STARTDATE OPTIONAL</font>
+<font color ="#0000FF">*"     VALUE(NODATA) LIKE  APQI-PUTACTIVE DEFAULT '/'</font>
+<font color ="#0000FF">*"     VALUE(KSCHL_001) LIKE  BDCDATA-FVAL DEFAULT 'ZESP'</font>
+<font color ="#0000FF">*"     VALUE(SELKZ_01_002) LIKE  BDCDATA-FVAL DEFAULT ''</font>
+<font color ="#0000FF">*"     VALUE(SELKZ_04_003) LIKE  BDCDATA-FVAL DEFAULT 'X'</font>
+<font color ="#0000FF">*"     VALUE(VKORG_004) LIKE  BDCDATA-FVAL DEFAULT 'ES10'</font>
+<font color ="#0000FF">*"     VALUE(VTWEG_005) LIKE  BDCDATA-FVAL DEFAULT 'HX'</font>
+<font color ="#0000FF">*"     VALUE(KUNNR_006) LIKE  BDCDATA-FVAL DEFAULT '7000005'</font>
+<font color ="#0000FF">*"     VALUE(MATNR_01_007) LIKE  BDCDATA-FVAL DEFAULT '200000916'</font>
+<font color ="#0000FF">*"     VALUE(KBETR_01_008) LIKE  BDCDATA-FVAL DEFAULT</font>
+<font color ="#0000FF">*"       '            0.70'</font>
+<font color ="#0000FF">*"     VALUE(KONWA_01_009) LIKE  BDCDATA-FVAL DEFAULT 'EUR'</font>
+<font color ="#0000FF">*"     VALUE(KPEIN_01_010) LIKE  BDCDATA-FVAL DEFAULT '    1'</font>
+<font color ="#0000FF">*"     VALUE(KMEIN_01_011) LIKE  BDCDATA-FVAL DEFAULT 'NOS'</font>
+<font color ="#0000FF">*"     VALUE(DATAB_01_012) LIKE  BDCDATA-FVAL DEFAULT '26.04.2019'</font>
+<font color ="#0000FF">*"     VALUE(DATBI_01_013) LIKE  BDCDATA-FVAL DEFAULT '31.12.9999'</font>
+<font color ="#0000FF">*"     VALUE(QUAT) LIKE  ZIA_S_QUAT_FROM_AQUA STRUCTURE</font>
+<font color ="#0000FF">*"        ZIA_S_QUAT_FROM_AQUA</font>
+<font color ="#0000FF">*"     VALUE(BLOCK) TYPE  KBSTAT OPTIONAL</font>
+<font color ="#0000FF">*"  EXPORTING</font>
+<font color ="#0000FF">*"     VALUE(SUBRC) LIKE  SYST-SUBRC</font>
+<font color ="#0000FF">*"  TABLES</font>
+<font color ="#0000FF">*"      MESSTAB STRUCTURE  BDCMSGCOLL OPTIONAL</font>
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+<font color ="#0000FF">*************BOC Added by DMODI dt -30-01-2020******************</font>
+<font color ="#0000FF">******************Local data Declaration******************</font>
+<font color ="#0000FF">*  DATA :LT_A005 TYPE STANDARD TABLE OF A005,</font>
+<font color ="#0000FF">*        LS_A005 TYPE A005,</font>
+<font color ="#0000FF">*        LV_REC_DATE LIKE  BDCDATA-FVAL, "TYPE CHAR10,</font>
+<font color ="#0000FF">*        LV_YEAR TYPE CHAR4,</font>
+<font color ="#0000FF">*        LV_MM   TYPE CHAR2,</font>
+<font color ="#0000FF">*        LV_DT   TYPE CHAR2,</font>
+<font color ="#0000FF">*        LV_KUNNR TYPE KUNNR,</font>
+<font color ="#0000FF">*        LV_MATNR TYPE MATNR.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  CLEAR :LV_REC_DATE ,LV_KUNNR,LV_MATNR.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'</font>
+<font color ="#0000FF">*    EXPORTING</font>
+<font color ="#0000FF">*      INPUT  = KUNNR_006</font>
+<font color ="#0000FF">*    IMPORTING</font>
+<font color ="#0000FF">*      OUTPUT = LV_KUNNR.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  CALL FUNCTION 'CONVERSION_EXIT_MATN1_INPUT'</font>
+<font color ="#0000FF">*    EXPORTING</font>
+<font color ="#0000FF">*      INPUT        = MATNR_01_007</font>
+<font color ="#0000FF">*    IMPORTING</font>
+<font color ="#0000FF">*      OUTPUT       = LV_MATNR</font>
+<font color ="#0000FF">*    EXCEPTIONS</font>
+<font color ="#0000FF">*      LENGTH_ERROR = 1</font>
+<font color ="#0000FF">*      OTHERS       = 2.</font>
+<font color ="#0000FF">*  IF SY-SUBRC &lt;&gt; 0.</font>
+<font color ="#0000FF">*    MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO</font>
+<font color ="#0000FF">*            WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.</font>
+<font color ="#0000FF">*  ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">**********************</font>
+<font color ="#0000FF">*  SELECT * FROM A005 INTO TABLE LT_A005</font>
+<font color ="#0000FF">*                      WHERE KSCHL = KSCHL_001</font>
+<font color ="#0000FF">*                      AND   VKORG = VKORG_004</font>
+<font color ="#0000FF">*                      AND   VTWEG = VTWEG_005</font>
+<font color ="#0000FF">*                      AND   KUNNR = LV_KUNNR "KUNNR_006</font>
+<font color ="#0000FF">*                      AND   MATNR = LV_MATNR "MATNR_01_007</font>
+<font color ="#0000FF">*                      AND   DATBI &gt; SY-DATUM.</font>
+<font color ="#0000FF">*  IF SY-SUBRC = 0.</font>
+<font color ="#0000FF">*    SORT LT_A005 BY DATBI KNUMH DESCENDING.</font>
+<font color ="#0000FF">*    READ TABLE LT_A005 INTO LS_A005 INDEX 1.</font>
+<font color ="#0000FF">*    IF SY-SUBRC = 0.</font>
+<font color ="#0000FF">*      LV_YEAR = LS_A005-DATBI+0(4).</font>
+<font color ="#0000FF">*      LV_MM   = LS_A005-DATBI+4(2).</font>
+<font color ="#0000FF">*      LV_DT   = LS_A005-DATBI+6(2).</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      CONCATENATE LV_DT LV_MM LV_YEAR INTO LV_REC_DATE SEPARATED BY</font>
+<font color ="#0000FF">*'.'.</font>
+<font color ="#0000FF">*    ENDIF.</font>
+<font color ="#0000FF">*    CLEAR LS_A005.</font>
+<font color ="#0000FF">*  ENDIF.</font>
+<font color ="#0000FF">**********************************************************</font>
+<font color ="#0000FF">*  *************EOC Added by DMODI dt -30-01-2020******************</font>
+
+<font color ="#0000FF">*       <a href ="global-zvk11_condition.html">Global data declarations</a></font>
+
+  subrc = 0.
+
+<font color ="#0000FF">*  IF QUAT-QUOT = 'N' OR QUAT-QUOT = ' '. " For New Creation - VK11</font>
+
+  PERFORM bdc_nodata      USING nodata.
+
+  PERFORM open_group      USING group user keep holddate ctu.
+
+  PERFORM bdc_dynpro      USING 'SAPMV13A' '0100'.
+  PERFORM bdc_field       USING 'BDC_CURSOR'
+                                'RV13A-KSCHL'.
+  PERFORM bdc_field       USING 'BDC_OKCODE'
+                                '/00'.
+  PERFORM bdc_field       USING 'RV13A-KSCHL'
+                                kschl_001.
+  PERFORM bdc_dynpro      USING 'SAPLV14A' '0100'.
+  PERFORM bdc_field       USING 'BDC_CURSOR'
+                                'RV130-SELKZ(01)'."'RV130-SELKZ(04)'.
+  PERFORM bdc_field       USING 'BDC_OKCODE'
+                                '=WEIT'.
+  PERFORM bdc_field       USING 'RV130-SELKZ(01)'
+                                selkz_01_002.
+  IF selkz_04_003 IS NOT INITIAL.
+    PERFORM bdc_field       USING 'RV130-SELKZ(04)'
+                                  selkz_04_003.
+  ENDIF.
+  PERFORM bdc_dynpro      USING 'SAPMV13A' '1005'.
+  PERFORM bdc_field       USING 'BDC_CURSOR'
+                                'RV13A-DATBI(01)'.
+  PERFORM bdc_field       USING 'BDC_OKCODE'
+                                '/00'.
+  PERFORM bdc_field       USING 'KOMG-VKORG'
+                                vkorg_004.
+  PERFORM bdc_field       USING 'KOMG-VTWEG'
+                                vtweg_005.
+  PERFORM bdc_field       USING 'KOMG-KUNNR'
+                                kunnr_006.
+  PERFORM bdc_field       USING 'KOMG-MATNR(01)'
+                                matnr_01_007.
+  PERFORM bdc_field       USING 'KONP-KBETR(01)'
+                                kbetr_01_008.
+
+<font color ="#0000FF">*  IF KSCHL_001 = 'ZESD' OR KSCHL_001 = 'ZESC'.</font>
+<font color ="#0000FF">*    CLEAR KONWA_01_009.</font>
+<font color ="#0000FF">*  ELSE.</font>
+  PERFORM bdc_field       USING 'KONP-KONWA(01)'
+                              konwa_01_009.
+<font color ="#0000FF">*  ENDIF.</font>
+
+  PERFORM bdc_field       USING 'KONP-KPEIN(01)'
+                                kpein_01_010.
+  PERFORM bdc_field       USING 'KONP-KMEIN(01)'
+                                kmein_01_011.
+  PERFORM bdc_field       USING 'RV13A-DATAB(01)'
+                                datab_01_012.
+  PERFORM bdc_field       USING 'RV13A-DATBI(01)'
+                                datbi_01_013.
+  PERFORM bdc_dynpro      USING 'SAPMV13A' '1005'.
+  PERFORM bdc_field       USING 'BDC_CURSOR'
+                                'KOMG-MATNR(01)'.
+  PERFORM bdc_field       USING 'BDC_OKCODE'
+                                '=SICH'.
+  PERFORM bdc_transaction TABLES messtab
+  USING                         'VK11'
+                                ctu
+                                mode
+                                update.
+
+<font color ="#0000FF">**************************************************************</font>
+<font color ="#0000FF">*************BOC Added by DMODI dt -30-01-2020******************</font>
+<font color ="#0000FF">*  ELSEIF QUAT-QUOT = 'U'.  " For Update BDC Data - VK12</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    PERFORM OPEN_GROUP      USING GROUP USER KEEP HOLDDATE CTU.</font>
+<font color ="#0000FF">*    PERFORM BDC_DYNPRO      USING 'SAPMV13A' '0100'.</font>
+<font color ="#0000FF">*    PERFORM BDC_FIELD       USING 'BDC_CURSOR'</font>
+<font color ="#0000FF">*                                  'RV13A-KSCHL'.</font>
+<font color ="#0000FF">*    PERFORM BDC_FIELD       USING 'BDC_OKCODE'</font>
+<font color ="#0000FF">*                                  '/00'.</font>
+<font color ="#0000FF">*    PERFORM BDC_FIELD       USING 'RV13A-KSCHL'</font>
+<font color ="#0000FF">*                                    KSCHL_001.</font>
+<font color ="#0000FF">*    PERFORM BDC_DYNPRO      USING 'SAPLV14A' '0100'.</font>
+<font color ="#0000FF">*    PERFORM BDC_FIELD       USING 'BDC_CURSOR'</font>
+<font color ="#0000FF">*                                  'RV130-SELKZ(04)'.</font>
+<font color ="#0000FF">*    PERFORM BDC_FIELD       USING 'BDC_OKCODE'</font>
+<font color ="#0000FF">*                                  '=WEIT'.</font>
+<font color ="#0000FF">*    PERFORM BDC_FIELD       USING 'RV130-SELKZ(01)'</font>
+<font color ="#0000FF">*                                  SELKZ_01_002.</font>
+<font color ="#0000FF">*    PERFORM BDC_FIELD       USING 'RV130-SELKZ(04)'</font>
+<font color ="#0000FF">*                                  SELKZ_04_003.</font>
+<font color ="#0000FF">*    PERFORM BDC_DYNPRO      USING 'RV13A005' '1000'.</font>
+<font color ="#0000FF">*    PERFORM BDC_FIELD       USING 'BDC_CURSOR'</font>
+<font color ="#0000FF">*                                  'F001'.</font>
+<font color ="#0000FF">*    PERFORM BDC_FIELD       USING 'BDC_OKCODE'</font>
+<font color ="#0000FF">*                                  '=ONLI'.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    PERFORM BDC_FIELD       USING 'F001'</font>
+<font color ="#0000FF">*                                  VKORG_004.</font>
+<font color ="#0000FF">*    PERFORM BDC_FIELD       USING 'F002'</font>
+<font color ="#0000FF">*                                  VTWEG_005.</font>
+<font color ="#0000FF">*    PERFORM BDC_FIELD       USING 'F003'</font>
+<font color ="#0000FF">*                                  KUNNR_006.</font>
+<font color ="#0000FF">*    PERFORM BDC_FIELD       USING 'F004-LOW'</font>
+<font color ="#0000FF">*                                  MATNR_01_007.</font>
+<font color ="#0000FF">*    PERFORM BDC_FIELD       USING 'SEL_DATE'</font>
+<font color ="#0000FF">*                                  LV_REC_DATE.</font>
+<font color ="#0000FF">*    PERFORM BDC_DYNPRO      USING 'SAPMV13A' '1005'.</font>
+<font color ="#0000FF">*    PERFORM BDC_FIELD       USING 'BDC_CURSOR'</font>
+<font color ="#0000FF">*                                  'RV13A-DATBI(01)'.</font>
+<font color ="#0000FF">*    PERFORM BDC_FIELD       USING 'BDC_OKCODE'</font>
+<font color ="#0000FF">*                                  '/00'.</font>
+<font color ="#0000FF">*    PERFORM BDC_FIELD       USING 'RV13A-DATAB(01)'</font>
+<font color ="#0000FF">*                                  DATAB_01_012.</font>
+<font color ="#0000FF">*    PERFORM BDC_FIELD       USING 'RV13A-DATBI(01)'</font>
+<font color ="#0000FF">*                                  DATBI_01_013.</font>
+<font color ="#0000FF">*    PERFORM BDC_DYNPRO      USING 'SAPMV13A' '1005'.</font>
+<font color ="#0000FF">*    PERFORM BDC_FIELD       USING 'BDC_CURSOR'</font>
+<font color ="#0000FF">*                                  'RV13A-DATAB(01)'.</font>
+<font color ="#0000FF">*    PERFORM BDC_FIELD       USING 'BDC_OKCODE'</font>
+<font color ="#0000FF">*                                  '=SICH'.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    PERFORM BDC_TRANSACTION TABLES MESSTAB</font>
+<font color ="#0000FF">*                         USING   'VK12'</font>
+<font color ="#0000FF">*                                  CTU</font>
+<font color ="#0000FF">*                                  MODE</font>
+<font color ="#0000FF">*                                  UPDATE.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  ENDIF.</font>
+<font color ="#0000FF">*************************************************************</font>
+<font color ="#0000FF">* *************EOC Added by DMODI dt -30-01-2020******************</font>
+  IF sy-subrc &lt;&gt; 0.
+    subrc = sy-subrc.
+    EXIT.
+  ENDIF.
+
+  PERFORM close_group USING  ctu.
+
+ENDFUNCTION.
+INCLUDE bdcrecxy .
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

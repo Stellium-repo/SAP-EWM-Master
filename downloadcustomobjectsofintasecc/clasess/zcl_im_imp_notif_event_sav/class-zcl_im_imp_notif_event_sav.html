@@ -1,0 +1,126 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCL_IM_IMP_NOTIF_EVENT_SAV</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for class: ZCL_IM_IMP_NOTIF_EVENT_SAV</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Cl.implement.p.cl.add-in ZIMP_NOTIF_EVENT_SAV</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*   Class attributes.                                                    *</font>
+<font color ="#0000FF">**************************************************************************</font>
+Instantiation: Public
+Message class:
+State: Implemented
+Final Indicator: X
+R/3 Release: 700
+
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*   Public section of class.                                             *</font>
+<font color ="#0000FF">**************************************************************************</font>
+class ZCL_IM_IMP_NOTIF_EVENT_SAV definition
+  public
+  final
+  create public .
+
+<font color ="#0000FF">*"* public components of class ZCL_IM_IMP_NOTIF_EVENT_SAV</font>
+<font color ="#0000FF">*"* do not include other source files here!!</font>
+public section.
+
+  interfaces IF_EX_NOTIF_EVENT_SAVE .
+
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*   Private section of class.                                            *</font>
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*"* private components of class ZCL_IM_IMP_NOTIF_EVENT_SAV</font>
+<font color ="#0000FF">*"* do not include other source files here!!</font>
+private section.
+
+  types:
+    BEGIN OF ty_vbrp,
+           vbeln TYPE vbeln,
+           posnr TYPE posnr,
+           vgbel TYPE vgbel,
+           vgpos TYPE vgpos,
+           aubel TYPE vbeln_va,
+           aupos TYPE posnr_va,
+           matnr TYPE matnr,
+           charg TYPE charg_d,
+         END OF ty_vbrp .
+  types:
+    BEGIN OF ty_entregas,
+           vbeln TYPE vbeln,
+           vgbel TYPE vgbel,
+           vgpos TYPE vgpos,
+           matnr TYPE matnr,
+           charg TYPE charg_d,
+           uecha TYPE uecha,
+         END OF ty_entregas .
+  types:
+    BEGIN OF ty_pedidos,
+           vbeln TYPE vbeln,
+           posnr TYPE posnr,
+           aubel TYPE vbeln_va,
+           aupos TYPE posnr_va,
+           matnr TYPE matnr,
+           charg TYPE charg_d,
+           uepos TYPE uepos,
+         END OF ty_pedidos .
+  types:
+    BEGIN OF ty_lips,
+           vbeln TYPE vbeln,
+           posnr TYPE posnr,
+           uecha TYPE uecha,
+         END OF ty_lips .
+  types:
+    BEGIN OF ty_vbap,
+           vbeln TYPE vbeln_va,
+           posnr TYPE posnr_va,
+           uepos TYPE uepos,
+         END OF ty_vbap .
+  types:
+    BEGIN OF ty_vbrk,
+           vbeln TYPE vbeln,
+           knumv TYPE knumv,
+         END OF ty_vbrk .
+  types:
+    BEGIN OF ty_konv,
+           knumv TYPE knumv,
+           kposn TYPE kposn,
+           kbetr TYPE konv-kbetr,
+           waers TYPE waers,
+           kschl TYPE kschl,
+         END OF ty_konv .
+
+  methods CREATE_TEXT
+    changing
+      CV_WVIQMEL_INDTXTUPD type RIQS0-INDTXTUPD
+      CS_VIQMEL type VIQMEL
+      CS_WVIQMEL_UPDATE type RIQS0-XUPDATE .
+
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*   Protected section of class.                                          *</font>
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*"* protected components of class ZCL_IM_IMP_NOTIF_EVENT_SAV</font>
+<font color ="#0000FF">*"* do not include other source files here!!</font>
+protected section.
+
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*   Types section of class.                                              *</font>
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*"* dummy include to reduce generation dependencies between</font>
+<font color ="#0000FF">*"* class ZCL_IM_IMP_NOTIF_EVENT_SAV and it's users.</font>
+<font color ="#0000FF">*"* touched if any type reference has been changed</font>
+
+<font color ="#0000FF">*Text elements</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">* 001 Notification 4000000001 with high priority has been assigned to you. Please review it.</font>
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

@@ -1,0 +1,347 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZIA_FM_PO_PRINT_MAIL</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for function: ZIA_FM_PO_PRINT_MAIL</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  PO Print Pdf Mail</b></font>
+<hr>
+<pre width="100">
+FUNCTION ZIA_FM_PO_PRINT_MAIL.
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+<font color ="#0000FF">*"*"Local Interface:</font>
+<font color ="#0000FF">*"  IMPORTING</font>
+<font color ="#0000FF">*"     REFERENCE(PO_NUMBER) TYPE  EBELN</font>
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& TITLE        : PO PRINT PDF WITH MAIL</font>
+<font color ="#0000FF">*& MODULE       : MM</font>
+<font color ="#0000FF">*& PROGRAM      : ZIA_FM_PO_PRINT_MAIL</font>
+<font color ="#0000FF">*& REQUESTED BY : RAVI SHARMA</font>
+<font color ="#0000FF">*& CREATED BY   : NAGARAJU GOLLA</font>
+<font color ="#0000FF">*& CREATED DATE : 12.01.2023</font>
+<font color ="#0000FF">*& CHARM NO     : 8000005964</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+
+<font color ="#0000FF">*       <a href ="global-zia_fm_po_print_mail.html">Global data declarations</a></font>
+  TYPE-POOLS: MEEIN.
+
+DATA: L_DRUVO TYPE T166K-DRUVO, ""
+        L_NAST  TYPE NAST, ""
+        L_FROM_MEMORY,
+        L_DOC   TYPE MEEIN_PURCHASE_DOC_PRINT.
+
+DATA : ENT_RETCO.
+DATA : ENT_SCREEN.
+
+TYPES : BEGIN OF TY_NAST,
+        OBJKY TYPE NAST-OBJKY,
+        KSCHL TYPE NAST-KSCHL,
+        END OF TY_NAST.
+
+DATA : WA_EKKO  TYPE EKKO,
+       WA_PEKKO TYPE PEKKO,
+       WA_NAST  TYPE TY_NAST,
+       WA_LDOC_XEKPO TYPE EKPO,
+       IT_EKPO TYPE STANDARD TABLE OF EKPO,
+       T_EKPO TYPE ZTT_EKPO,
+       W_EKPO TYPE ZTYP_EKPO,
+       WA_EKPO TYPE EKPO,
+       IT_PEKPO TYPE STANDARD TABLE OF PEKPO,
+       LV_VAR  TYPE CHAR50,
+       WA_TNAPR TYPE TNAPR.
+<font color ="#0000FF">*DATA : WA_NAST TYPE NAST.</font>
+
+DATA : G_NAST TYPE NAST.
+
+TYPES : BEGIN OF TYP_EKET,
+        EBELN TYPE EKET-EBELN,
+        EBELP TYPE EKET-EBELP,
+        EINDT TYPE EKET-EINDT,
+        END OF TYP_EKET.
+
+DATA : IT_EKET TYPE STANDARD TABLE OF TYP_EKET,
+       WA_EKET TYPE TYP_EKET.
+DATA : LT_FTP TYPE TABLE OF ZIA_FTP.
+DATA : I_OTF TYPE ITCOO OCCURS 0 WITH HEADER LINE,
+       I_TLINE TYPE TABLE OF TLINE WITH HEADER LINE,
+       I_RECEIVERS TYPE  TABLE OF SOMLRECI1 WITH HEADER LINE,
+       I_RECORD LIKE SOLISTI1 OCCURS 0 WITH HEADER LINE,
+       I_OBJPACK LIKE SOPCKLSTI1 OCCURS 0 WITH HEADER LINE,
+       I_OBJTXT LIKE SOLISTI1 OCCURS 0 WITH HEADER LINE,
+       I_OBJBIN LIKE SOLISTI1  OCCURS 0 WITH HEADER LINE,
+       I_RECLIST LIKE SOMLRECI1  OCCURS 0 WITH HEADER LINE.
+
+DATA : RECEPIENT_EMAIL TYPE ADR6-SMTP_ADDR,
+       USER_D TYPE USR21.
+
+DATA : W_OBJHEAD TYPE SOLI_TAB,
+       W_CTRLOP TYPE SSFCTRLOP,
+       W_COMPOP TYPE SSFCOMPOP,
+       W_RETURN TYPE SSFCRESCL,
+       W_DOC_CHNG TYPE SODOCCHGI1,
+       W_DATA TYPE SODOCCHGI1,
+       W_BUFFER TYPE STRING.
+
+DATA : V_FORM_NAME TYPE RS38L_FNAM,
+       V_LEN_IN LIKE SOOD-OBJLEN,
+       V_LEN_OUT LIKE SOOD-OBJLEN,
+       V_LEN_OUTN TYPE I,
+       V_LINES_TXT TYPE I,
+       V_LINES_BIN TYPE I.
+DATA : V_TEXT TYPE STRING.
+DATA : V_SUBJECT TYPE STRING.
+
+    SELECT SINGLE *
+          FROM EKKO
+          INTO WA_EKKO
+          WHERE EBELN = PO_NUMBER.
+
+IF SY-SUBRC = 0 AND WA_EKKO-EBELN IS NOT INITIAL.
+
+  IF G_NAST-AENDE EQ SPACE.
+    L_DRUVO = '1'.
+  ELSE.
+    L_DRUVO = '2'.
+  ENDIF.
+
+    SELECT *
+      FROM EKPO
+      INTO TABLE IT_EKPO
+      WHERE EBELN = PO_NUMBER.
+
+  IF SY-SUBRC = 0.
+    SELECT EBELN
+           EBELP
+           EINDT
+        FROM EKET INTO TABLE IT_EKET
+        FOR ALL ENTRIES IN IT_EKPO
+        WHERE EBELN = IT_EKPO-EBELN
+          AND EBELP = IT_EKPO-EBELP.
+  ENDIF.
+
+
+  LOOP AT IT_EKPO INTO WA_EKPO WHERE LOEKZ &lt;&gt; 'L'.
+    LV_VAR       = LV_VAR + 1.
+    W_EKPO-SNO   = LV_VAR.
+    W_EKPO-EBELP = WA_EKPO-EBELP.
+    W_EKPO-MATNR = WA_EKPO-MATNR.
+    W_EKPO-TXZ01 = WA_EKPO-TXZ01.
+    W_EKPO-MENGE = WA_EKPO-MENGE.
+    W_EKPO-NETPR = WA_EKPO-NETPR.
+    W_EKPO-MEINS = WA_EKPO-MEINS.
+    W_EKPO-BRTWR = WA_EKPO-BRTWR.
+    W_EKPO-LBLKZ = WA_EKPO-LBLKZ.
+    W_EKPO-EMLIF = WA_EKPO-EMLIF.
+    W_EKPO-PEINH = WA_EKPO-PEINH.
+    W_EKPO-MWSKZ = WA_EKPO-MWSKZ.
+    W_EKPO-LOEKZ = WA_EKPO-LOEKZ.
+
+    READ TABLE IT_EKET INTO WA_EKET WITH KEY EBELN = WA_EKPO-EBELN
+                                             EBELP = WA_EKPO-EBELP.
+
+    W_EKPO-EINDT = WA_EKET-EINDT.
+    APPEND W_EKPO TO T_EKPO.
+  ENDLOOP.
+
+  MOVE-CORRESPONDING WA_EKKO TO WA_PEKKO.
+
+  IF WA_EKKO-ERNAM IS NOT INITIAL.
+    SELECT SINGLE *
+          FROM USR21
+          INTO USER_D
+          WHERE BNAME =  WA_EKKO-ERNAM.
+   IF SY-SUBRC = 0.
+    SELECT SINGLE SMTP_ADDR
+          FROM ADR6
+          INTO RECEPIENT_EMAIL
+          WHERE ADDRNUMBER = USER_D-ADDRNUMBER
+            AND PERSNUMBER = USER_D-PERSNUMBER.
+   ENDIF.
+  ENDIF.
+     SELECT *
+     FROM ZIA_FTP
+     INTO TABLE LT_FTP
+     WHERE PROCESS_TYPE = 'MAILPDF' AND
+               TH_PARAM = WA_EKKO-BUKRS AND
+              SAP_PARAM = WA_EKKO-BSART AND
+             SAP_PARAM2 = WA_EKKO-EKGRP.
+   SELECT SINGLE OBJKY
+                 KSCHL
+            FROM NAST
+            INTO WA_NAST
+            WHERE OBJKY = WA_EKKO-EBELN. "AND
+<font color ="#0000FF">*                  KSCHL = 'ZAPO'.</font>
+
+
+
+
+IF LT_FTP IS NOT INITIAL AND WA_NAST-KSCHL = 'ZAPO'..
+
+  CALL FUNCTION 'SSF_FUNCTION_MODULE_NAME'
+  EXPORTING
+    FORMNAME           = 'ZIA_SF_PO_PRINT'
+  IMPORTING
+    FM_NAME            = V_FORM_NAME
+  EXCEPTIONS
+    NO_FORM            = 1
+    NO_FUNCTION_MODULE = 2.
+IF SY-SUBRC &lt;&gt; 0.
+  MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+  WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+ENDIF.
+
+    W_CTRLOP-GETOTF = 'X'.
+    W_CTRLOP-NO_DIALOG = 'X'.
+    W_COMPOP-TDNOPREV = 'X'.
+
+"Output Options
+    W_COMPOP-TDNOPREV  = 'X'.
+    W_COMPOP-TDDEST    = 'LP01'.
+    W_COMPOP-TDNOPRINT = 'X'.
+
+CALL FUNCTION V_FORM_NAME
+    EXPORTING
+      WA_EKKO            = WA_EKKO
+      WA_PEKKO           = WA_PEKKO
+      WA_NAST            = WA_NAST
+      IT_EKPO            = T_EKPO
+      CONTROL_PARAMETERS = W_CTRLOP
+      OUTPUT_OPTIONS     = W_COMPOP
+    IMPORTING
+      JOB_OUTPUT_INFO    = W_RETURN
+    TABLES
+<font color ="#0000FF">*      IT_EKPO           = IT_EKPO</font>
+      IT_PEKPO           = IT_PEKPO.
+
+I_OTF[] = W_RETURN-OTFDATA[].
+
+CALL FUNCTION 'CONVERT_OTF'
+  EXPORTING
+    FORMAT                = 'PDF'
+    MAX_LINEWIDTH         = 132
+  IMPORTING
+    BIN_FILESIZE          = V_LEN_IN
+  TABLES
+    OTF                   = I_OTF
+    LINES                 = I_TLINE
+  EXCEPTIONS
+    ERR_MAX_LINEWIDTH     = 1
+    ERR_FORMAT            = 2
+    ERR_CONV_NOT_POSSIBLE = 3
+    ERR_BAD_OTF           = 4.
+IF SY-SUBRC &lt;&gt; 0.
+  MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+  WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+ENDIF.
+
+LOOP AT I_TLINE.
+
+  TRANSLATE I_TLINE USING '~'.
+  CONCATENATE W_BUFFER I_TLINE INTO W_BUFFER.
+
+ENDLOOP.
+
+TRANSLATE W_BUFFER USING '~'.
+
+DO.
+  I_RECORD = W_BUFFER.
+  APPEND I_RECORD.
+  SHIFT W_BUFFER LEFT BY 255 PLACES.
+  IF W_BUFFER IS INITIAL.
+    EXIT.
+  ENDIF.
+ENDDO.
+
+REFRESH :
+  I_RECLIST,
+  I_OBJTXT,
+  I_OBJBIN,
+  I_OBJPACK.
+
+CLEAR W_OBJHEAD.
+
+I_OBJBIN[] = I_RECORD[].
+DESCRIBE TABLE I_OBJBIN LINES V_LINES_BIN.
+
+CONCATENATE 'Please Find Attached Purchase Order :' PO_NUMBER 'Pdf File' INTO V_TEXT SEPARATED BY space.
+
+I_OBJTXT = V_TEXT.
+APPEND I_OBJTXT.
+
+DESCRIBE TABLE I_OBJTXT LINES V_LINES_TXT.
+
+W_DOC_CHNG-OBJ_NAME = 'Smartform'.
+W_DOC_CHNG-EXPIRY_DAT = SY-DATUM + 10 .
+
+CONCATENATE 'PO Number :' PO_NUMBER INTO V_SUBJECT SEPARATED BY space.
+
+W_DOC_CHNG-OBJ_DESCR  = V_SUBJECT.
+W_DOC_CHNG-SENSITIVTY = 'F'.
+W_DOC_CHNG-DOC_SIZE = V_LINES_TXT * 255.
+
+CLEAR I_OBJPACK-TRANSF_BIN.
+
+I_OBJPACK-HEAD_START = 1.
+I_OBJPACK-HEAD_NUM = 0.
+I_OBJPACK-BODY_START = 1.
+I_OBJPACK-BODY_NUM = V_LINES_TXT.
+I_OBJPACK-DOC_TYPE = 'RAW'.
+APPEND I_OBJPACK.
+
+I_OBJPACK-TRANSF_BIN = 'X'.
+I_OBJPACK-HEAD_START = 1.
+I_OBJPACK-HEAD_NUM = 1.
+I_OBJPACK-BODY_START = 1.
+I_OBJPACK-BODY_NUM = V_LINES_BIN.
+I_OBJPACK-DOC_TYPE  = 'PDF'.
+I_OBJPACK-OBJ_NAME = 'Releasing Information'.
+CONCATENATE 'PO Number:' PO_NUMBER
+INTO I_OBJPACK-OBJ_DESCR.
+I_OBJPACK-DOC_SIZE = V_LINES_BIN * 255.
+APPEND I_OBJPACK.
+
+CLEAR I_RECLIST.
+
+I_RECLIST-RECEIVER = RECEPIENT_EMAIL.
+I_RECLIST-EXPRESS  = 'X'.
+I_RECLIST-REC_TYPE  = 'U'.
+APPEND I_RECLIST.
+
+CALL FUNCTION 'SO_NEW_DOCUMENT_ATT_SEND_API1'
+  EXPORTING
+    DOCUMENT_DATA              = W_DOC_CHNG
+    PUT_IN_OUTBOX              = 'X'
+    COMMIT_WORK                = 'X'
+  TABLES
+    PACKING_LIST               = I_OBJPACK
+   CONTENTS_BIN                = I_OBJBIN
+    OBJECT_HEADER              = W_OBJHEAD
+    CONTENTS_TXT               = I_OBJTXT
+    RECEIVERS                  = I_RECLIST
+  EXCEPTIONS
+    TOO_MANY_RECEIVERS         = 1
+    DOCUMENT_NOT_SENT          = 2
+    DOCUMENT_TYPE_NOT_EXIST    = 3
+    OPERATION_NO_AUTHORIZATION = 4
+    PARAMETER_ERROR            = 5
+    X_ERROR                    = 6
+    ENQUEUE_ERROR              = 7
+    OTHERS                     = 8.
+IF SY-SUBRC NE 0.
+<font color ="#0000FF">*      WRITE:/ 'Error When Sending the File', sy-subrc.</font>
+ELSE.
+<font color ="#0000FF">*      WRITE:/ 'Mail sent'.</font>
+ENDIF.
+ENDIF.
+ENDIF.
+
+ENDFUNCTION.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

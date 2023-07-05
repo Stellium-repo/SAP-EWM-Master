@@ -1,0 +1,1188 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZIA_F_BILLING_CANCEL</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for function: ZIA_F_BILLING_CANCEL</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  RFC for Billing cancel</b></font>
+<hr>
+<pre width="100">
+FUNCTION ZIA_F_BILLING_CANCEL.
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+<font color ="#0000FF">*"*"Local Interface:</font>
+<font color ="#0000FF">*"  TABLES</font>
+<font color ="#0000FF">*"      IT_BILLING_CANCEL TYPE  ZIA_T_BILLING_CANCEL</font>
+<font color ="#0000FF">*"      MESSAGE TYPE  ZIA_T_RES_PNS</font>
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+<font color ="#0000FF">*tables: zia_pilog.</font>
+
+<font color ="#0000FF">*       <a href ="global-zia_f_billing_cancel.html">Global data declarations</a></font>
+
+TABLES: ZIA_CS_PNS_H_T, ZIA_CS_PNS_I_T, ZIA_CS_PNS_C_T.
+  TYPES: BEGIN OF TY_DELIVERY_CANCEL,
+          VBELN TYPE LIPS-VBELN,
+          POSNR TYPE LIPS-POSNR,
+          MATNR TYPE LIPS-MATNR,
+          LFIMG TYPE LIPS-LFIMG,
+          UMVKZ TYPE LIPS-UMVKZ,
+          UMVKN TYPE LIPS-UMVKN,
+          CHARG TYPE LIPS-CHARG,
+          INSMK TYPE LIPS-INSMK,
+         END OF TY_DELIVERY_CANCEL.
+
+<font color ="#0000FF">*  TYPES: BEGIN OF TY_CANCEL_ORDTYP,</font>
+<font color ="#0000FF">*          VBELN TYPE VBRK-VBELN,</font>
+<font color ="#0000FF">*          FKART TYPE VBRK-FKART,</font>
+<font color ="#0000FF">*         END OF TY_CANCEL_ORDTYP.</font>
+
+  DATA: IT_VBRK TYPE TABLE OF VBRK,
+        WA_VBRK TYPE VBRK,
+        IT_VBRP TYPE TABLE OF VBRP,
+        WA_VBRP TYPE VBRP,
+        IT_VBFA TYPE TABLE OF VBFA,
+        WA_VBFA TYPE VBFA,
+        IT_VBPA TYPE TABLE OF VBPA,
+        WA_VBPA TYPE VBPA,
+        IT_VBAK TYPE TABLE OF VBAK,
+        WA_VBAK TYPE VBAK,
+<font color ="#0000FF">*       IT_VBKD TYPE TABLE OF VBKD,</font>
+<font color ="#0000FF">*       WA_VBKD TYPE VBKD,</font>
+        IT_ZAN_UPID_LOCSKU TYPE TABLE OF ZAN_UPID_LOCSKU,
+        WA_ZAN_UPID_LOCSKU TYPE ZAN_UPID_LOCSKU.
+<font color ="#0000FF">*       WA_PNS_H TYPE ZACC_CS_PNS_H,</font>
+<font color ="#0000FF">*       IT_PNS_H TYPE TABLE OF ZACC_CS_PNS_H,</font>
+<font color ="#0000FF">*       WA_PNS_I TYPE ZACC_CS_PNS_I,</font>
+<font color ="#0000FF">*       IT_PNS_I TYPE TABLE OF ZACC_CS_PNS_I,</font>
+<font color ="#0000FF">*       WA_PNS_COND TYPE ZACC_CS_PNS_COND,</font>
+<font color ="#0000FF">*       IT_PNS_COND TYPE TABLE OF ZACC_CS_PNS_COND.</font>
+
+  TYPES: BEGIN OF TY_PICKLIST,
+          BUKRS TYPE BUKRS,
+          IHREZ TYPE ZACC_CS_PNS_COND-SD_NUMBER,
+        END OF TY_PICKLIST.
+
+  DATA: IT_PICK TYPE TABLE OF TY_PICKLIST,
+        WA_PICK TYPE TY_PICKLIST.
+
+<font color ="#0000FF">*  DATA:V_POS TYPE ZACC_CS_PNS_COND-ITM_NO.</font>
+
+<font color ="#0000FF">*  DATA : IT_KOMV  TYPE TABLE OF KOMV,</font>
+<font color ="#0000FF">*         WA_KOMV  TYPE KOMV,</font>
+<font color ="#0000FF">*         IT_KOMVD TYPE TABLE OF KOMVD,</font>
+<font color ="#0000FF">*         WA_KOMVD TYPE KOMVD.</font>
+
+<font color ="#0000FF">*  DATA: WA_COMM_HEAD_I TYPE  KOMK,</font>
+<font color ="#0000FF">*        WA_COMM_ITEM_I TYPE  KOMP,</font>
+<font color ="#0000FF">*        WA_COMM_HEAD_E TYPE  KOMK,</font>
+<font color ="#0000FF">*        WA_COMM_ITEM_E TYPE  KOMP.</font>
+
+  DATA: WA_BILLING_CANCEL LIKE LINE OF IT_BILLING_CANCEL.
+
+  DATA: IT_RETURN    TYPE TABLE OF BAPIRETURN1,
+        IT_SUCCESS   TYPE TABLE OF BAPIVBRKSUCCESS,
+        WA_SUCCESS TYPE BAPIVBRKSUCCESS.
+
+<font color ="#0000FF">*  DATA: IT_SALES_HEADER TYPE TABLE OF ZACC_S_US10_SAP_TO_PNS,</font>
+<font color ="#0000FF">*        WA_SALES_HEADER TYPE ZACC_S_US10_SAP_TO_PNS,</font>
+<font color ="#0000FF">*        IT_SALES_ITEM   TYPE TABLE OF ZACC_S_US10_I_SAP_TO_PNS,</font>
+<font color ="#0000FF">*        WA_SALES_ITEM   TYPE ZACC_S_US10_I_SAP_TO_PNS,</font>
+<font color ="#0000FF">*        IT_SALES_COND   TYPE TABLE OF ZACC_S_US10_SO_COND_SAP_TO_PNS,</font>
+<font color ="#0000FF">*        WA_SALES_COND   TYPE ZACC_S_US10_SO_COND_SAP_TO_PNS,</font>
+<font color ="#0000FF">*        IT_MESSAGE      TYPE TABLE OF ZACC_S_DISPATCH_MSG,</font>
+<font color ="#0000FF">*        WA_MESSAGE      TYPE ZACC_S_DISPATCH_MSG.</font>
+
+  DATA: T_VBELN TYPE RANGE OF VBRK-VBELN WITH HEADER LINE.
+<font color ="#0000FF">*  DATA: V_GROSSTOTAL(13)    DECIMALS 5 TYPE P,</font>
+<font color ="#0000FF">*        V_DISCOUNTAMT(13)   DECIMALS 5 TYPE P,</font>
+<font color ="#0000FF">*        V_TAXAMT(13)        DECIMALS 5 TYPE P,</font>
+  DATA: V_FKDAT  TYPE VBRK-FKDAT.
+  DATA: V_BUDAT1 TYPE SY-DATLO.
+
+  DATA: LV_SRNO  TYPE NUMC7.
+
+  DATA: IT_DELIVERY_CANCEL TYPE TABLE OF TY_DELIVERY_CANCEL,
+        WA_DELIVERY_CANCEL TYPE TY_DELIVERY_CANCEL.
+
+  DATA: HEADER_DATA LIKE BAPIOBDLVHDRCHG,
+        HEADER_CONTROL LIKE BAPIOBDLVHDRCTRLCHG,
+        DELIVERY LIKE BAPIOBDLVHDRCHG-DELIV_NUMB,
+        ITEM_DATA LIKE BAPIOBDLVITEMCHG OCCURS 0 WITH HEADER LINE,
+        ITEM_CONTROL LIKE BAPIOBDLVITEMCTRLCHG OCCURS 0 WITH HEADER LINE.
+
+  DATA: RETURN LIKE BAPIRET2 OCCURS 0 WITH HEADER LINE,
+        WA_RETURN TYPE BAPIRET2.
+
+  DATA: V_VGBEL  TYPE LIKP-VBELN.
+  DATA: LV_VKORG TYPE LIKP-VKORG.
+
+  DATA: V_MBLNR  TYPE MKPF-MBLNR,
+        V_MJAHR  TYPE MKPF-MJAHR,
+        V_BUDAT  TYPE MKPF-BUDAT.
+
+  DATA: IT_MESG TYPE TABLE OF MESG.
+
+<font color ="#0000FF">*  DATA: IT_CANCEL_ORDTYP TYPE TABLE OF TY_CANCEL_ORDTYP,</font>
+<font color ="#0000FF">*        WA_CANCEL_ORDTYP TYPE TY_CANCEL_ORDTYP.</font>
+
+<font color ="#0000FF">*  DATA: LS_MSG TYPE ZACC_S_DISPATCH_MSG,</font>
+<font color ="#0000FF">*        LT_MSG TYPE TABLE OF ZACC_S_DISPATCH_MSG.</font>
+
+  TYPES: BEGIN OF TY_CANCEL,
+          INVOICE TYPE VBRK-VBELN,
+          CANCEL_INV TYPE VBRK-VBELN,
+         END OF TY_CANCEL.
+
+  DATA: IT_CANCEL TYPE TABLE OF TY_CANCEL,
+        WA_CANCEL TYPE TY_CANCEL.
+
+  DATA: V_FKART   TYPE VBRK-FKART,
+        V_FLAG(1) TYPE C.
+
+  DATA: IT_RETURN_SO TYPE TABLE OF BAPIRET2,
+        WA_HEADINX TYPE BAPISDH1X.
+
+  DATA: V_AUBEL TYPE VBRP-AUBEL.
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+  LOOP AT IT_BILLING_CANCEL INTO WA_BILLING_CANCEL.
+
+    CLEAR: V_FLAG, V_FKART.
+    SELECT SINGLE FKART FROM VBRK
+                        INTO V_FKART
+                        WHERE VBELN = WA_BILLING_CANCEL-BILLINGDOCUMENT.
+
+    IF WA_BILLING_CANCEL-SALESORGANIZATION = 'AE10'.
+      IF ( V_FKART &lt;&gt; 'ZASP' AND V_FKART &lt;&gt; 'ZAFC' ) . " ADD ZAFC BY NIRAV 23.06.2021
+        V_FLAG = 'X'.
+      ENDIF.
+    ENDIF.
+
+    IF V_FLAG IS INITIAL.
+
+      CONCATENATE WA_BILLING_CANCEL-BILLINGDATE+6(4)
+                  WA_BILLING_CANCEL-BILLINGDATE+3(2)
+                  WA_BILLING_CANCEL-BILLINGDATE+0(2) INTO V_FKDAT.
+
+<font color ="#0000FF">*------------------------------ Call Billing Cancel BAPI --------------------------------------*</font>
+      CALL FUNCTION 'BAPI_BILLINGDOC_CANCEL1'
+        EXPORTING
+          BILLINGDOCUMENT = WA_BILLING_CANCEL-BILLINGDOCUMENT
+          BILLINGDATE     = V_FKDAT
+        TABLES
+          RETURN          = IT_RETURN
+          SUCCESS         = IT_SUCCESS.
+
+      IF SY-SUBRC EQ 0.
+        COMMIT WORK.
+        WAIT UP TO 5 SECONDS.
+      ENDIF.
+
+      CLEAR: V_FKDAT.
+
+      IF IT_SUCCESS IS NOT INITIAL.
+
+        READ TABLE IT_SUCCESS INTO WA_SUCCESS INDEX 1.
+        IF SY-SUBRC EQ 0.
+
+          MESSAGE-DOCNO        = WA_SUCCESS-BILL_DOC.
+          WA_CANCEL-INVOICE    = WA_SUCCESS-REF_DOC.
+          WA_CANCEL-CANCEL_INV = WA_SUCCESS-BILL_DOC.
+
+          APPEND: WA_CANCEL TO IT_CANCEL.
+          CLEAR: WA_CANCEL, WA_SUCCESS.
+        ENDIF.
+
+        MESSAGE-MESSAGE = 'Success'.
+        MESSAGE-STATUS  = '0'.
+<font color ="#0000FF">*       MESSAGE-DOCNO   = WA_BILLING_CANCEL-BILLINGDOCUMENT.</font>
+        APPEND: MESSAGE.
+        CLEAR: MESSAGE.
+
+<font color ="#0000FF">*       WA_MESSAGE-MESSAGE = 'Success in billing cancel'.</font>
+<font color ="#0000FF">*       WA_MESSAGE-STATUS = '0'.</font>
+<font color ="#0000FF">*       WA_MESSAGE-DOCNO = WA_BILLING_CANCEL-BILLINGDOCUMENT.</font>
+<font color ="#0000FF">*       APPEND WA_MESSAGE TO IT_MESSAGE.</font>
+<font color ="#0000FF">*       CLEAR: WA_MESSAGE.</font>
+
+        T_VBELN-SIGN   = 'I'.
+        T_VBELN-OPTION = 'EQ'.
+        T_VBELN-LOW    = WA_BILLING_CANCEL-BILLINGDOCUMENT.
+        APPEND: T_VBELN.
+
+        COMMIT WORK.
+
+<font color ="#0000FF">*------------------------------ Start coding for delivey reverse and delete --------------------------------------*</font>
+        IF ( WA_BILLING_CANCEL-BILLINGDOCUMENT IS NOT INITIAL ) AND ( WA_BILLING_CANCEL-FLAG = 'X' ).
+
+          CLEAR: V_VGBEL, LV_VKORG.
+          SELECT SINGLE VGBEL FROM VBRP
+                              INTO V_VGBEL
+                              WHERE VBELN = WA_BILLING_CANCEL-BILLINGDOCUMENT.
+
+          SELECT SINGLE VKORG INTO LV_VKORG
+                              FROM LIKP
+                              WHERE VBELN = V_VGBEL.
+
+          IF SY-SUBRC = 0.
+
+            IF V_VGBEL IS NOT INITIAL.
+
+              SELECT SINGLE MBLNR
+                            MJAHR
+                            BUDAT FROM MKPF
+                                  INTO (V_MBLNR, V_MJAHR, V_BUDAT)
+                                  WHERE XBLNR = V_VGBEL.
+
+              CONCATENATE WA_BILLING_CANCEL-BILLINGDATE+6(4)
+                          WA_BILLING_CANCEL-BILLINGDATE+3(2)
+                          WA_BILLING_CANCEL-BILLINGDATE+0(2) INTO V_BUDAT1.
+
+<font color ="#0000FF">*------------------------------ Call BAPI For PGI Reverse --------------------------------------*</font>
+              IF LV_VKORG &lt;&gt; 'AE10' AND V_FKART &lt;&gt; 'ZASP'.
+                CALL FUNCTION 'WS_REVERSE_GOODS_ISSUE'
+                  EXPORTING
+                    I_VBELN                   = V_VGBEL
+                    I_BUDAT                   = V_BUDAT1
+                    I_MBLNR                   = V_MBLNR
+                    I_TCODE                   = 'VL09'
+                    I_VBTYP                   = 'J'
+                    I_MJAHR                   = V_MJAHR
+                  TABLES
+                    T_MESG                    = IT_MESG
+                  EXCEPTIONS
+                    ERROR_REVERSE_GOODS_ISSUE = 1
+                    OTHERS                    = 2.
+              ENDIF.
+
+              IF SY-SUBRC &lt;&gt; 0.
+                MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+
+              ELSEIF SY-SUBRC = 0.
+
+                COMMIT WORK.
+                WAIT UP TO 5 SECONDS.
+
+                SELECT VBELN
+                       POSNR
+                       MATNR
+                       LFIMG
+                       UMVKZ
+                       UMVKN
+                       CHARG
+                       INSMK FROM LIPS
+                             INTO TABLE IT_DELIVERY_CANCEL
+                             WHERE VBELN = V_VGBEL.
+
+                HEADER_DATA-DELIV_NUMB    = V_VGBEL.
+                HEADER_CONTROL-DELIV_NUMB = V_VGBEL.
+                HEADER_CONTROL-DLV_DEL    = 'X'.
+                DELIVERY                  = V_VGBEL.
+
+                IF LV_VKORG NE 'GB50' AND LV_VKORG NE 'NL10' AND LV_VKORG NE 'AE10'.
+
+                  LOOP AT IT_DELIVERY_CANCEL INTO WA_DELIVERY_CANCEL.
+
+                    ITEM_DATA-DELIV_NUMB      = WA_DELIVERY_CANCEL-VBELN.
+                    ITEM_DATA-DELIV_ITEM      = WA_DELIVERY_CANCEL-POSNR.
+                    ITEM_DATA-MATERIAL        = WA_DELIVERY_CANCEL-MATNR.
+                    ITEM_DATA-DLV_QTY         = WA_DELIVERY_CANCEL-LFIMG.
+                    ITEM_DATA-DLV_QTY_IMUNIT  = WA_DELIVERY_CANCEL-LFIMG.
+                    ITEM_DATA-FACT_UNIT_NOM   = '1'. ""WA_DELIVERY_CANCEL-UMVKZ. Comment by DMODI 07-01-2021
+                    ITEM_DATA-FACT_UNIT_DENOM = WA_DELIVERY_CANCEL-UMVKN.
+                    ITEM_DATA-BATCH           = WA_DELIVERY_CANCEL-CHARG.
+                    ITEM_DATA-STOCK_TYPE      = WA_DELIVERY_CANCEL-INSMK.
+
+                    APPEND ITEM_DATA.
+
+                    ITEM_CONTROL-DELIV_NUMB = WA_DELIVERY_CANCEL-VBELN.
+                    ITEM_CONTROL-DELIV_ITEM = WA_DELIVERY_CANCEL-POSNR.
+                    ITEM_CONTROL-DEL_ITEM = 'X'.
+
+                    APPEND ITEM_CONTROL.
+                    CLEAR: WA_DELIVERY_CANCEL.
+                  ENDLOOP.
+
+                ENDIF.
+
+<font color ="#0000FF">*------------------------------ Call BAPI for Delivery Delete --------------------------------------*</font>
+
+                CALL FUNCTION 'BAPI_OUTB_DELIVERY_CHANGE'
+                  EXPORTING
+                    HEADER_DATA    = HEADER_DATA
+                    HEADER_CONTROL = HEADER_CONTROL
+                    DELIVERY       = DELIVERY
+                  TABLES
+                    ITEM_DATA      = ITEM_DATA
+                    ITEM_CONTROL   = ITEM_CONTROL
+                    RETURN         = RETURN.
+
+                LOOP AT RETURN WHERE TYPE = 'E' .
+
+                ENDLOOP.
+
+                IF SY-SUBRC NE 0.
+                  CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
+                    EXPORTING
+                      WAIT = ''.
+                  WAIT UP TO 5 SECONDS.
+
+<font color ="#0000FF">*------------------------------ Start Delete Sales Order BAPI Call--------------------------------------*</font>
+
+<font color ="#0000FF">***                  IF LV_VKORG = 'AE10' OR LV_VKORG = 'CA10'.  "" CA10 Added by DMODI DT:25-12-2020</font>
+
+                    CLEAR: V_AUBEL, WA_HEADINX, IT_RETURN_SO[].
+                    SELECT SINGLE AUBEL FROM VBRP
+                                        INTO V_AUBEL
+                                        WHERE VBELN = WA_BILLING_CANCEL-BILLINGDOCUMENT.
+
+                    WA_HEADINX-UPDATEFLAG = 'U'.
+<font color ="#0000FF">***                    WA_HEADINX-UPDATEFLAG = 'D'. Commented BY DMODI DT:25-12-2020</font>
+
+                    CALL FUNCTION 'BAPI_SALESORDER_CHANGE'
+                      EXPORTING
+                        SALESDOCUMENT    = V_AUBEL
+                        ORDER_HEADER_INX = WA_HEADINX
+                      TABLES
+                        RETURN           = IT_RETURN_SO.
+
+                    IF SY-SUBRC = 0.
+                      CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
+                        EXPORTING
+                          WAIT = 'X'.
+                      WAIT UP TO 5 SECONDS.
+
+                      DATA: V_PNS_NO TYPE ZIA_CS_PNS_H_T-PNS_ORDER_NUMBER.
+
+                      CLEAR: V_PNS_NO.
+                      SELECT SINGLE PNS_ORDER_NUMBER FROM ZIA_CS_PNS_H_T
+                                                     INTO V_PNS_NO
+                                                     WHERE COMP_CODE     = LV_VKORG
+                                                       AND SAPSONO       = V_AUBEL
+                                                       AND SAPDELIVERYNO = V_VGBEL
+                                                       AND SAPBILLINGNO  = WA_BILLING_CANCEL-BILLINGDOCUMENT.
+
+                      IF V_PNS_NO IS NOT INITIAL.
+<font color ="#0000FF">****** BOC for Commented by DMODI DT:25-12-2020******</font>
+<font color ="#0000FF">***                        DELETE FROM ZIA_CS_PNS_H_T WHERE COMP_CODE        = LV_VKORG</font>
+<font color ="#0000FF">***                                                     AND PNS_ORDER_NUMBER = V_PNS_NO.</font>
+<font color ="#0000FF">***                        COMMIT WORK.</font>
+<font color ="#0000FF">***</font>
+<font color ="#0000FF">***                        DELETE FROM ZIA_CS_PNS_I_T WHERE COMP_CODE        = LV_VKORG</font>
+<font color ="#0000FF">***                                                     AND PNS_ORDER_NUMBER = V_PNS_NO.</font>
+<font color ="#0000FF">***                        COMMIT WORK.</font>
+<font color ="#0000FF">***</font>
+<font color ="#0000FF">***                        DELETE FROM ZIA_CS_PNS_C_T WHERE COMP_CODE        = LV_VKORG</font>
+<font color ="#0000FF">***                                                     AND PNS_ORDER_NUMBER = V_PNS_NO.</font>
+<font color ="#0000FF">***                        COMMIT WORK.</font>
+<font color ="#0000FF">****** EOC for Commented by DMODI DT:25-12-2020******</font>
+
+                      ENDIF.
+
+                    ELSE.
+                      MESSAGE-MESSAGE = 'Sales Order Delete in Error'.
+                      MESSAGE-STATUS  = '1'.
+                      MESSAGE-DOCNO   = WA_BILLING_CANCEL-BILLINGDOCUMENT.
+
+                      APPEND: MESSAGE.
+                      CLEAR: MESSAGE.
+
+                    ENDIF.
+<font color ="#0000FF">***                  ENDIF.</font>
+<font color ="#0000FF">*------------------------------ End Delete Sales Order BAPI Call--------------------------------------*</font>
+                ENDIF.
+              ENDIF.
+            ENDIF.
+          ENDIF.
+        ENDIF.
+
+        CLEAR: V_VGBEL, V_MBLNR, V_MJAHR, V_BUDAT, HEADER_DATA, HEADER_CONTROL, DELIVERY, IT_DELIVERY_CANCEL[], ITEM_CONTROL[].
+<font color ="#0000FF">*********************End coding for delivey reverse and delete</font>
+
+      ELSE.
+        MESSAGE-MESSAGE = 'Error'.
+        MESSAGE-STATUS  = '1'.
+        MESSAGE-DOCNO   = WA_BILLING_CANCEL-BILLINGDOCUMENT.
+        APPEND MESSAGE.
+        CLEAR: MESSAGE.
+
+<font color ="#0000FF">*       WA_MESSAGE-MESSAGE = 'Error in billing cancel'.</font>
+<font color ="#0000FF">*       WA_MESSAGE-STATUS = '1'.</font>
+<font color ="#0000FF">*       WA_MESSAGE-DOCNO = WA_BILLING_CANCEL-BILLINGDOCUMENT.</font>
+<font color ="#0000FF">*       APPEND WA_MESSAGE TO IT_MESSAGE.</font>
+<font color ="#0000FF">*       CLEAR: WA_MESSAGE.</font>
+      ENDIF.
+    ELSE.
+      MESSAGE-MESSAGE = 'Billing Type is not correct'.
+      MESSAGE-STATUS  = '1'.
+      MESSAGE-DOCNO   = WA_BILLING_CANCEL-BILLINGDOCUMENT.
+      APPEND MESSAGE.
+      CLEAR: MESSAGE.
+    ENDIF.
+    REFRESH:IT_RETURN,IT_SUCCESS.
+    CLEAR: WA_BILLING_CANCEL.
+  ENDLOOP.
+
+<font color ="#0000FF">************************************************Start to fill RFC(ZAN_DISPATCH_PNS)******************************************************</font>
+  IF T_VBELN[] IS NOT INITIAL.
+    SELECT * FROM VBRK
+             INTO TABLE IT_VBRK
+             WHERE VBELN IN T_VBELN.
+  ENDIF.
+
+  IF IT_VBRK[] IS NOT INITIAL.
+
+    SELECT * FROM VBRP
+             INTO TABLE IT_VBRP
+             FOR ALL ENTRIES IN IT_VBRK
+             WHERE VBELN =  IT_VBRK-VBELN.
+
+    IF IT_VBRP[] IS NOT INITIAL.
+      SELECT * FROM ZAN_UPID_LOCSKU
+               INTO TABLE IT_ZAN_UPID_LOCSKU
+               FOR ALL ENTRIES IN IT_VBRP
+               WHERE FGEX    = IT_VBRP-MATNR
+                 AND WHPLANT = IT_VBRP-WERKS.
+    ENDIF.
+
+<font color ="#0000FF">*     SELECT * FROM VBFA INTO TABLE IT_VBFA FOR ALL ENTRIES IN IT_VBRK WHERE VBELN =  IT_VBRK-VBELN.</font>
+<font color ="#0000FF">*     IF IT_VBFA IS NOT INITIAL.</font>
+
+    SELECT * FROM VBAK
+             INTO TABLE IT_VBAK
+             FOR ALL ENTRIES IN IT_VBRP
+             WHERE VBELN =  IT_VBRP-AUBEL.
+
+<font color ="#0000FF">*     IF IT_VBAK IS NOT INITIAL.</font>
+<font color ="#0000FF">*       SELECT * FROM VBKD INTO TABLE IT_VBKD FOR ALL ENTRIES IN IT_VBAK WHERE VBELN =  IT_VBAK-VBELN.</font>
+<font color ="#0000FF">*     ENDIF.</font>
+
+    SELECT * FROM VBPA
+             INTO TABLE IT_VBPA
+             FOR ALL ENTRIES IN IT_VBRK
+             WHERE VBELN =  IT_VBRK-VBELN.
+  ENDIF.
+
+  LOOP AT IT_VBAK INTO WA_VBAK.
+    WA_PICK-BUKRS = WA_VBAK-BUKRS_VF.
+<font color ="#0000FF">**    WA_PICK-IHREZ = WA_VBAK-BNAME." comment by nirav 28.11.2020</font>
+   WA_PICK-IHREZ = WA_VBAK-IHREZ. " uncomment by nirav 28.11.2020
+    APPEND: WA_PICK TO IT_PICK.
+    CLEAR:WA_PICK, WA_VBAK.
+
+  ENDLOOP.
+
+<font color ="#0000FF">*   SORT IT_PICK BY SD_NUMBER.</font>
+<font color ="#0000FF">*   DELETE ADJACENT DUPLICATES FROM IT_PICK COMPARING SD_NUMBER.</font>
+
+  IF IT_PICK IS NOT INITIAL.
+    DATA: LT_H TYPE TABLE OF ZIA_CS_PNS_H_T,
+          LT_I TYPE TABLE OF ZIA_CS_PNS_I_T.
+
+    SELECT * FROM ZIA_CS_PNS_H_T
+             INTO TABLE LT_H
+             FOR ALL ENTRIES IN IT_PICK
+             WHERE COMP_CODE        = IT_PICK-BUKRS
+               AND PNS_ORDER_NUMBER = IT_PICK-IHREZ.
+
+<font color ="#0000FF">*     SELECT * FROM ZACC_CS_PNS_COND INTO TABLE IT_PNS_COND FOR ALL ENTRIES IN IT_PICK</font>
+<font color ="#0000FF">*        WHERE SD_NUMBER = IT_PICK-SD_NUMBER.</font>
+
+  ENDIF.
+
+
+
+  DATA: LWA_H TYPE ZIA_CS_PNS_H_T.
+
+  LOOP AT LT_H INTO LWA_H.
+
+    REFRESH: LT_I.
+
+    SELECT * FROM ZIA_CS_PNS_I_T
+             INTO TABLE LT_I
+             WHERE COMP_CODE        = LWA_H-COMP_CODE
+               AND PNS_ORDER_NUMBER = LWA_H-PNS_ORDER_NUMBER.
+
+    READ TABLE IT_CANCEL INTO WA_CANCEL INDEX 1.
+
+    PERFORM PUSH_DATA_TO_PNS IN PROGRAM ZIA_CS_SCENARIO
+                                  TABLES MESSAGE
+                                         LT_I
+                                  USING LWA_H
+                                        LWA_H-SAPSONO
+                                        LWA_H-SAPDELIVERYNO
+                                        LWA_H-SAPBILLINGNO
+                                        LWA_H-SAPFINO
+                                        LWA_H-GJAHR
+                                        LWA_H-PNS_ORDER_NUMBER
+                                        WA_CANCEL-CANCEL_INV.
+    CLEAR: LWA_H.
+  ENDLOOP.
+
+<font color ="#0000FF">*********BOC for Cancel billing Delete tables BY: DMODI DT:25-12-2020**</font>
+      IF V_PNS_NO IS NOT INITIAL.
+
+        DATA : LV_PNS_NO TYPE STRING,
+               LV_PNS_NO_PLUS TYPE STRING,
+               LV_PNS_NO_% TYPE STRING,
+               LV_COUNT TYPE STRING.
+
+        DATA: LS_I TYPE ZIA_CS_PNS_I_T,
+              LT_C  TYPE STANDARD TABLE OF ZIA_CS_PNS_C_T,
+              LS_C  TYPE ZIA_CS_PNS_C_T.
+
+<font color ="#0000FF">***************BOC FOR Header data By DMODI*********************************</font>
+          CLEAR: LWA_H, LV_PNS_NO, LV_PNS_NO_PLUS, LV_COUNT, LV_PNS_NO_%.
+
+<font color ="#0000FF">********Header Query</font>
+          SELECT SINGLE * FROM ZIA_CS_PNS_H_T INTO LWA_H
+                                      WHERE COMP_CODE = LV_VKORG
+                                      AND PNS_ORDER_NUMBER = V_PNS_NO.
+
+<font color ="#0000FF">******BOC Max Number find Query*****</font>
+          CONCATENATE V_PNS_NO '%' INTO LV_PNS_NO_%.
+          SELECT SINGLE MAX( PNS_ORDER_NUMBER )
+                                      FROM ZIA_CS_PNS_H_T INTO LV_PNS_NO_PLUS
+                                      WHERE COMP_CODE = LV_VKORG
+                                      AND PNS_ORDER_NUMBER LIKE LV_PNS_NO_%.
+
+          IF LV_PNS_NO_PLUS IS NOT INITIAL.
+            LWA_H-PNS_ORDER_NUMBER = LV_PNS_NO_PLUS.
+          ENDIF.
+
+          IF LWA_H IS NOT INITIAL.
+            SPLIT LWA_H-PNS_ORDER_NUMBER AT '_' INTO LV_PNS_NO LV_COUNT.
+
+            IF LV_COUNT IS NOT INITIAL.
+              LV_COUNT = LV_COUNT + 1.
+            ELSE.
+              LV_COUNT = 1.
+            ENDIF.
+
+            MOVE-CORRESPONDING LWA_H TO ZIA_CS_PNS_H_T.
+            CONCATENATE LV_PNS_NO '_' LV_COUNT INTO ZIA_CS_PNS_H_T-PNS_ORDER_NUMBER.
+            ZIA_CS_PNS_H_T-DETAIL_TEXT5 = LV_PNS_NO.
+            CLEAR LWA_H.
+            INSERT ZIA_CS_PNS_H_T.
+            COMMIT WORK.
+            WAIT UP TO 3 SECONDS.
+<font color ="#0000FF">******EOC Max Number find Query*****</font>
+
+<font color ="#0000FF">***************BOC FOR ITEM data By DMODI*********************************</font>
+          CLEAR: LS_I, LT_I[].
+
+          SELECT * FROM ZIA_CS_PNS_I_T
+                        INTO TABLE LT_I
+                        WHERE COMP_CODE = LV_VKORG
+                        AND PNS_ORDER_NUMBER = V_PNS_NO.
+
+            LOOP AT LT_I INTO LS_I.
+                MOVE-CORRESPONDING LS_I TO ZIA_CS_PNS_I_T.
+                CONCATENATE LV_PNS_NO '_' LV_COUNT INTO ZIA_CS_PNS_I_T-PNS_ORDER_NUMBER.
+                INSERT ZIA_CS_PNS_I_T.
+                COMMIT WORK.
+                WAIT UP TO 3 SECONDS.
+                CLEAR LS_I.
+            ENDLOOP.
+<font color ="#0000FF">***************EOC FOR ITEM data By DMODI*********************************</font>
+
+<font color ="#0000FF">***************BOC FOR Condition data By DMODI*********************************</font>
+          CLEAR: LS_C, LT_C[].
+
+          SELECT * FROM ZIA_CS_PNS_C_T
+                        INTO TABLE LT_C
+                        WHERE COMP_CODE = LV_VKORG
+                        AND PNS_ORDER_NUMBER = V_PNS_NO.
+
+           LOOP AT LT_C INTO LS_C.
+            MOVE-CORRESPONDING LS_C TO ZIA_CS_PNS_C_T.
+            CONCATENATE LV_PNS_NO '_' LV_COUNT INTO ZIA_CS_PNS_C_T-PNS_ORDER_NUMBER.
+
+            INSERT ZIA_CS_PNS_C_T.
+            COMMIT WORK.
+            WAIT UP TO 3 SECONDS.
+            CLEAR LS_C.
+           ENDLOOP.
+
+ENDIF.
+<font color ="#0000FF">******** BOC for Ztables Delete Query *********************</font>
+          DELETE FROM ZIA_CS_PNS_H_T WHERE COMP_CODE        = LV_VKORG
+                                       AND PNS_ORDER_NUMBER = V_PNS_NO.
+          COMMIT WORK.
+          WAIT UP TO 3 SECONDS.
+
+          DELETE FROM ZIA_CS_PNS_I_T WHERE COMP_CODE        = LV_VKORG
+                                       AND PNS_ORDER_NUMBER = V_PNS_NO.
+          COMMIT WORK.
+          WAIT UP TO 3 SECONDS.
+
+          DELETE FROM ZIA_CS_PNS_C_T WHERE COMP_CODE        = LV_VKORG
+                                       AND PNS_ORDER_NUMBER = V_PNS_NO.
+          COMMIT WORK.
+          WAIT UP TO 3 SECONDS.
+ ENDIF.
+<font color ="#0000FF">******** EOC for Ztables Delete Query *********************</font>
+
+
+
+<font color ="#0000FF">*      ENDIF.</font>
+<font color ="#0000FF">*      ENDIF.</font>
+<font color ="#0000FF">*********EOC for Cancel billing Delete tables BY: DMODI DT:25-12-2020**</font>
+
+
+<font color ="#0000FF">*   LOOP AT IT_VBRK INTO WA_VBRK.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*     WA_SALES_HEADER-COMP_CODE     = WA_VBRK-BUKRS.</font>
+<font color ="#0000FF">*     WA_SALES_HEADER-SALES_ORG     = WA_VBRK-VKORG.</font>
+<font color ="#0000FF">*     WA_SALES_HEADER-DISTR_CHANNEL = WA_VBRK-VTWEG.</font>
+<font color ="#0000FF">*     WA_SALES_HEADER-DIVISION      = WA_VBRK-SPART.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">**     WA_SALES_HEADER-BILLING_DATE  = WA_VBRK-FKDAT.</font>
+<font color ="#0000FF">*     CONCATENATE WA_VBRK-FKDAT+6(2) WA_VBRK-FKDAT+4(2) WA_VBRK-FKDAT+0(4) INTO WA_SALES_HEADER-BILLING_DATE.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*     WA_SALES_HEADER-INV_NO        = WA_VBRK-VBELN.</font>
+<font color ="#0000FF">*     WA_SALES_HEADER-ORD_TYP       = WA_VBRK-FKART.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*     IF WA_VBRK-VBELN IS NOT INITIAL.</font>
+<font color ="#0000FF">*       SELECT SINGLE SD_NUMBER FROM ZACC_CS_PNS_H</font>
+<font color ="#0000FF">*                               INTO WA_SALES_HEADER-SD_NUMBER</font>
+<font color ="#0000FF">*                               WHERE INV_NO = WA_VBRK-VBELN.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*       IF WA_SALES_HEADER-SD_NUMBER IS INITIAL.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*         SELECT SINGLE COMMONREFNO THIRDPLDISPATCHCODE FROM ZACC_CS_DISP_H</font>
+<font color ="#0000FF">*                                                       INTO (WA_SALES_HEADER-SD_NUMBER,WA_SALES_HEADER-THIRDPLDISPATCHCODE)</font>
+<font color ="#0000FF">*                                                       WHERE INV_NO = WA_VBRK-VBELN.</font>
+<font color ="#0000FF">*       ENDIF.</font>
+<font color ="#0000FF">*     ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*     WA_SALES_HEADER-TAXAMT        = WA_VBRK-MWSBK.</font>
+<font color ="#0000FF">*     WA_SALES_HEADER-INCOTERMS1    = WA_VBRK-INCO1.</font>
+<font color ="#0000FF">*     WA_SALES_HEADER-INCOTERMS2    = WA_VBRK-INCO2.</font>
+<font color ="#0000FF">*     WA_SALES_HEADER-PAYMENT_TERMS = WA_VBRK-ZTERM.</font>
+<font color ="#0000FF">*     WA_SALES_HEADER-CURRENCY      = WA_VBRK-WAERK.</font>
+<font color ="#0000FF">*     WA_SALES_HEADER-CUST_GROUP    = WA_VBRK-KDGRP.</font>
+<font color ="#0000FF">*     WA_SALES_HEADER-TAX_CLASS1    = WA_VBRK-TAXK1.</font>
+<font color ="#0000FF">*     WA_SALES_HEADER-TAX_CLASS2    = WA_VBRK-TAXK2.</font>
+<font color ="#0000FF">*     WA_SALES_HEADER-TAX_CLASS3    = WA_VBRK-TAXK3.</font>
+<font color ="#0000FF">*     WA_SALES_HEADER-TAX_CLASS4    = WA_VBRK-TAXK4.</font>
+<font color ="#0000FF">*     WA_SALES_HEADER-TAX_CLASS5    = WA_VBRK-TAXK5.</font>
+<font color ="#0000FF">*     WA_SALES_HEADER-TAX_CLASS6    = WA_VBRK-TAXK6.</font>
+<font color ="#0000FF">*     WA_SALES_HEADER-TAX_CLASS7    = WA_VBRK-TAXK7.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*     SELECT SINGLE BELNR FROM BKPF</font>
+<font color ="#0000FF">*                         INTO WA_SALES_HEADER-FI_DOC</font>
+<font color ="#0000FF">*                         WHERE AWKEY = WA_VBRK-VBELN.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*     READ TABLE IT_VBRP INTO WA_VBRP WITH KEY VBELN = WA_VBRK-VBELN.</font>
+<font color ="#0000FF">*     IF SY-SUBRC = 0.</font>
+<font color ="#0000FF">*       WA_SALES_HEADER-PLANT        = WA_VBRP-WERKS.</font>
+<font color ="#0000FF">*       WA_SALES_HEADER-SALES_OFC    = WA_VBRP-VKBUR.</font>
+<font color ="#0000FF">*       WA_SALES_HEADER-SALES_GRP    = WA_VBRP-VKGRP.</font>
+<font color ="#0000FF">*       WA_SALES_HEADER-SO_NO        = WA_VBRP-AUBEL.</font>
+<font color ="#0000FF">*       WA_SALES_HEADER-DEL_NO       = WA_VBRP-VGBEL.</font>
+<font color ="#0000FF">*       WA_SALES_HEADER-ORDER_RESION = WA_VBRP-AUGRU_AUFT.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*       CONCATENATE WA_VBRP-PRSDT+6(2) WA_VBRP-PRSDT+4(2) WA_VBRP-PRSDT+0(4) INTO WA_SALES_HEADER-PRICE_DATE.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*       WA_SALES_HEADER-PRICE_LIST   = WA_VBRP-PLTYP_AUFT.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*       READ TABLE IT_VBKD INTO WA_VBKD WITH KEY VBELN = WA_VBRP-AUBEL.</font>
+<font color ="#0000FF">*       IF SY-SUBRC EQ 0.</font>
+<font color ="#0000FF">*         WA_SALES_HEADER-CUST_PURCH_NO = WA_VBKD-BSTKD.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*         CONCATENATE WA_VBKD-BSTDK+6(2) WA_VBKD-BSTDK+4(2) WA_VBKD-BSTDK+0(4) INTO WA_SALES_HEADER-PURCH_DATE.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*         CLEAR:WA_VBKD.</font>
+<font color ="#0000FF">*       ENDIF.</font>
+<font color ="#0000FF">*     ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*     LOOP AT IT_VBRP INTO WA_VBRP WHERE VBELN = WA_VBRK-VBELN.</font>
+<font color ="#0000FF">*       WA_SALES_ITEM-SD_NUMBER    = WA_SALES_HEADER-SD_NUMBER.</font>
+<font color ="#0000FF">*       WA_SALES_ITEM-ITM_NUMBER   = WA_VBRP-POSNR.</font>
+<font color ="#0000FF">*       WA_SALES_ITEM-SHIP_POINT   = WA_VBRP-WERKS.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*       CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'</font>
+<font color ="#0000FF">*         EXPORTING</font>
+<font color ="#0000FF">*           INPUT  = WA_SALES_ITEM-MATERIAL</font>
+<font color ="#0000FF">*         IMPORTING</font>
+<font color ="#0000FF">*           OUTPUT = WA_SALES_ITEM-MATERIAL.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*       WA_SALES_ITEM-MATERIAL     = WA_VBRP-MATNR.</font>
+<font color ="#0000FF">*       WA_SALES_ITEM-UNTOF_WGHT   = WA_VBRP-GEWEI.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*       READ TABLE IT_ZAN_UPID_LOCSKU INTO WA_ZAN_UPID_LOCSKU WITH KEY FGEX = WA_VBRP-MATNR  WHPLANT = WA_VBRP-WERKS.</font>
+<font color ="#0000FF">*       IF SY-SUBRC = 0.</font>
+<font color ="#0000FF">*         WA_SALES_ITEM-LOCALCODE = WA_ZAN_UPID_LOCSKU-GOVT_CODE.</font>
+<font color ="#0000FF">*       ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*       WA_SALES_ITEM-BATCH        = WA_VBRP-CHARG.</font>
+<font color ="#0000FF">*       WA_SALES_ITEM-TARGET_QTY   = WA_VBRP-FKIMG.</font>
+<font color ="#0000FF">*       WA_SALES_ITEM-STORAGE_LOC  = WA_VBRP-LGORT.</font>
+<font color ="#0000FF">*       WA_SALES_ITEM-GROSS_WEIGHT = '1'.</font>
+<font color ="#0000FF">*       WA_SALES_ITEM-NET_WEIGHT   = '1'.</font>
+<font color ="#0000FF">*       WA_SALES_ITEM-TARGET_QUOM  = WA_VBRP-MEINS.</font>
+<font color ="#0000FF">*       WA_SALES_ITEM-MAT_CLASS1 = WA_VBRP-TAXM1." Tax Classification</font>
+<font color ="#0000FF">*       WA_SALES_ITEM-MAT_CLASS2 = WA_VBRP-TAXM2." Tax Classification</font>
+<font color ="#0000FF">*       WA_SALES_ITEM-MAT_CLASS3 = WA_VBRP-TAXM3." Tax Classification</font>
+<font color ="#0000FF">*       WA_SALES_ITEM-MAT_CLASS4 = WA_VBRP-TAXM4." Tax Classification</font>
+<font color ="#0000FF">*       WA_SALES_ITEM-MAT_CLASS5 = WA_VBRP-TAXM5." Tax Classification</font>
+<font color ="#0000FF">*       WA_SALES_ITEM-MAT_CLASS6 = WA_VBRP-TAXM6." Tax Classification</font>
+<font color ="#0000FF">*       WA_SALES_ITEM-MAT_CLASS7 = WA_VBRP-TAXM7." Tax Classification</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*       CLEAR: WA_COMM_HEAD_I, WA_COMM_ITEM_I, WA_COMM_HEAD_E, WA_COMM_ITEM_E.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*       WA_COMM_HEAD_I-MANDT = SY-MANDT.     " Client</font>
+<font color ="#0000FF">*       WA_COMM_HEAD_I-KALSM = WA_VBRK-KALSM." Pricing procedure  nanda</font>
+<font color ="#0000FF">*       WA_COMM_HEAD_I-KAPPL = 'V'.          " Application</font>
+<font color ="#0000FF">*       WA_COMM_HEAD_I-WAERK = WA_VBRK-WAERK." currency</font>
+<font color ="#0000FF">*       WA_COMM_HEAD_I-KNUMV = WA_VBRK-KNUMV." NO OF THE document conditions</font>
+<font color ="#0000FF">*       WA_COMM_HEAD_I-VBTYP = WA_VBRK-VBTYP." sd document catagory</font>
+<font color ="#0000FF">*       WA_COMM_HEAD_I-BELNR = WA_VBRK-VBELN." Invoice no.</font>
+<font color ="#0000FF">*       WA_COMM_ITEM_I-KPOSN = WA_VBRP-POSNR." Item Number</font>
+<font color ="#0000FF">*       WA_COMM_ITEM_I-MGAME = WA_VBRP-FKIMG." Billing quantity</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*       READ TABLE IT_VBKD INTO WA_VBKD WITH KEY VBELN = WA_VBRP-AUBEL.</font>
+<font color ="#0000FF">*       IF SY-SUBRC EQ 0.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*         CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'</font>
+<font color ="#0000FF">*           EXPORTING</font>
+<font color ="#0000FF">*             INPUT  = WA_VBRP-MATNR</font>
+<font color ="#0000FF">*           IMPORTING</font>
+<font color ="#0000FF">*             OUTPUT = WA_VBRP-MATNR.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*         READ TABLE IT_PNS_I INTO WA_PNS_I WITH KEY SD_NUMBER = WA_VBKD-IHREZ</font>
+<font color ="#0000FF">*                                                    MATERIAL  = WA_VBRP-MATNR.</font>
+<font color ="#0000FF">*         IF SY-SUBRC EQ 0.</font>
+<font color ="#0000FF">*           V_POS = WA_PNS_I-ITM_NUMBER.</font>
+<font color ="#0000FF">*         ENDIF.</font>
+<font color ="#0000FF">*       ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*       CALL FUNCTION 'RV_PRICE_PRINT_ITEM'</font>
+<font color ="#0000FF">*         EXPORTING</font>
+<font color ="#0000FF">*           COMM_HEAD_I = WA_COMM_HEAD_I</font>
+<font color ="#0000FF">*           COMM_ITEM_I = WA_COMM_ITEM_I</font>
+<font color ="#0000FF">*           LANGUAGE    = 'E'</font>
+<font color ="#0000FF">*         IMPORTING</font>
+<font color ="#0000FF">*           COMM_HEAD_E = WA_COMM_HEAD_E</font>
+<font color ="#0000FF">*           COMM_ITEM_E = WA_COMM_ITEM_E</font>
+<font color ="#0000FF">*         TABLES</font>
+<font color ="#0000FF">*           TKOMV       = IT_KOMV</font>
+<font color ="#0000FF">*           TKOMVD      = IT_KOMVD.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*       IF WA_SALES_HEADER-ORD_TYP = 'ZUC4'.</font>
+<font color ="#0000FF">*         DELETE IT_KOMV WHERE KSCHL = 'ZICC'.</font>
+<font color ="#0000FF">*       ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*       LOOP AT IT_PNS_COND INTO WA_PNS_COND WHERE ITM_NO = V_POS.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*         WA_SALES_COND-SD_NUMBER  = WA_SALES_HEADER-SD_NUMBER.</font>
+<font color ="#0000FF">*         WA_SALES_COND-ITM_NO     = WA_SALES_ITEM-ITM_NUMBER.</font>
+<font color ="#0000FF">**         WA_PNS_COND-ITM_NO.</font>
+<font color ="#0000FF">*         WA_SALES_COND-COND_TYP   = WA_PNS_COND-COND_TYP.</font>
+<font color ="#0000FF">*         WA_SALES_COND-PRICE_UNIT = WA_PNS_COND-PRICE_UNIT.</font>
+<font color ="#0000FF">*         WA_SALES_COND-CURRENCY   = WA_PNS_COND-CURRENCY.</font>
+<font color ="#0000FF">*         WA_SALES_COND-COND_RATE  = WA_PNS_COND-COND_RATE.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*         LOOP AT IT_KOMV INTO WA_KOMV WHERE KPOSN = WA_VBRP-POSNR</font>
+<font color ="#0000FF">*                                        AND  KSCHL = WA_PNS_COND-COND_TYP</font>
+<font color ="#0000FF">*                                        AND ( KINAK EQ 'Y' OR KINAK EQ ' ').</font>
+<font color ="#0000FF">*           WA_SALES_COND-COND_VALUE = WA_KOMV-KWERT.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*         ENDLOOP.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*         CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'</font>
+<font color ="#0000FF">*           EXPORTING</font>
+<font color ="#0000FF">*             INPUT  = WA_SALES_COND-ITM_NO</font>
+<font color ="#0000FF">*           IMPORTING</font>
+<font color ="#0000FF">*             OUTPUT = WA_SALES_COND-ITM_NO.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*         APPEND WA_SALES_COND TO IT_SALES_COND.</font>
+<font color ="#0000FF">*         CLEAR: WA_KOMV, WA_SALES_COND,WA_PNS_COND..</font>
+<font color ="#0000FF">*       ENDLOOP.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*       LOOP AT IT_KOMV INTO WA_KOMV WHERE KPOSN = WA_VBRP-POSNR</font>
+<font color ="#0000FF">*                                      AND ( KINAK EQ 'Y' OR KINAK EQ ' ').</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">**         READ TABLE IT_PNS_COND INTO WA_PNS_COND WITH KEY ITM_NO   = V_POS</font>
+<font color ="#0000FF">**                                                          COND_TYP = WA_KOMV-KSCHL.</font>
+<font color ="#0000FF">**         IF SY-SUBRC EQ 0.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">**           WA_SALES_COND-SD_NUMBER  = WA_SALES_HEADER-SD_NUMBER.</font>
+<font color ="#0000FF">**           WA_SALES_COND-ITM_NO     = WA_KOMV-KPOSN.</font>
+<font color ="#0000FF">**           WA_SALES_COND-COND_TYP   = WA_KOMV-KSCHL.</font>
+<font color ="#0000FF">**           WA_SALES_COND-COND_RATE  = WA_KOMV-KBETR.</font>
+<font color ="#0000FF">**           WA_SALES_COND-COND_VALUE = WA_KOMV-KWERT.</font>
+<font color ="#0000FF">**           WA_SALES_COND-PRICE_UNIT = WA_KOMV-KPEIN.</font>
+<font color ="#0000FF">**           WA_SALES_COND-CURRENCY   = WA_KOMV-WAERS.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*         IF WA_KOMV-KWERT &lt;&gt; 0.</font>
+<font color ="#0000FF">*           IF WA_SALES_HEADER-ORD_TYP = 'ZUC5' OR WA_SALES_HEADER-ORD_TYP = 'ZUD4'.</font>
+<font color ="#0000FF">*             IF WA_KOMV-KOAID = 'B' AND WA_KOMV-KNTYP = ' '.</font>
+<font color ="#0000FF">*               WA_SALES_ITEM-GROSSTOTAL = WA_SALES_ITEM-GROSSTOTAL + WA_KOMV-KWERT.</font>
+<font color ="#0000FF">*               V_GROSSTOTAL = WA_SALES_ITEM-GROSSTOTAL.</font>
+<font color ="#0000FF">*             ENDIF.</font>
+<font color ="#0000FF">*           ELSE.</font>
+<font color ="#0000FF">*             IF WA_KOMV-KOAID = 'B' AND WA_KOMV-KNTYP = 'H' AND WA_KOMV-KSTAT = ' '.</font>
+<font color ="#0000FF">*               WA_SALES_ITEM-GROSSTOTAL = WA_SALES_ITEM-GROSSTOTAL + WA_KOMV-KWERT.</font>
+<font color ="#0000FF">*               V_GROSSTOTAL = WA_SALES_ITEM-GROSSTOTAL.</font>
+<font color ="#0000FF">*             ENDIF.</font>
+<font color ="#0000FF">*           ENDIF.</font>
+<font color ="#0000FF">*         ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*         IF WA_SALES_HEADER-ORD_TYP = 'ZUC4' AND WA_KOMV-KSCHL = 'ZFCA'.</font>
+<font color ="#0000FF">*           WA_SALES_ITEM-GROSSTOTAL = WA_SALES_ITEM-GROSSTOTAL + WA_KOMV-KWERT.</font>
+<font color ="#0000FF">*           V_GROSSTOTAL = WA_SALES_ITEM-GROSSTOTAL.</font>
+<font color ="#0000FF">*         ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*         IF WA_KOMV-KWERT &lt;&gt; 0.</font>
+<font color ="#0000FF">*           IF WA_KOMV-KOAID = 'A' AND WA_KOMV-KSTAT = '' AND WA_KOMV-KRUEK &lt;&gt; 'X'.</font>
+<font color ="#0000FF">*             WA_SALES_ITEM-DISCOUNTAMT = WA_SALES_ITEM-DISCOUNTAMT + WA_KOMV-KWERT.</font>
+<font color ="#0000FF">*             V_DISCOUNTAMT = WA_SALES_ITEM-DISCOUNTAMT.</font>
+<font color ="#0000FF">*           ENDIF.</font>
+<font color ="#0000FF">*         ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*         IF WA_KOMV-KWERT &lt;&gt; 0.</font>
+<font color ="#0000FF">*           IF WA_KOMV-KOAID = 'D' AND WA_KOMV-KNTYP = 'D' AND WA_KOMV-KSTAT = ' '.</font>
+<font color ="#0000FF">*             WA_SALES_ITEM-TAXAMT = WA_SALES_ITEM-TAXAMT + WA_KOMV-KWERT.</font>
+<font color ="#0000FF">*             V_TAXAMT = WA_SALES_ITEM-TAXAMT.</font>
+<font color ="#0000FF">*           ENDIF.</font>
+<font color ="#0000FF">*         ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*         WA_SALES_ITEM-NETINVAMT = WA_SALES_ITEM-GROSSTOTAL + WA_SALES_ITEM-DISCOUNTAMT.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*         CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'</font>
+<font color ="#0000FF">*           EXPORTING</font>
+<font color ="#0000FF">*             INPUT  = WA_SALES_COND-ITM_NO</font>
+<font color ="#0000FF">*           IMPORTING</font>
+<font color ="#0000FF">*             OUTPUT = WA_SALES_COND-ITM_NO.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">**           APPEND WA_SALES_COND TO IT_SALES_COND.</font>
+<font color ="#0000FF">*         CLEAR: WA_KOMV, WA_SALES_COND,WA_PNS_COND.</font>
+<font color ="#0000FF">**         ENDIF.</font>
+<font color ="#0000FF">**         CLEAR: WA_KOMV, WA_SALES_COND,WA_PNS_COND.</font>
+<font color ="#0000FF">*       ENDLOOP.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*       CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'</font>
+<font color ="#0000FF">*         EXPORTING</font>
+<font color ="#0000FF">*           INPUT  = WA_SALES_ITEM-MATERIAL</font>
+<font color ="#0000FF">*         IMPORTING</font>
+<font color ="#0000FF">*           OUTPUT = WA_SALES_ITEM-MATERIAL.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*       CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'</font>
+<font color ="#0000FF">*         EXPORTING</font>
+<font color ="#0000FF">*           INPUT  = WA_SALES_ITEM-ITM_NUMBER</font>
+<font color ="#0000FF">*         IMPORTING</font>
+<font color ="#0000FF">*           OUTPUT = WA_SALES_ITEM-ITM_NUMBER.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*       APPEND WA_SALES_ITEM TO IT_SALES_ITEM.</font>
+<font color ="#0000FF">*       CLEAR: WA_VBRP, WA_SALES_ITEM.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*     ENDLOOP.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*     WA_SALES_HEADER-GROSSTOTAL  = V_GROSSTOTAL.</font>
+<font color ="#0000FF">*     WA_SALES_HEADER-DISCOUNTAMT = V_DISCOUNTAMT.</font>
+<font color ="#0000FF">*     WA_SALES_HEADER-TAXAMT      = V_TAXAMT.</font>
+<font color ="#0000FF">*     WA_SALES_HEADER-NETINVAMT   = V_GROSSTOTAL - V_DISCOUNTAMT.</font>
+<font color ="#0000FF">*     WA_SALES_HEADER-TOTALDOCAMT = V_GROSSTOTAL.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*     LOOP AT IT_VBFA INTO WA_VBFA WHERE VBELN = WA_VBRK-VBELN.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*       CASE WA_VBFA-VBTYP_V.</font>
+<font color ="#0000FF">*         WHEN 'C'."Sales Order</font>
+<font color ="#0000FF">*           WA_SALES_HEADER-SO_NO        = WA_VBFA-VBELV.</font>
+<font color ="#0000FF">*           READ TABLE IT_VBAK INTO WA_VBAK WITH KEY VBELN = WA_VBFA-VBELV.</font>
+<font color ="#0000FF">*           IF SY-SUBRC = 0.</font>
+<font color ="#0000FF">************Start Commented By Manoj Maheriya Dt:10.01.2018</font>
+<font color ="#0000FF">**             WA_SALES_HEADER-ORD_TYP       = WA_VBAK-AUART.</font>
+<font color ="#0000FF">************End Commented By Manoj Maheriya Dt:10.01.2018</font>
+<font color ="#0000FF">*             WA_SALES_HEADER-CUST_PURCH_NO = WA_VBAK-BSTNK.</font>
+<font color ="#0000FF">*             CONCATENATE WA_VBAK-BSTDK+6(2) WA_VBAK-BSTDK+4(2) WA_VBAK-BSTDK+0(4) INTO WA_SALES_HEADER-PURCH_DATE.</font>
+<font color ="#0000FF">*             CONCATENATE WA_VBAK-VDATU+6(2) WA_VBAK-VDATU+4(2) WA_VBAK-VDATU+0(4) INTO WA_SALES_HEADER-REQ_DEL_DATE.</font>
+<font color ="#0000FF">*             WA_SALES_HEADER-ORDER_RESION  = WA_VBAK-AUGRU.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*             READ TABLE IT_VBKD INTO WA_VBKD WITH KEY VBELN = WA_VBAK-VBELN.</font>
+<font color ="#0000FF">*             IF SY-SUBRC = 0.</font>
+<font color ="#0000FF">*               CONCATENATE WA_VBKD-PRSDT+6(2) WA_VBKD-PRSDT+4(2) WA_VBKD-PRSDT+0(4) INTO WA_SALES_HEADER-PRICE_DATE.</font>
+<font color ="#0000FF">*             ENDIF.</font>
+<font color ="#0000FF">*           ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*         WHEN 'J'."Dilivery.</font>
+<font color ="#0000FF">*           WA_SALES_HEADER-DEL_NO       = WA_VBFA-VBELV.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*       ENDCASE.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*       CLEAR: WA_VBFA, WA_VBAK, WA_VBKD.</font>
+<font color ="#0000FF">*     ENDLOOP.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*     LOOP AT IT_VBPA INTO WA_VBPA WHERE VBELN = WA_VBRK-VBELN.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*       CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'</font>
+<font color ="#0000FF">*         EXPORTING</font>
+<font color ="#0000FF">*           INPUT  = WA_VBPA-KUNNR</font>
+<font color ="#0000FF">*         IMPORTING</font>
+<font color ="#0000FF">*           OUTPUT = WA_VBPA-KUNNR.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*       CASE WA_VBPA-PARVW.</font>
+<font color ="#0000FF">*             WHEN 'WE'."Ship to party(SH)</font>
+<font color ="#0000FF">*           WA_SALES_HEADER-SHIP_TO_PARTY = WA_VBPA-KUNNR.</font>
+<font color ="#0000FF">*             WHEN 'AG'."Sold to party(SP)</font>
+<font color ="#0000FF">*           WA_SALES_HEADER-SOLD_TO_PARTY = WA_VBPA-KUNNR.</font>
+<font color ="#0000FF">*             WHEN 'RE'."Bill to party(BP)</font>
+<font color ="#0000FF">*           WA_SALES_HEADER-BILL_TO_PARTY = WA_VBPA-KUNNR.</font>
+<font color ="#0000FF">*             WHEN 'RG'."Pay to party(PY)</font>
+<font color ="#0000FF">*           WA_SALES_HEADER-PAY_TO_PARTY = WA_VBPA-KUNNR.</font>
+<font color ="#0000FF">*       ENDCASE.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*       CLEAR: WA_VBPA.</font>
+<font color ="#0000FF">*     ENDLOOP.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*     READ TABLE IT_CANCEL INTO WA_CANCEL WITH KEY INVOICE = WA_VBRK-VBELN.</font>
+<font color ="#0000FF">*     IF SY-SUBRC EQ 0.</font>
+<font color ="#0000FF">*       WA_SALES_HEADER-REFINV_NO = WA_CANCEL-INVOICE.</font>
+<font color ="#0000FF">*       WA_SALES_HEADER-INV_NO    = WA_CANCEL-CANCEL_INV.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*       CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'</font>
+<font color ="#0000FF">*         EXPORTING</font>
+<font color ="#0000FF">*           INPUT  = WA_CANCEL-CANCEL_INV</font>
+<font color ="#0000FF">*         IMPORTING</font>
+<font color ="#0000FF">*           OUTPUT = WA_CANCEL-CANCEL_INV.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*       SELECT VBELN FKART FROM VBRK INTO TABLE IT_CANCEL_ORDTYP WHERE VBELN = WA_CANCEL-CANCEL_INV.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*       IF IT_CANCEL_ORDTYP[] IS NOT INITIAL.</font>
+<font color ="#0000FF">*         READ TABLE IT_CANCEL_ORDTYP INTO WA_CANCEL_ORDTYP INDEX 1.</font>
+<font color ="#0000FF">*         IF SY-SUBRC = 0.</font>
+<font color ="#0000FF">*           WA_SALES_HEADER-ORD_TYP = WA_CANCEL_ORDTYP-FKART.</font>
+<font color ="#0000FF">*         ENDIF.</font>
+<font color ="#0000FF">*       ENDIF.</font>
+<font color ="#0000FF">*     ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*     SELECT SINGLE BELNR FROM BKPF INTO WA_SALES_HEADER-FI_DOC</font>
+<font color ="#0000FF">*       WHERE AWKEY = WA_SALES_HEADER-INV_NO.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*     APPEND WA_SALES_HEADER TO IT_SALES_HEADER.</font>
+<font color ="#0000FF">*     CLEAR: WA_SALES_HEADER, WA_SALES_ITEM, WA_VBRK, WA_VBRP, WA_ZAN_UPID_LOCSKU, WA_VBFA, WA_VBAK, WA_VBPA, WA_VBKD, WA_CANCEL, WA_CANCEL_ORDTYP.</font>
+<font color ="#0000FF">*   ENDLOOP.</font>
+<font color ="#0000FF">*************************************************End to fill RFC(ZAN_DISPATCH_PNS)********************************************************</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*   CALL FUNCTION 'ZACC_DISPATCH_PNS' DESTINATION 'PIRFC'</font>
+<font color ="#0000FF">*     TABLES</font>
+<font color ="#0000FF">*       GIT_HEADER  = IT_SALES_HEADER</font>
+<font color ="#0000FF">*       GIT_ITEM    = IT_SALES_ITEM</font>
+<font color ="#0000FF">*       GIT_COND    = IT_SALES_COND</font>
+<font color ="#0000FF">*       GIT_MESSAGE = IT_MESSAGE.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*   COMMIT WORK.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*   LOOP AT IT_MESSAGE INTO WA_MESSAGE WHERE STATUS EQ '1'.</font>
+<font color ="#0000FF">*     LS_MSG-STATUS  = 'ERROR'.</font>
+<font color ="#0000FF">*     LS_MSG-DOCNO  = WA_MESSAGE-DOCNO.</font>
+<font color ="#0000FF">*     LS_MSG-MESSAGE = WA_MESSAGE-MESSAGE.</font>
+<font color ="#0000FF">*     APPEND LS_MSG TO LT_MSG.</font>
+<font color ="#0000FF">*     CLEAR:LS_MSG.</font>
+<font color ="#0000FF">*   ENDLOOP.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*   IF LT_MSG IS NOT INITIAL.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*     CLEAR LV_SRNO.</font>
+<font color ="#0000FF">*     zia_pilog-PROCESS_TYPE   = 'BILL_CANCEL'.</font>
+<font color ="#0000FF">*     zia_pilog-STATUS         = 'E'.</font>
+<font color ="#0000FF">*     zia_pilog-CREATED_ON     = SY-DATUM.</font>
+<font color ="#0000FF">*     zia_pilog-TIME           = SY-UZEIT.</font>
+<font color ="#0000FF">*     zia_pilog-CREATED_BY     = SY-UNAME.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*     LOOP AT LT_MSG INTO LS_MSG.</font>
+<font color ="#0000FF">*       SELECT SINGLE MAX( SR_NO ) INTO LV_SRNO FROM zia_pilog.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*       LV_SRNO = LV_SRNO + 1.</font>
+<font color ="#0000FF">*       zia_pilog-SR_NO          = LV_SRNO.</font>
+<font color ="#0000FF">*       zia_pilog-DOC_NO         = LS_MSG-DOCNO.</font>
+<font color ="#0000FF">*       zia_pilog-MESSAGE        = LS_MSG-MESSAGE.</font>
+<font color ="#0000FF">*       INSERT zia_pilog.</font>
+<font color ="#0000FF">*       COMMIT WORK.</font>
+<font color ="#0000FF">*     ENDLOOP.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*     REFRESH: LT_MSG.</font>
+<font color ="#0000FF">*     CLEAR:LS_MSG.</font>
+<font color ="#0000FF">*   ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*   COMMIT WORK.</font>
+
+ENDFUNCTION.
+
+
+<font color ="#0000FF">*Messages</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: &lt;FS_EDIDS&gt;-MSGID</font>
+<font color ="#0000FF">*&lt;FS</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: ALE_MSGID</font>
+<font color ="#0000FF">*ALE</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: AM</font>
+<font color ="#0000FF">*287   Address cannot be maintained; entry in table TSADRV missing</font>
+<font color ="#0000FF">*290   Entry missing in TSADRV; new address maintenance cannot be called</font>
+<font color ="#0000FF">*291   Entry missing in TSADRV; new address maintenance cannot be called</font>
+<font color ="#0000FF">*298   Address group & not defined; delete flag for address not possible</font>
+<font color ="#0000FF">*I_M</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: EC</font>
+<font color ="#0000FF">*089   Internal error: Unable to read screen data</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: Hard coded</font>
+<font color ="#0000FF">*   Error Occured while transferring data</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: PM_ID</font>
+<font color ="#0000FF">*PM_</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: SCPR</font>
+<font color ="#0000FF">*026   Table & is too wide. It cannot be processed</font>
+<font color ="#0000FF">*028   The table/view & has no generated maintenance dialog</font>
+<font color ="#0000FF">*035   Dictionary interface error: Contact SAP</font>
+<font color ="#0000FF">*120   Table/view & not found</font>
+<font color ="#0000FF">*273   Function module call error</font>
+<font color ="#0000FF">*320   BC Set processing error</font>
+<font color ="#0000FF">*395   Internal field description read error</font>
+<font color ="#0000FF">*399   No data record activation information</font>
+<font color ="#0000FF">*408   Table key not supported by activation links</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: SV</font>
+<font color ="#0000FF">*001   The selected function is not supported</font>
+<font color ="#0000FF">*002   Number of retrieved entries: &</font>
+<font color ="#0000FF">*004   No entries found that match selection criteria</font>
+<font color ="#0000FF">*005   One entry chosen</font>
+<font color ="#0000FF">*006   Number of chosen entries: &</font>
+<font color ="#0000FF">*007   No previous entry exists</font>
+<font color ="#0000FF">*008   No next entry exists</font>
+<font color ="#0000FF">*009   An entry already exists with the same key</font>
+<font color ="#0000FF">*010   An entry with this key is marked for deletion</font>
+<font color ="#0000FF">*011   Number of deleted entries: &</font>
+<font color ="#0000FF">*012   Number of changed entries: &</font>
+<font color ="#0000FF">*013   Entry deleted</font>
+<font color ="#0000FF">*014   Number of entries copied: &</font>
+<font color ="#0000FF">*015   Target key must be different from source key</font>
+<font color ="#0000FF">*016   Number of reset entries: &</font>
+<font color ="#0000FF">*017   Entry reset</font>
+<font color ="#0000FF">*018   Data was saved</font>
+<font color ="#0000FF">*019   Choose the key from the allowed namespace</font>
+<font color ="#0000FF">*024   Specify target entries</font>
+<font color ="#0000FF">*025   Specify target entries</font>
+<font color ="#0000FF">*026   Select entries before performing the function</font>
+<font color ="#0000FF">*028   Table & not in DDIC</font>
+<font color ="#0000FF">*032   Position the cursor on a valid entry</font>
+<font color ="#0000FF">*033   Specify the key within the work area</font>
+<font color ="#0000FF">*037   The maintenance dialog for & is incomplete or not defined</font>
+<font color ="#0000FF">*039   Table & has no relevant fields</font>
+<font color ="#0000FF">*040   & entries reset, & original and & new entries are still marked</font>
+<font color ="#0000FF">*041   & entries reset, & original entries are still marked</font>
+<font color ="#0000FF">*042   & entries reset, & new entries are still marked</font>
+<font color ="#0000FF">*043   Data already saved</font>
+<font color ="#0000FF">*044   Read access only</font>
+<font color ="#0000FF">*045   Enter a start date that is before the end date</font>
+<font color ="#0000FF">*046   Enter an end date that is after the start date</font>
+<font color ="#0000FF">*047   Overlapping records are deleted or delimited</font>
+<font color ="#0000FF">*049   Data locked by user & (display only)</font>
+<font color ="#0000FF">*050   System error: Unable to lock table/view &</font>
+<font color ="#0000FF">*051   No data maintenance authorization; display only</font>
+<font color ="#0000FF">*053   No display authorization for requested data</font>
+<font color ="#0000FF">*054   Maintenance of data in current client & not permitted</font>
+<font color ="#0000FF">*055   Address for object & not found</font>
+<font color ="#0000FF">*056   Mark at least one entry before selecting this function</font>
+<font color ="#0000FF">*057   The selected entry is new and has no original</font>
+<font color ="#0000FF">*058   The selected entries are new and have no original</font>
+<font color ="#0000FF">*059   The selected entry is still in its original state</font>
+<font color ="#0000FF">*060   The selected entries are still in their original state</font>
+<font color ="#0000FF">*061   & entries are still originals, & new entries have no original</font>
+<font color ="#0000FF">*065   No entries exist, double-click for long text</font>
+<font color ="#0000FF">*066   Select block end</font>
+<font color ="#0000FF">*084   No values can be displayed</font>
+<font color ="#0000FF">*092   Change task & is being processed</font>
+<font color ="#0000FF">*095   System error changing change task &</font>
+<font color ="#0000FF">*096   Task & was changed</font>
+<font color ="#0000FF">*098   Entry flagged for inclusion in task &</font>
+<font color ="#0000FF">*099   Entry was flagged for deletion from task &</font>
+<font color ="#0000FF">*105   & entries were flagged for inclusion in task &</font>
+<font color ="#0000FF">*106   & entries were flagged for deletion from task &</font>
+<font color ="#0000FF">*107   Entry was already in task &</font>
+<font color ="#0000FF">*108   & entries were already in task &</font>
+<font color ="#0000FF">*109   & entries included, & entries were contained: &</font>
+<font color ="#0000FF">*110   Entry was not in task &</font>
+<font color ="#0000FF">*111   & entries deleted, & entries were not included: &</font>
+<font color ="#0000FF">*112   & entries were not in task &</font>
+<font color ="#0000FF">*113   Entry could not be retrieved</font>
+<font color ="#0000FF">*114   & entries could not be retrieved</font>
+<font color ="#0000FF">*115   Entry could not be deleted</font>
+<font color ="#0000FF">*116   & entries could not be deleted</font>
+<font color ="#0000FF">*117   Do not make any changes (SAP entry)</font>
+<font color ="#0000FF">*120   Other entries are retrieved and modified if necessary</font>
+<font color ="#0000FF">*121   Deleted entry will be recovered and possibly changed</font>
+<font color ="#0000FF">*122   Entry was delimited</font>
+<font color ="#0000FF">*123   Number of delimited entries: &</font>
+<font color ="#0000FF">*124   Process delimited entries</font>
+<font color ="#0000FF">*125   Process delimited entry</font>
+<font color ="#0000FF">*127   Delimit area of validity</font>
+<font color ="#0000FF">*128   Delivery class &, transport not possible</font>
+<font color ="#0000FF">*129   Related objects in various tasks</font>
+<font color ="#0000FF">*130   Client & is local, transport not permitted</font>
+<font color ="#0000FF">*132   Object locked for task &1, user &2 only display permitted</font>
+<font color ="#0000FF">*134   Inconsistency in object definition, only display permitted</font>
+<font color ="#0000FF">*136   Change with caution, entry belongs to customer</font>
+<font color ="#0000FF">*138   Check maintenance object &1 or update function group &2</font>
+<font color ="#0000FF">*139   Address data not applied</font>
+<font color ="#0000FF">*140   &1 entries deleted; &2 entries added</font>
+<font color ="#0000FF">*141   Individual entries not added to the change request</font>
+<font color ="#0000FF">*142   Transport is not possible for the specified data</font>
+<font color ="#0000FF">*153   No language was chosen</font>
+<font color ="#0000FF">*160   The installed system code page does not allow any other languages</font>
+<font color ="#0000FF">*161   Put the cursor on a form name</font>
+<font color ="#0000FF">*162   The object &1 &2 &3 cannot be put in a request</font>
+<font color ="#0000FF">*164   Table/view &1 is not in the Dictionary</font>
+<font color ="#0000FF">*173   Function group &1 inconsistent</font>
+<font color ="#0000FF">*174   Enter values in work area for non-key fields</font>
+<font color ="#0000FF">*175   The selected BC Set function is not supported</font>
+<font color ="#0000FF">*177   Data record contains fix value from BC Set and cannot be deleted</font>
+<font color ="#0000FF">*183   Error in remote access to central Customizing Distribution system</font>
+<font color ="#0000FF">*184   Data record contains fixed value from BC Set and cannot be changed</font>
+<font color ="#0000FF">*202   You are not authorized to change fields with fixed BC Set values</font>
+<font color ="#0000FF">*306   Table/view & is not active</font>
+<font color ="#0000FF">*413   & selected entries cannot be deleted</font>
+<font color ="#0000FF">*538   Dropdown lists are not supported in view clusters</font>
+<font color ="#0000FF">*757   You have no maintenance authorization for this table key</font>
+<font color ="#0000FF">*763   You have no maintenance authorization for the displayed data records</font>
+<font color ="#0000FF">*764   Changed data record selection</font>
+<font color ="#0000FF">*766   Restricted display of datasets</font>
+<font color ="#0000FF">*808   Not all columns in the table can be displayed in the list</font>
+<font color ="#0000FF">*810   View &1 is more than 1000 characters long</font>
+<font color ="#0000FF">*818   &1 of &2 Business Configuration Set entries imported</font>
+<font color ="#0000FF">*819   Business Configuration Set imported</font>
+<font color ="#0000FF">*830   Last selected entry has been reached</font>
+<font color ="#0000FF">*831   First selected entry has been reached</font>
+<font color ="#0000FF">*863   Number of copied entries (including translations): &</font>
+<font color ="#0000FF">*MSG</font>
+<font color ="#0000FF">*P_M</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: TB</font>
+<font color ="#0000FF">*109   No maintenance authorization for cross-client tables (see Help)</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: TK</font>
+<font color ="#0000FF">*430   Client &1 has status 'not modifiable'</font>
+<font color ="#0000FF">*729   Changes to repository objects are not permitted in this client</font>
+<font color ="#0000FF">*730   Changes to repository or cross-client customizing are not permitted</font>
+<font color ="#0000FF">*731   Cross-client customizing cannot be modified</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: VIM_AUTH_MSGID</font>
+<font color ="#0000FF">*VIM</font>
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

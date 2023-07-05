@@ -1,0 +1,93 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZEX_GET_CURRENCY</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for function: ZEX_GET_CURRENCY</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  for getting Amount in words</b></font>
+<hr>
+<pre width="100">
+FUNCTION ZEX_GET_CURRENCY.
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+<font color ="#0000FF">*"*"Local interface:</font>
+<font color ="#0000FF">*"       IMPORTING</font>
+<font color ="#0000FF">*"             VALUE(CURRENCY) LIKE  SY-WAERS</font>
+<font color ="#0000FF">*"             VALUE(AMOUNT)</font>
+<font color ="#0000FF">*"       EXPORTING</font>
+<font color ="#0000FF">*"             VALUE(IN_WORDS)</font>
+<font color ="#0000FF">*"       EXCEPTIONS</font>
+<font color ="#0000FF">*"              ERROR</font>
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+
+<font color ="#0000FF">*       <a href ="global-zex_get_currency.html">Global data declarations</a></font>
+  CALL FUNCTION 'SPELL_AMOUNT'
+       EXPORTING
+            AMOUNT    = AMOUNT
+            CURRENCY  = CURRENCY
+            FILLER    = ' '
+            LANGUAGE  = SY-LANGU
+       IMPORTING
+            IN_WORDS  = SPELL
+       EXCEPTIONS
+            NOT_FOUND = 1
+            TOO_LARGE = 2
+            OTHERS    = 3.
+  IF SY-SUBRC NE 0.
+    RAISE ERROR .
+  ENDIF .
+  SELECT SINGLE * FROM TCURC WHERE WAERS EQ CURRENCY .
+  CHECK SY-SUBRC EQ 0.
+  SELECT SINGLE * FROM TCURT WHERE WAERS EQ CURRENCY
+  AND SPRAS EQ 'E' .
+  CHECK SY-SUBRC EQ 0.
+  CONCATENATE TCURT-KTEXT 'S' INTO TCURT-KTEXT.
+  TRANSLATE TCURT-KTEXT TO UPPER CASE.
+<font color ="#0000FF">*------------------------------------------------------------*</font>
+<font color ="#0000FF">*****-- Abhi</font>
+SELECT SINGLE * FROM ZEXPARAM WHERE PARAKEY1 EQ CURRENCY .
+    IF SPELL-DECWORD NE 'ZERO'.
+      CONCATENATE TCURT-KTEXT SPELL-WORD 'AND' ZEXPARAM-PARAKEY3
+                                                SPELL-DECWORD
+          'ONLY' INTO  IN_WORDS SEPARATED BY SPACE .
+    ELSEIF SPELL-DECWORD EQ 'ZERO'.
+      CONCATENATE TCURT-KTEXT SPELL-WORD
+          'ONLY' INTO  IN_WORDS SEPARATED BY SPACE .
+    ENDIF.
+
+<font color ="#0000FF">**----</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  IF TCURC-WAERS NE 'USD' OR  TCURC-WAERS EQ  'INR' .</font>
+<font color ="#0000FF">*    IF SPELL-DECWORD NE 'ZERO'.</font>
+<font color ="#0000FF">*      CONCATENATE TCURT-KTEXT SPELL-WORD 'AND' 'PAISE' SPELL-DECWORD</font>
+<font color ="#0000FF">*          'ONLY' INTO  IN_WORDS SEPARATED BY SPACE .</font>
+<font color ="#0000FF">*    ELSEIF SPELL-DECWORD EQ 'ZERO'.</font>
+<font color ="#0000FF">*      CONCATENATE TCURT-KTEXT SPELL-WORD</font>
+<font color ="#0000FF">*          'ONLY' INTO  IN_WORDS SEPARATED BY SPACE .</font>
+<font color ="#0000FF">*    ENDIF.</font>
+<font color ="#0000FF">**------------------------------------------------------------*</font>
+<font color ="#0000FF">*  ELSEIF TCURC-WAERS EQ 'USD' .</font>
+<font color ="#0000FF">*    IF SPELL-DECWORD NE 'ZERO'.</font>
+<font color ="#0000FF">*      CONCATENATE TCURT-KTEXT SPELL-WORD 'AND' 'CENTS' SPELL-DECWORD</font>
+<font color ="#0000FF">*          'ONLY' INTO  IN_WORDS SEPARATED BY SPACE .</font>
+<font color ="#0000FF">*    ELSEIF SPELL-DECWORD EQ 'ZERO'.</font>
+<font color ="#0000FF">*      CONCATENATE TCURT-KTEXT SPELL-WORD</font>
+<font color ="#0000FF">*          'ONLY' INTO  IN_WORDS SEPARATED BY SPACE .</font>
+<font color ="#0000FF">*    ENDIF.</font>
+<font color ="#0000FF">*  ENDIF .</font>
+
+ENDFUNCTION.
+
+
+<font color ="#0000FF">*Messages</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: ZE</font>
+<font color ="#0000FF">*047   & & & &</font>
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

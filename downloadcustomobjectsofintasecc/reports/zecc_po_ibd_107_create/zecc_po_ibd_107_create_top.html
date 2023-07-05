@@ -1,0 +1,337 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZECC_PO_IBD_107_CREATE_TOP</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZECC_PO_IBD_107_CREATE_TOP</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZECC_PO_IBD_107_CREATE_TOP</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&  Include           ZECC_PO_IBD_107_CREATE_TOP</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+
+DATA:   bdcdata LIKE bdcdata    OCCURS 0 WITH HEADER LINE.
+<font color ="#0000FF">*       messages of call transaction</font>
+DATA:   messtab LIKE bdcmsgcoll OCCURS 0 WITH HEADER LINE.
+
+DATA:
+  gs_ctu_params TYPE ctu_params,
+  gv_ebeln      TYPE ebeln,
+  gv_ebelp      TYPE ebelp,
+  gv_inb_del    TYPE mblnr,
+  gv_asnno      TYPE submi,
+  gv_mblnr      TYPE mblnr,
+  gv_bednr      TYPE vfdat,
+  gv_afnam      TYPE hsdat,
+  gv_matnr      TYPE matnr,
+  gv_charg      TYPE charg_d,
+  gv_werks      TYPE werks_d,
+  gv_error      TYPE char1,
+  gs_ibd_map    TYPE zia_bli_ibd_map.
+
+TYPES: lty_return TYPE TABLE OF bapiret2,
+       BEGIN OF ty_107,
+         mblnr TYPE mseg-mblnr,
+         mjahr TYPE mseg-mjahr,
+         ebeln TYPE ekpo-ebeln,
+         werks TYPE ekpo-werks,
+       END OF ty_107,
+       BEGIN OF ty_eina,
+         infnr TYPE eina-infnr,
+         matnr TYPE eina-matnr,
+         lifnr TYPE eina-lifnr,
+       END OF ty_eina,
+
+       BEGIN OF ty_eine,
+         infnr TYPE eine-infnr,
+         ekorg TYPE eine-ekorg,
+       END OF ty_eine.
+
+TABLES: ekko,ekpo,zacc_pi_log,
+        zexdochdr, zia_po_bli_doc, zmm_po_grn_it10, zpo_grn_it10_h,
+        zsc_scm_dire_man.
+
+CONSTANTS: c_sender_address      TYPE soextreci1-receiver VALUE
+                                        'do-not-reply@intaspharma.com',
+           c_sender_address_type TYPE soextreci1-adr_typ VALUE 'INT'.
+
+<font color ="#0000FF">*TYPES: BEGIN OF TY_MESSAGE,</font>
+<font color ="#0000FF">*         MESSAGE(200)    TYPE C,</font>
+<font color ="#0000FF">*         MESSAGE_V1(100) TYPE C,</font>
+<font color ="#0000FF">*         MESSAGE_V2(100) TYPE C,</font>
+<font color ="#0000FF">*         STATUS(10)      TYPE C,</font>
+<font color ="#0000FF">*         INV_NO(100)     TYPE C,</font>
+<font color ="#0000FF">*         BILL_NO(100)    TYPE C,</font>
+<font color ="#0000FF">*       END OF TY_MESSAGE.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*DATA: MESSAGE TYPE TY_MESSAGE OCCURS 0 WITH HEADER LINE.</font>
+
+DATA: ls_mailsubject    TYPE sodocchgi1,
+      lt_mailrecipients TYPE somlrec90 OCCURS 0 WITH HEADER LINE,
+      ls_mailrecipients TYPE somlrec90,
+      ls_mailtxt        TYPE soli,
+      lt_mailtxt        TYPE STANDARD TABLE OF soli,
+      lt_mailsubject    TYPE sodocchgi1,
+      lt_obj_pack       TYPE STANDARD TABLE OF sopcklsti1,
+      wa_obj_pack       TYPE sopcklsti1,
+      l_tab_lines       TYPE sy-tabix,
+      lc_func           TYPE zacc_email_det-functionality VALUE '107_GRN',
+      it_bli_inv_map    TYPE TABLE OF zia_bli_inv_map,
+      wa_bli_inv_map    TYPE zia_bli_inv_map,
+      wa_bli_inv_map1   TYPE zia_bli_inv_map,
+      v_101             TYPE c,
+      it_bli_map        TYPE TABLE OF zia_bli_inv_map,
+      multiple(1)       TYPE c,
+      it_vbrp           TYPE TABLE OF vbrp,
+      wa_vbrp           TYPE vbrp,
+      return            TYPE TABLE OF bapiret2,
+      ls_return         TYPE bapiret2,
+      it_message        TYPE TABLE OF zia_s_res_pns,
+      wa_pilog          TYPE zia_pilog,
+      wa_message        TYPE zia_s_res_pns,
+
+      send_asn(1)       TYPE c,
+      v_werks           TYPE t001w-werks,
+      v_lgort           TYPE mard-lgort,
+      v_bukrs           TYPE bkpf-bukrs,
+
+      lt_107            TYPE TABLE OF ty_107,
+      lwa_107           TYPE ty_107,
+
+      poheader          LIKE bapimepoheader OCCURS 0 WITH HEADER LINE,
+      poheaderx         LIKE bapimepoheaderx OCCURS 0 WITH HEADER LINE,
+      poitem            LIKE bapimepoitem OCCURS 0 WITH HEADER LINE,
+      poitem_tmp        LIKE bapimepoitem OCCURS 0 WITH HEADER LINE,
+      poitemx           LIKE bapimepoitemx OCCURS 0 WITH HEADER LINE,
+      pocond            LIKE bapimepocond OCCURS 0 WITH HEADER LINE,
+      pocondx           LIKE bapimepocondx OCCURS 0 WITH HEADER LINE,
+      poacc             LIKE bapimepoaccount OCCURS 0 WITH HEADER LINE,
+      poaccx            LIKE bapimepoaccountx OCCURS 0 WITH HEADER LINE,
+      pocondheader      LIKE  bapimepocondheader OCCURS 0 WITH HEADER LINE,
+      pocondheaderx     LIKE  bapimepocondheaderx OCCURS 0 WITH HEADER LINE,
+
+      pono              LIKE bapiekkoc-po_number,
+      lv_fgex           TYPE zan_upid_locsku-fgex,
+      lv_message(100),
+      lv_upid           TYPE zan_upid-upid,
+      lv_umrez          TYPE marm-umrez,
+      lv_umrez1         TYPE eina-umrez,
+      lt_bli            TYPE TABLE OF zia_bli_inv_map,
+      lwa_bli           TYPE zia_bli_inv_map.
+RANGES: r_vbeln FOR vbrp-vbeln.
+
+TYPES: BEGIN OF ty_bli_dt,
+         blino(20) TYPE c,
+         date      TYPE sy-datum,
+       END OF ty_bli_dt.
+
+DATA: lt_bli_dt  TYPE TABLE OF ty_bli_dt,
+      lwa_bli_dt TYPE ty_bli_dt.
+
+TYPES: BEGIN OF ty_vbrk,
+         vbeln TYPE vbrk-vbeln,
+         knumv TYPE vbrk-knumv,
+         kunnr TYPE vbrk-kunag,
+         inco1 TYPE vbrk-inco1,
+         inco2 TYPE vbrk-inco2,
+         waerk TYPE vbrk-waerk,
+         fkdat TYPE vbrk-fkdat,
+       END OF ty_vbrk.
+
+TYPES: BEGIN OF ty_vbrp,
+         vbeln TYPE vbrp-vbeln,
+         posnr TYPE vbrp-posnr,
+         fkimg TYPE vbrp-fkimg,
+         vrkme TYPE vbrp-vrkme,
+         netwr TYPE vbrp-netwr,
+         matnr TYPE vbrp-matnr,
+         werks TYPE vbrp-werks,
+         charg TYPE vbrp-charg,
+       END OF ty_vbrp.
+
+DATA: lt_vbrp  TYPE TABLE OF ty_vbrp,
+      lt_vbrk  TYPE TABLE OF ty_vbrk,
+      lwa_vbrk TYPE ty_vbrk,
+      lwa_vbrp TYPE ty_vbrp.
+
+DATA: lt_so_po  TYPE TABLE OF zan_so_po_auto,
+      lwa_so_po TYPE zan_so_po_auto.
+
+
+DATA: lt_eina  TYPE TABLE OF ty_eina,
+      lwa_eina TYPE ty_eina,
+      lt_eine  TYPE TABLE OF ty_eine,
+      lwa_eine TYPE ty_eine.
+
+DATA:  lv_error TYPE c.
+
+TYPES: BEGIN OF ty_konv,
+         knumv TYPE konv-knumv,
+         kposn TYPE konv-kposn,
+         kschl TYPE konv-kschl,
+<font color ="#0000FF">**        KAWRT	TYPE KAWRT, " ADD BY NIRAV ON 31.03.2021</font>
+         kbetr TYPE konv-kbetr,
+         kpein TYPE konv-kpein,
+         kmein TYPE konv-kmein,
+         kwert TYPE kwert, " ADD BY NIRAV ON 02.04.2021
+       END OF ty_konv.
+
+DATA: lt_konv  TYPE TABLE OF ty_konv,
+      lwa_konv TYPE ty_konv.
+DATA : lv_value TYPE kwert." ADD BY NIRAV VON 09.04.2021
+DATA: BEGIN OF i_vbrp OCCURS 0,
+        vbeln    LIKE vbrp-vbeln,
+        posnr    LIKE vbrp-posnr,
+        vgbel    LIKE vbrp-vgbel,
+        vgpos    LIKE vbrp-vgpos,
+        refdocno LIKE zexdochdr-refdocno,
+        flg(1),
+      END OF i_vbrp.
+
+DATA: BEGIN OF i_docfl OCCURS 0.
+        include structure <a href ="zexdocfl/dictionary-zexdocfl.html">zexdocfl</a>.
+        DATA: flg(1),
+        vbeln  LIKE vbrk-vbeln,
+      END OF i_docfl.
+
+<font color ="#0000FF">*DATA : I_DOCFL1 LIKE ZEXDOCFL OCCURS 0 WITH HEADER LINE.</font>
+DATA: BEGIN OF i_docfl1 OCCURS 0.
+        include structure <a href ="zexdocfl/dictionary-zexdocfl.html">zexdocfl</a>.
+        DATA:   flg(1),
+      END OF i_docfl1.
+
+TYPES: BEGIN OF ty_mcha,
+         matnr TYPE mcha-matnr,
+         werks TYPE mcha-werks,
+         charg TYPE mcha-charg,
+         vfdat TYPE mcha-vfdat,
+         hsdat TYPE mcha-hsdat,
+       END OF ty_mcha.
+
+DATA: lt_mcha  TYPE TABLE OF ty_mcha,
+      lwa_mcha TYPE ty_mcha.
+
+TYPES: BEGIN OF ty_marc,
+         matnr TYPE marc-matnr,
+         werks TYPE marc-werks,
+       END OF ty_marc.
+
+DATA: lt_marc  TYPE TABLE OF ty_marc,
+      lwa_marc TYPE ty_marc.
+
+DATA: lv_cnt TYPE i,
+      lv_pos TYPE ekpo-ebelp.
+
+DATA: it_flag TYPE TABLE OF zia_param_tab_t,
+      wa_flag TYPE zia_param_tab_t.
+
+TYPES: BEGIN OF ty_final,
+         blino     TYPE zex_docnr,
+         vbeln     TYPE vbeln,
+         posnr     TYPE posnr,
+         bukrs     TYPE bukrs,
+         lifnr     TYPE lifnr,
+         ekorg     TYPE ekorg,
+         ekgrp     TYPE ekgrp,
+         bsart     TYPE bsart,
+         matnr     TYPE matnr,
+         werks     TYPE marc-werks,
+         lgort     TYPE mard-lgort,
+         fkimg     TYPE vbrp-fkimg,
+         charg     TYPE vbrp-charg, "CHARG,
+         mwskz     TYPE mwskz,
+         vrkme     TYPE vrkme,
+         kschl     TYPE konv-kschl,
+         cond_rate TYPE konv-kbetr,
+         kpein     TYPE konv-kpein,
+         kmein     TYPE konv-kmein,
+         inco1     TYPE vbrk-inco1,
+         inco2     TYPE vbrk-inco2,
+         exp_dat   TYPE sy-datum,
+         manuf_dat TYPE sy-datum,
+         currency  TYPE waers,
+         no_infnr  TYPE c,
+         netwr     TYPE vbrp-netwr, " add by nirav 12.11.2021
+       END OF ty_final.
+TYPES : BEGIN OF lst_collect,
+          blino TYPE zex_docnr,
+<font color ="#0000FF">*              VBELN     TYPE VBELN,</font>
+          matnr TYPE matnr,
+          charg TYPE vbrp-charg,
+          fkimg TYPE vbrp-fkimg,
+        END OF lst_collect.
+
+DATA : ls_col TYPE lst_collect,
+       lt_col TYPE STANDARD TABLE OF lst_collect.
+
+DATA: lt_final1  TYPE TABLE OF ty_final,
+      lwa_final1 TYPE ty_final.
+
+DATA: lt_final    TYPE TABLE OF ty_final,
+      lwa_final   TYPE ty_final,
+      lt_final_c  TYPE TABLE OF ty_final, " add by nirav 18.11.2021
+      lwa_final_c TYPE ty_final. " add by nirav 18.11.2021
+
+TYPES: BEGIN OF ty_coll,
+         blino TYPE zex_docnr,
+         matnr TYPE matnr,
+         werks TYPE marc-werks,
+         fkimg TYPE vbrp-fkimg,
+         charg TYPE charg,
+         vrkme TYPE vrkme,
+       END OF ty_coll.
+DATA: ls_header   TYPE bapi2017_gm_head_01,
+      ls_code     TYPE bapi2017_gm_code,
+      ls_headret  TYPE bapi2017_gm_head_ret,
+      lt_item     TYPE STANDARD TABLE OF bapi2017_gm_item_create,
+      ls_item     TYPE bapi2017_gm_item_create,
+      lt_return   TYPE STANDARD TABLE OF bapiret2,
+      extensionin LIKE bapiparex OCCURS 0 WITH HEADER LINE,
+      line_id     TYPE mb_line_id.
+
+DATA: it_poexpimpitem TYPE TABLE OF bapieipo,
+      wa_poexpimpitem TYPE bapieipo.
+
+DATA: it_poexpimpitemx TYPE TABLE OF bapieipox,
+      wa_poexpimpitemx LIKE LINE OF it_poexpimpitemx.
+
+DATA: it_popartner TYPE TABLE OF bapiekkop,
+      wa_popartner LIKE LINE OF it_popartner.
+
+DATA: i_meinh LIKE marm-meinh,
+      i_umrez LIKE marm-umrez,
+      v_meins TYPE mara-meins.
+
+DATA :lv_blino(20)     TYPE c,
+      lv_post_park(10) TYPE c,
+      lv_cred_memo     TYPE c.
+TYPES : BEGIN OF ty_ekbe,
+          ebeln TYPE ebeln,
+          belnr	TYPE mblnr,
+        END OF ty_ekbe.
+DATA : it_ekbe TYPE TABLE OF ty_ekbe,
+       wa_ekbe TYPE ty_ekbe.
+DATA : gv_bukrs TYPE t001k-bukrs.
+
+DATA:imp_bukrs  TYPE ekko-bukrs,
+     imp_werks  TYPE ekpo-werks,
+     ls_zia_ftp TYPE zia_ftp.
+
+<font color ="#0000FF">*selection screen</font>
+SELECT-OPTIONS:
+ s_ebeln FOR ekko-ebeln,
+ s_bsart FOR ekko-bsart,
+ s_aedat FOR ekko-aedat,
+ s_lifnr FOR ekko-lifnr,
+ s_bukrs FOR ekko-bukrs NO INTERVALS NO-EXTENSION,
+ s_ekorg FOR ekko-ekorg NO INTERVALS NO-EXTENSION,
+ s_werks FOR ekpo-werks.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

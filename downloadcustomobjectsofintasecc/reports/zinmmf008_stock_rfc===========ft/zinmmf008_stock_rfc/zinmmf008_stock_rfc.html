@@ -1,0 +1,343 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZINMMF008_STOCK_RFC</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for function: ZINMMF008_STOCK_RFC</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Stock RFC</b></font>
+<hr>
+<pre width="100">
+FUNCTION ZINMMF008_STOCK_RFC.
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+<font color ="#0000FF">*"*"Local Interface:</font>
+<font color ="#0000FF">*"  IMPORTING</font>
+<font color ="#0000FF">*"     VALUE(I_WERKS) TYPE  WERKS_D</font>
+<font color ="#0000FF">*"     VALUE(I_MATNR) TYPE  MSEG-MATNR</font>
+<font color ="#0000FF">*"     VALUE(I_CHARG) TYPE  CHARG_D</font>
+<font color ="#0000FF">*"     VALUE(I_GRN_NO) TYPE  CHAR20</font>
+<font color ="#0000FF">*"  TABLES</font>
+<font color ="#0000FF">*"      E_FINAL TYPE  ZINMM029TT_STOCK</font>
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+
+<font color ="#0000FF">*       <a href ="global-zinmmf008_stock_rfc.html">Global data declarations</a></font>
+
+  DATA : IT_MSEG_GRN TYPE TABLE OF MSEG,
+         IT_LIPS_CON TYPE TABLE OF LIPS,
+         IT_LIKP     TYPE TABLE OF LIKP,
+         IT_VBRP     TYPE TABLE OF VBRP,
+         WA_MSEG_GRN TYPE MSEG,
+         WA_LIPS_CON TYPE LIPS,
+         WA_MKPF     TYPE MKPF.
+
+  DATA: IT_MARM TYPE TABLE OF MARM.
+  DATA: WA_MARM TYPE MARM.
+
+  DATA: IT_MSEG_FINAL TYPE TABLE OF ZINMM029STR_STOCK.
+  DATA: WA_MSEG_FINAL TYPE ZINMM029STR_STOCK.
+  DATA: IT_MSEG1 TYPE TABLE OF ZINMM029STR_STOCK.
+  DATA: WA_MSEG1 TYPE ZINMM029STR_STOCK.
+  DATA: IT_LIPS2 TYPE TABLE OF ZINMM029STR_STOCK.
+  DATA: WA_LIPS2 TYPE ZINMM029STR_STOCK.
+
+  DATA: LV_LIFEX TYPE LIFEX.
+  DATA: LV_MBLNR TYPE MBLNR.
+  DATA: LV_VBELN TYPE VBELN_VL.
+
+  CLEAR: IT_MSEG_GRN, IT_LIPS_CON, IT_LIKP, WA_MSEG_GRN, WA_LIPS_CON, WA_MKPF.
+  CLEAR: IT_MARM, WA_MARM, IT_MSEG_FINAL, WA_MSEG_FINAL, IT_MSEG1, WA_MSEG1, IT_LIPS2, WA_LIPS2.
+  CLEAR: LV_LIFEX, LV_VBELN, LV_MBLNR.
+
+  CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'
+    EXPORTING
+      INPUT  = I_GRN_NO
+    IMPORTING
+      OUTPUT = LV_VBELN.
+
+
+  SELECT * FROM VBRP
+    INTO TABLE IT_VBRP
+    WHERE VBELN = LV_VBELN.
+
+  IF IT_VBRP IS NOT INITIAL.
+
+    SELECT * FROM LIPS
+      INTO TABLE IT_LIPS_CON
+      FOR ALL ENTRIES IN IT_VBRP
+      WHERE VBELN = IT_VBRP-VGBEL.
+
+  ENDIF.
+
+  IF IT_LIPS_CON IS NOT INITIAL.
+    CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'
+      EXPORTING
+        INPUT  = I_MATNR
+      IMPORTING
+        OUTPUT = I_MATNR.
+
+    DELETE IT_LIPS_CON WHERE WERKS &lt;&gt; I_WERKS.
+    DELETE IT_LIPS_CON WHERE CHARG &lt;&gt; I_CHARG.
+    DELETE IT_LIPS_CON WHERE MATNR &lt;&gt; I_MATNR.
+
+    CLEAR IT_LIPS2.
+    LOOP AT IT_LIPS_CON INTO WA_LIPS_CON.
+      MOVE-CORRESPONDING WA_LIPS_CON TO WA_LIPS2.
+
+      WA_LIPS2-CINSM = WA_LIPS_CON-LFIMG.
+
+      CLEAR: WA_LIPS2-CLABS, WA_LIPS2-CSPEM.
+      COLLECT WA_LIPS2 INTO E_FINAL.
+      CLEAR: WA_LIPS2.
+    ENDLOOP .
+
+  ELSE.
+
+    CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'
+      EXPORTING
+        INPUT  = I_MATNR
+      IMPORTING
+        OUTPUT = I_MATNR.
+
+    CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'
+      EXPORTING
+        INPUT  = I_GRN_NO
+      IMPORTING
+        OUTPUT = LV_MBLNR.
+
+    DATA: GW_AFPO TYPE AFPO.
+    CLEAR: GW_AFPO.
+
+    SELECT SINGLE * INTO GW_AFPO
+      FROM AFPO
+      WHERE  MATNR = I_MATNR AND
+             CHARG = I_CHARG AND
+             PWERK = I_WERKS.
+    IF SY-SUBRC = 0.
+      DATA(LV_CONV) = 'X'.
+    ELSE.
+      CLEAR: LV_CONV.
+    ENDIF.
+
+
+    IF I_GRN_NO IS NOT INITIAL.
+      CLEAR : IT_MSEG_GRN.
+
+      SELECT * FROM MSEG
+        INTO TABLE IT_MSEG_GRN
+        WHERE MBLNR = LV_MBLNR
+          AND MATNR = I_MATNR
+          AND CHARG  = I_CHARG
+          AND WERKS = I_WERKS.
+
+      IF IT_MSEG_GRN IS INITIAL.
+
+        CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'
+          EXPORTING
+            INPUT  = I_GRN_NO
+          IMPORTING
+            OUTPUT = LV_MBLNR.
+
+        SELECT * FROM MSEG
+            INTO TABLE IT_MSEG_GRN
+            WHERE MBLNR = LV_MBLNR
+              AND MATNR = I_MATNR
+              AND CHARG  = I_CHARG
+              AND WERKS = I_WERKS.
+
+      ENDIF.
+
+      IF IT_MSEG_GRN IS NOT INITIAL.
+        DELETE IT_MSEG_GRN WHERE BWART &lt;&gt; '101' AND
+                                 BWART &lt;&gt; '102' AND
+                                 BWART &lt;&gt; '109' AND
+                                 BWART &lt;&gt; '110'.
+      ENDIF.
+
+      CLEAR : LV_LIFEX.
+
+      LV_LIFEX = I_GRN_NO.
+
+      SELECT * FROM LIKP
+        INTO TABLE IT_LIKP
+        WHERE LIFEX = LV_LIFEX.
+
+      IF IT_LIKP IS INITIAL.
+
+        CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'
+          EXPORTING
+            INPUT  = LV_LIFEX
+          IMPORTING
+            OUTPUT = LV_LIFEX.
+
+        SELECT * FROM LIKP
+          INTO TABLE IT_LIKP
+          WHERE LIFEX = LV_LIFEX.
+
+        IF IT_LIKP IS INITIAL.
+
+          CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'
+            EXPORTING
+              INPUT  = LV_LIFEX
+            IMPORTING
+              OUTPUT = LV_LIFEX.
+
+
+          SELECT * FROM LIKP
+            INTO TABLE IT_LIKP
+            WHERE LIFEX = LV_LIFEX.
+
+        ENDIF.
+
+      ENDIF.
+
+      IF IT_LIKP IS NOT INITIAL.
+        CLEAR IT_LIPS_CON.
+        SELECT * FROM LIPS
+          INTO TABLE IT_LIPS_CON
+          FOR ALL ENTRIES IN IT_LIKP
+          WHERE VBELN = IT_LIKP-VBELN.
+
+        IF IT_LIPS_CON IS NOT INITIAL.
+          DELETE IT_LIPS_CON WHERE WERKS &lt;&gt; I_WERKS.
+          DELETE IT_LIPS_CON WHERE CHARG &lt;&gt; I_CHARG.
+          DELETE IT_LIPS_CON WHERE MATNR &lt;&gt; I_MATNR.
+
+          DELETE IT_LIPS_CON WHERE BWART &lt;&gt; '331' AND
+                                   BWART &lt;&gt; '332' AND
+                                   BWART &lt;&gt; '333' AND
+                                   BWART &lt;&gt; '334' AND
+                                   BWART &lt;&gt; '335' AND
+                                   BWART &lt;&gt; '336' AND
+                                   BWART &lt;&gt; '501' AND
+                                   BWART &lt;&gt; '502' AND
+                                   BWART &lt;&gt; '503' AND
+                                   BWART &lt;&gt; '504' AND
+                                   BWART &lt;&gt; '505' AND
+                                   BWART &lt;&gt; '506' AND
+                                   BWART &lt;&gt; '551' AND
+                                   BWART &lt;&gt; '552' AND
+                                   BWART &lt;&gt; '553' AND
+                                   BWART &lt;&gt; '554' AND
+                                   BWART &lt;&gt; '555' AND
+                                   BWART &lt;&gt; '556' AND
+                                   BWART &lt;&gt; '701' AND
+                                   BWART &lt;&gt; '702' AND
+                                   BWART &lt;&gt; '703' AND
+                                   BWART &lt;&gt; '704' AND
+                                   BWART &lt;&gt; '705' AND
+                                   BWART &lt;&gt; '706' .
+
+        ENDIF.
+
+      ENDIF.
+
+
+    ENDIF.
+
+<font color ="#0000FF">****************************** For MSEG1 Club</font>
+    CLEAR IT_MSEG1.
+    LOOP AT IT_MSEG_GRN INTO WA_MSEG_GRN.
+      MOVE-CORRESPONDING WA_MSEG_GRN TO WA_MSEG1.
+
+      WA_MSEG1-CINSM = WA_MSEG_GRN-MENGE.
+
+      IF WA_MSEG_GRN-BWART = '102' OR
+         WA_MSEG_GRN-BWART = '110'.
+        WA_MSEG1-CINSM = WA_MSEG1-CINSM * -1.
+      ENDIF.
+
+      CLEAR: WA_MSEG1-CLABS, WA_MSEG1-CSPEM.
+      MOVE WA_MSEG1 TO WA_MSEG_FINAL.
+      COLLECT WA_MSEG1 INTO IT_MSEG1.
+      APPEND WA_MSEG_FINAL TO IT_MSEG_FINAL.
+      CLEAR:  WA_MSEG1, WA_MSEG_FINAL.
+    ENDLOOP .
+
+<font color ="#0000FF">****************************** For LIPS Club</font>
+    CLEAR IT_LIPS2.
+    LOOP AT IT_LIPS_CON INTO WA_LIPS_CON.
+      MOVE-CORRESPONDING WA_LIPS_CON TO WA_LIPS2.
+
+      WA_LIPS2-CINSM = WA_LIPS_CON-LFIMG.
+
+      IF WA_LIPS_CON-BWART = '332' OR
+         WA_LIPS_CON-BWART = '334' OR
+         WA_LIPS_CON-BWART = '336' OR
+         WA_LIPS_CON-BWART = '501' OR
+         WA_LIPS_CON-BWART = '503' OR
+         WA_LIPS_CON-BWART = '505' OR
+         WA_LIPS_CON-BWART = '552' OR
+         WA_LIPS_CON-BWART = '554' OR
+         WA_LIPS_CON-BWART = '556' OR
+         WA_LIPS_CON-BWART = '701' OR
+         WA_LIPS_CON-BWART = '702' OR
+         WA_LIPS_CON-BWART = '705' .
+        WA_LIPS2-CINSM = WA_LIPS2-CINSM * -1.
+      ENDIF.
+
+      CLEAR: WA_LIPS2-CLABS, WA_LIPS2-CSPEM.
+      MOVE WA_LIPS2 TO WA_MSEG_FINAL.
+      COLLECT WA_LIPS2 INTO IT_LIPS2.
+      APPEND WA_MSEG_FINAL TO IT_MSEG_FINAL.
+      CLEAR: WA_LIPS2, WA_MSEG_FINAL.
+    ENDLOOP .
+
+
+
+    IF IT_MSEG_FINAL IS NOT INITIAL.
+      CLEAR: IT_MARM.
+      SELECT * FROM MARM
+        INTO TABLE IT_MARM
+        FOR ALL ENTRIES IN IT_MSEG_FINAL
+        WHERE MATNR = IT_MSEG_FINAL-MATNR AND
+              MEINH = 'PAK'.
+
+    ENDIF.
+
+    SORT IT_MSEG_FINAL BY MATNR WERKS LGORT CHARG.
+    DELETE ADJACENT DUPLICATES FROM IT_MSEG_FINAL COMPARING MATNR WERKS LGORT CHARG.
+
+
+    LOOP AT IT_MSEG_FINAL INTO WA_MSEG_FINAL.
+
+      READ TABLE IT_MSEG1 INTO WA_MSEG1 WITH KEY MATNR = WA_MSEG_FINAL-MATNR
+                                                 WERKS = WA_MSEG_FINAL-WERKS
+                                                 LGORT = WA_MSEG_FINAL-LGORT
+                                                 CHARG = WA_MSEG_FINAL-CHARG .
+      IF SY-SUBRC = 0.
+        DATA(LV_MSEG1_MENGE) = WA_MSEG1-CINSM.
+      ENDIF.
+
+      IF LV_CONV IS INITIAL.
+        CLEAR WA_MARM.
+        READ TABLE IT_MARM INTO WA_MARM WITH KEY MATNR = WA_MSEG_FINAL-MATNR.
+        IF SY-SUBRC = 0.
+          IF WA_MARM-UMREZ IS NOT INITIAL.
+            LV_MSEG1_MENGE = LV_MSEG1_MENGE / WA_MARM-UMREZ.
+          ENDIF.
+        ENDIF.
+      ENDIF.
+
+      READ TABLE IT_LIPS2 INTO WA_LIPS2 WITH KEY MATNR = WA_MSEG_FINAL-MATNR
+                                                 WERKS = WA_MSEG_FINAL-WERKS
+                                                 LGORT = WA_MSEG_FINAL-LGORT
+                                                 CHARG = WA_MSEG_FINAL-CHARG .
+      IF SY-SUBRC = 0.
+        DATA(LV_LIPS2_MENGE) = WA_LIPS2-CINSM.
+      ENDIF.
+
+      WA_MSEG_FINAL-CINSM = LV_MSEG1_MENGE - LV_LIPS2_MENGE.
+
+      APPEND WA_MSEG_FINAL TO E_FINAL.
+      CLEAR WA_MSEG_FINAL.
+      CLEAR: LV_MSEG1_MENGE, LV_LIPS2_MENGE.
+    ENDLOOP.
+  ENDIF.
+ENDFUNCTION.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

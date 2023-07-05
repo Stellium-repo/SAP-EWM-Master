@@ -1,0 +1,161 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>M_0FI_GL_4</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: M_0FI_GL_4</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Business Add-Ins Method for General Data Transfer</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*   Method attributes.                                                   *</font>
+<font color ="#0000FF">**************************************************************************</font>
+Instantiation: Private
+<font color ="#0000FF">**************************************************************************</font>
+
+METHOD m_0fi_gl_4.
+
+<font color ="#0000FF">*  declaring a field symbol with type of extract structure of 0FI_AR_4</font>
+  FIELD-SYMBOLS: &lt;l_s_data&gt; TYPE dtfigl_4,
+                 &lt;l_s_data1&gt; TYPE dtfigl_4..
+
+  DATA: l_t_data      TYPE STANDARD TABLE OF dtfigl_4,
+        l_t_data1      TYPE STANDARD TABLE OF dtfigl_4,
+        l_t_data_temp TYPE STANDARD TABLE OF dtfigl_4.
+
+  DATA: lt_skat TYPE TABLE OF skat,
+        lw_skat TYPE skat.
+
+  DATA: lv_prd_date TYPE sy-datum.
+
+
+
+<font color ="#0000FF">*    * move the entire content into another internal table</font>
+  l_t_data[] = c_t_data[].
+<font color ="#0000FF">*  l_t_data_temp[] = c_t_data[].</font>
+
+  IF NOT l_t_data IS INITIAL.
+    SELECT *
+    FROM skat INTO TABLE lt_skat
+    FOR ALL ENTRIES IN l_t_data
+    WHERE spras = 'E'
+      AND ktopl = l_t_data-ktopl
+      AND saknr = l_t_data-hkont.
+    IF sy-subrc EQ 0.
+      SORT lt_skat BY ktopl saknr.
+    ENDIF.
+
+    LOOP AT l_t_data ASSIGNING &lt;l_s_data&gt;.
+      READ TABLE lt_skat INTO lw_skat WITH KEY ktopl = &lt;l_s_data&gt;-ktopl saknr = &lt;l_s_data&gt;-hkont BINARY SEARCH.
+      IF sy-subrc EQ 0.
+        &lt;l_s_data&gt;-zzhkont_txt50 = lw_skat-txt50.
+      ENDIF.
+
+      &lt;l_s_data&gt;-zzcalmonat = &lt;l_s_data&gt;-budat+4(2).
+      &lt;l_s_data&gt;-zzcalyear = &lt;l_s_data&gt;-budat+0(4).
+
+    ENDLOOP.
+
+
+  ENDIF.
+
+
+  c_t_data[] = l_t_data[].
+  REFRESH: l_t_data.
+
+
+<font color ="#0000FF">**bring field MATNR,BUSTW,EBELN,EBELP  from BSEG table**</font>
+
+  TYPES: BEGIN OF lty_bseg,
+           bukrs      TYPE bseg-bukrs,
+           belnr      TYPE bseg-belnr,
+           gjahr      TYPE bseg-gjahr,
+           buzei      TYPE bseg-buzei,
+           fiscper(7) TYPE n,
+           ebeln      TYPE bseg-ebeln,
+           ebelp      TYPE bseg-ebelp,
+           matnr      TYPE bseg-matnr,
+           bustw      TYPE bseg-bustw,
+           zzbewar    TYPE bseg-bewar,
+           zzmatnr    TYPE bseg-matnr,
+           zzbustw    TYPE bseg-bustw,
+         END OF lty_bseg,
+
+         BEGIN OF lty_bseg2,
+           bukrs   TYPE bseg-bukrs,
+           belnr   TYPE bseg-belnr,
+           gjahr   TYPE bseg-gjahr,
+           buzei   TYPE bseg-buzei,
+           ebeln   TYPE bseg-ebeln,
+           ebelp   TYPE bseg-ebelp,
+           matnr   TYPE bseg-matnr,
+           bustw   TYPE bseg-bustw,
+           zzbewar TYPE bseg-bewar,
+           zzmatnr TYPE bseg-matnr,
+           zzbustw TYPE bseg-bustw,
+         END OF lty_bseg2.
+
+
+  DATA: lt_bseg  TYPE TABLE OF lty_bseg,
+        lw_bseg  TYPE lty_bseg,
+        lt_bseg2 TYPE TABLE OF lty_bseg2,
+        lw_bseg2 TYPE lty_bseg2.
+
+  FIELD-SYMBOLS: &lt;lfs_data&gt; TYPE any.
+
+<font color ="#0000FF">*  data(lT_DATA) = C_T_DATA[].</font>
+
+  LOOP AT c_t_data[] ASSIGNING &lt;lfs_data&gt;.
+    MOVE-CORRESPONDING &lt;lfs_data&gt; TO lw_bseg.
+    IF lw_bseg-fiscper IS NOT INITIAL.
+      lw_bseg-gjahr = lw_bseg-fiscper+0(4).
+    ENDIF.
+    APPEND lw_bseg TO lt_bseg.
+    CLEAR: lw_bseg.
+  ENDLOOP.
+  DELETE lt_bseg WHERE bukrs IS INITIAL OR belnr IS INITIAL OR gjahr IS INITIAL OR buzei IS INITIAL.
+  SORT lt_bseg BY bukrs belnr gjahr buzei.
+
+  IF lt_bseg IS NOT INITIAL.
+    SELECT  bukrs belnr gjahr buzei ebeln ebelp matnr bustw bewar
+    FROM bseg INTO TABLE lt_bseg2
+    FOR ALL ENTRIES IN lt_bseg
+    WHERE bukrs = lt_bseg-bukrs
+      AND belnr = lt_bseg-belnr
+      AND gjahr = lt_bseg-gjahr
+      AND buzei = lt_bseg-buzei.
+    IF sy-subrc EQ 0.
+      SORT lt_bseg2 BY bukrs belnr gjahr buzei.
+    ENDIF.
+
+    LOOP AT c_t_data[] ASSIGNING &lt;lfs_data&gt;.
+      MOVE-CORRESPONDING &lt;lfs_data&gt; TO lw_bseg.
+      READ TABLE lt_bseg2 INTO lw_bseg2 WITH KEY bukrs = lw_bseg-bukrs belnr = lw_bseg-belnr
+                                                 gjahr = lw_bseg-gjahr buzei = lw_bseg-buzei BINARY SEARCH.
+      IF sy-subrc EQ 0.
+        lw_bseg-ebeln = lw_bseg2-ebeln.
+        lw_bseg-ebelp = lw_bseg2-ebelp.
+        lw_bseg-matnr = lw_bseg2-matnr.
+        lw_bseg-bustw = lw_bseg2-bustw.
+        lw_bseg-zzbewar = lw_bseg2-zzbewar.
+        lw_bseg-zzmatnr = lw_bseg2-matnr.
+        lw_bseg-zzbustw = lw_bseg2-bustw.
+        MOVE-CORRESPONDING lw_bseg TO &lt;lfs_data&gt;.
+      ENDIF.
+      CLEAR:lw_bseg,lw_bseg2.
+
+    ENDLOOP.
+
+  ENDIF.
+
+
+
+ENDMETHOD.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

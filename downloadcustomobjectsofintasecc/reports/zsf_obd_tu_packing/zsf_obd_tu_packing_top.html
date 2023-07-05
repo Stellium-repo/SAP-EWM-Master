@@ -1,0 +1,55 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZSF_OBD_TU_PACKING_TOP</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZSF_OBD_TU_PACKING_TOP</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZSF_OBD_TU_PACKING_TOP</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&  Include           ZSF_OBD_TU_PACKING_TOP</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+
+TABLES : likp,
+         lips,
+         vekp,
+         vepo .
+
+<font color ="#0000FF">*--Data Declaration</font>
+DATA :
+  ls_output_options     TYPE ssfcompop,
+  ls_control_parameters TYPE ssfctrlop,
+  wa_header             TYPE zsf_s_packing_header,
+  lt_table              TYPE TABLE OF zsf_s_packing,
+  wa_table              TYPE zsf_s_packing,
+  lx_menge              TYPE bstmg,
+  lo_menge              TYPE bstmg,
+  lv_qty                TYPE string,
+  lo_qty                TYPE string.
+DATA:
+  ld_user_address TYPE addr3_val,
+  ld_user_usr03   TYPE usr01,
+  ld_user_usr21   TYPE usr21.
+
+DATA :
+  lf_fm_name TYPE rs38l_fnam,
+  lv_fpname  TYPE tdsfname VALUE 'Z_OBD_TU_PACKING'.
+
+DATA :
+  lv_exidv TYPE exidv,
+  lv_matnr TYPE matnr.
+
+
+DATA:
+  lv_prod   TYPE matnr,
+  lv_charg  TYPE charg_d,
+  lv_exidv2 TYPE exidv.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

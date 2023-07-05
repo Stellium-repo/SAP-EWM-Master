@@ -1,0 +1,105 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>M_0FI_AR_4</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: M_0FI_AR_4</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Business Add-Ins Method for General Data Transfer</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*   Method attributes.                                                   *</font>
+<font color ="#0000FF">**************************************************************************</font>
+Instantiation: Private
+<font color ="#0000FF">**************************************************************************</font>
+
+METHOD m_0fi_ar_4.
+
+<font color ="#0000FF">*  declaring a field symbol with type of extract structure of 0FI_AR_4</font>
+  FIELD-SYMBOLS: &lt;l_s_data&gt; TYPE dtfiar_3.
+
+<font color ="#0000FF">* declare a structure with field required from VBRK table</font>
+  TYPES: BEGIN OF it_vbrk,
+           v_vbeln TYPE vbeln_vf,
+           v_vkorg TYPE vkorg,
+           v_vtweg TYPE vtweg,
+           v_spart TYPE spart,
+         END OF it_vbrk.
+<font color ="#0000FF">* declare a structure with field required from SKAT table</font>
+  TYPES: BEGIN OF it_skat,
+           v_spras TYPE spras,
+           v_ktopl TYPE ktopl,
+           v_saknr TYPE saknr,
+           v_txt50 TYPE txt50_skat,
+           v_txt20 TYPE txt20_skat,
+         END OF it_skat.
+
+<font color ="#0000FF">* Declare an internal table and work area with above type</font>
+  DATA: zbw_vbrk TYPE STANDARD TABLE OF it_vbrk,
+        zbw_skat TYPE STANDARD TABLE OF it_skat,
+        l_t_data TYPE STANDARD TABLE OF dtfiar_3,
+        " internal table same as C_T_DATA
+        wa_vbrk  TYPE it_vbrk,
+        wa_skat  TYPE it_skat.
+<font color ="#0000FF">*    * move the entire content into another internal table</font>
+  l_t_data[] = c_t_data[].
+  IF NOT l_t_data IS INITIAL.
+<font color ="#0000FF">*      * read the fields from VBRK table for all entries of L_T_DATA and put them into IT_VBRK</font>
+    SELECT vbeln vkorg vtweg spart FROM vbrk INTO TABLE zbw_vbrk FOR ALL ENTRIES IN l_t_data
+      WHERE vbeln = l_t_data-belnr.
+<font color ="#0000FF">*      * read the fields from SKAT table for all entries of L_T_DATA and put them into IT_SKAT</font>
+    SELECT spras ktopl saknr txt20 txt50 FROM skat INTO TABLE zbw_skat FOR ALL ENTRIES IN l_t_data
+    WHERE saknr = l_t_data-saknr AND spras = 'EN'.
+
+    select kunnr, name1, name2
+    from kna1 into table @data(lt_kna1)
+    FOR ALL ENTRIES IN @l_t_data
+    where kunnr = @l_t_data-kunnr.
+
+    sort lt_kna1 by kunnr.
+
+    SORT zbw_vbrk BY v_vbeln. CLEAR wa_vbrk.
+    SORT zbw_skat BY v_saknr. CLEAR wa_skat.
+
+    LOOP AT l_t_data ASSIGNING &lt;l_s_data&gt;.
+      READ TABLE zbw_vbrk INTO wa_vbrk WITH KEY v_vbeln = &lt;l_s_data&gt;-belnr BINARY SEARCH.
+
+      IF sy-subrc = 0.
+<font color ="#0000FF">**update the sales organization, distribution channel and division</font>
+<font color ="#0000FF">*  field after reading the billing document number from it_vbrk table</font>
+<font color ="#0000FF">*        &lt;l_s_data&gt;-zzvkorg = wa_vbrk-v_vkorg.</font>
+        &lt;l_s_data&gt;-zzvtweg = wa_vbrk-v_vtweg.
+<font color ="#0000FF">*        &lt;l_s_data&gt;-zzspart = wa_vbrk-v_spart .</font>
+      ENDIF.
+      READ TABLE zbw_skat INTO wa_skat WITH KEY v_saknr = &lt;l_s_data&gt;-saknr BINARY SEARCH.
+
+      IF sy-subrc = 0.
+
+        &lt;l_s_data&gt;-zztxt20 = wa_skat-v_txt20.
+        &lt;l_s_data&gt;-zztxt50 = wa_skat-v_txt50.
+
+      ENDIF.
+
+      read table lt_kna1 into data(lw_kna1) with key kunnr = &lt;l_s_data&gt;-kunnr BINARY SEARCH.
+      if sy-subrc eq 0.
+       &lt;l_s_data&gt;-zzkunnr_name1 = lw_kna1-name1.
+       &lt;l_s_data&gt;-zzkunnr_name2 = lw_kna1-name2.
+      endif.
+
+    ENDLOOP.
+  ENDIF.
+
+
+  c_t_data[] = l_t_data[].
+  REFRESH: l_t_data, zbw_vbrk,zbw_skat.
+
+
+ENDMETHOD.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

@@ -1,0 +1,550 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZECC_PO_IBD_107_CREATE_F01</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZECC_PO_IBD_107_CREATE_F01</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZECC_PO_IBD_107_CREATE_F01</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&  Include           ZECC_PO_IBD_107_CREATE_F01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+<font color ="#0000FF">*        Start new screen                                              *</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+FORM bdc_dynpro USING program dynpro.
+  CLEAR bdcdata.
+  bdcdata-program  = program.
+  bdcdata-dynpro   = dynpro.
+  bdcdata-dynbegin = 'X'.
+  APPEND bdcdata.
+ENDFORM.
+
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+<font color ="#0000FF">*        Insert field                                                  *</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+FORM bdc_field USING fnam fval.
+<font color ="#0000FF">*  IF fval &lt;&gt; nodata.</font>
+  CLEAR bdcdata.
+  bdcdata-fnam = fnam.
+  bdcdata-fval = fval.
+  APPEND bdcdata.
+<font color ="#0000FF">*  ENDIF.</font>
+ENDFORM.
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+<font color ="#0000FF">*        Start new transaction according to parameters                 *</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+FORM bdc_transaction USING tcode.
+  DATA: l_mstring(480).
+  DATA: l_subrc LIKE sy-subrc.
+  DATA: lx_auth_check TYPE REF TO cx_root.
+  DATA: l_auth_check_text TYPE string,
+        lv_msg            TYPE string.
+
+  gv_error = 'X'.
+  gs_ctu_params-dismode = 'N'.
+  gs_ctu_params-updmode = 'S'.
+  gs_ctu_params-defsize = 'X'.
+
+<font color ="#0000FF">* call transaction using</font>
+  REFRESH messtab.
+  DO 3 TIMES .
+    DATA(lv_tabix) = sy-index.
+    TRY.
+        CALL TRANSACTION tcode USING bdcdata
+                         OPTIONS FROM gs_ctu_params
+                         MESSAGES INTO messtab.
+      CATCH cx_sy_authorization_error INTO lx_auth_check.
+<font color ="#0000FF">*     Authorization missing for user when executing transaction</font>
+        l_auth_check_text = lx_auth_check-&gt;get_text( ).
+        sy-subrc = 99.
+    ENDTRY.
+    l_subrc = sy-subrc.
+
+    IF l_subrc &lt;&gt; 99.
+      IF tcode EQ 'VL31N'.
+        WRITE:/ ' Creating Inbound Delivery for PO:',gv_ebeln,'. Atempt-',lv_tabix.
+        READ TABLE messtab WITH KEY msgid   = 'VL'
+                                    msgtyp  = 'S'
+                                    msgnr   = '311'.
+        IF sy-subrc EQ 0.
+          gv_inb_del = |{ messtab-msgv2 ALPHA = IN }|.
+          WRITE: / 'Inbound Delivery ',gv_inb_del, ' Created'.
+          COMMIT WORK AND WAIT.
+          EXIT .
+        ELSE.
+<font color ="#0000FF">*          Display all meesages</font>
+          LOOP AT messtab.
+            MESSAGE ID messtab-msgid TYPE 'S' NUMBER messtab-msgnr
+            INTO DATA(lv_msgtxt)
+            WITH messtab-msgv1 messtab-msgv2 messtab-msgv3 messtab-msgv4.
+            WRITE: / messtab-msgtyp,':',lv_msgtxt.
+          ENDLOOP.
+          WAIT UP TO 1 SECONDS .
+          REFRESH messtab.
+        ENDIF.
+      ELSEIF tcode EQ 'MIGO'.
+        READ TABLE messtab WITH KEY msgid   = 'MIGO'
+                                    msgtyp  = 'S'
+                                    msgnr   = '012'.
+        IF sy-subrc EQ 0.
+          gv_mblnr = messtab-msgv1.
+          WRITE: / 'Material Doc. for 107:',gv_mblnr, ' Created'.
+        ELSE.
+<font color ="#0000FF">*    error occured due as pop up is not display</font>
+          READ TABLE messtab WITH KEY msgid   = '00'
+                                      msgtyp  = 'S'
+                                      msgnr   = '344'.
+          IF sy-subrc NE 0.
+            WRITE:/ 'Error while creating 107 document for PO:',gv_ebeln.
+          ENDIF.
+        ENDIF.
+        SKIP.
+      ELSEIF tcode EQ 'MSC2N'.
+<font color ="#0000FF">*          Display all meesages</font>
+        LOOP AT messtab WHERE msgtyp CA 'EAX'.
+          MESSAGE ID messtab-msgid TYPE 'S' NUMBER messtab-msgnr
+          INTO lv_msgtxt
+          WITH messtab-msgv1 messtab-msgv2 messtab-msgv3 messtab-msgv4.
+          WRITE: / messtab-msgtyp,':',lv_msgtxt.
+        ENDLOOP.
+        IF sy-subrc NE 0.
+          CLEAR gv_error.
+          EXIT.
+        ENDIF.
+        WAIT UP TO 1 SECONDS .
+        REFRESH messtab.
+      ENDIF.
+    ELSE.
+      WRITE: / l_auth_check_text.
+    ENDIF.
+  ENDDO .
+  IF tcode EQ 'VL31N'  AND gv_inb_del IS INITIAL .
+    lv_msg = 'Error while creating Inbound Delivery for PO:' && gv_ebeln && '-' && gv_ebelp.
+<font color ="#0000FF">*    Update PI Log Table</font>
+    WRITE: / lv_msg.
+    SELECT SINGLE MAX( sr_no ) INTO @DATA(lv_srno) FROM zacc_pi_log.
+    lv_srno = lv_srno + 1.
+    zacc_pi_log-sr_no = lv_srno.
+    zacc_pi_log-scenario  = 'AUTOIBD'.
+    zacc_pi_log-werks     = s_werks-low.
+<font color ="#0000FF">*    zacc_pi_log-refdocno  = inventoryno.</font>
+    zacc_pi_log-po_number  = gv_ebeln.
+    CONCATENATE sy-datum+6(2) sy-datum+4(2) sy-datum+0(4) INTO zacc_pi_log-post_date SEPARATED BY '.'.
+    zacc_pi_log-pi_status    = 'E'.
+    zacc_pi_log-sys_time   = sy-uzeit.
+    zacc_pi_log-createdon  = sy-datum.
+    zacc_pi_log-message   = lv_msg.
+    INSERT zacc_pi_log.
+    COMMIT WORK AND WAIT.
+  ENDIF .
+  REFRESH bdcdata.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Form  CALL_BDC_MIGO</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+<font color ="#0000FF">*  --&gt;  p1        text</font>
+<font color ="#0000FF">*  &lt;--  p2        text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+FORM call_bdc_migo .
+  DATA:
+    lv_date  TYPE char10,
+    lv_asnno TYPE submi.
+
+  IF gv_asnno IS INITIAL.
+    lv_asnno = gv_inb_del.
+    WRITE: / 'This is Accord Subsidaries'.
+  ELSE.
+    lv_asnno = gv_asnno.
+  ENDIF.
+
+  WRITE sy-datum TO lv_date.
+
+
+  PERFORM bdc_dynpro      USING 'SAPLMIGO' '0001'.
+  PERFORM bdc_field       USING 'BDC_OKCODE'
+                                '=MIGO_OK_GO'.
+  PERFORM bdc_field       USING 'GODYNPRO-ACTION'
+                                'A01'.   "Goods Receipt
+  PERFORM bdc_field       USING 'GODYNPRO-REFDOC'
+                                'R04'.    "Shipping notification / Inb. Del.
+  PERFORM bdc_field       USING 'GODEFAULT_TV-BWART'
+                                '107'.    " 107 Movement Type
+  PERFORM bdc_field       USING 'BDC_CURSOR'
+                                'GODYNPRO-INBOUND_DELIVERY'.
+  PERFORM bdc_field       USING 'GODYNPRO-INBOUND_DELIVERY'
+                                gv_inb_del.
+
+  PERFORM bdc_dynpro      USING 'SAPLMIGO' '0001'.
+  PERFORM bdc_field       USING 'BDC_OKCODE'
+                                '=OK_POST1'.
+  PERFORM bdc_field       USING 'GODEFAULT_TV-BWART'
+                                '107'.
+  PERFORM bdc_field       USING 'GOHEAD-BLDAT'
+                                lv_date.
+  PERFORM bdc_field       USING 'GOHEAD-LFSNR'
+                                lv_asnno.
+  PERFORM bdc_field       USING 'GOHEAD-BUDAT'
+                                lv_date.
+  PERFORM bdc_field       USING 'GOHEAD-FRBNR'
+                                lv_asnno.
+  PERFORM bdc_field       USING 'BDC_CURSOR'
+                                'GODYNPRO-DETAIL_TAKE'.
+  PERFORM bdc_field       USING 'GODYNPRO-DETAIL_TAKE'
+                                'X'.
+  PERFORM bdc_transaction USING 'MIGO'.
+  IF gv_mblnr IS NOT INITIAL.
+<font color ="#0000FF">*    error occured due as pop up is not display</font>
+    READ TABLE messtab WITH KEY msgid   = '00'
+                                msgtyp  = 'S'
+                                msgnr   = '344'.
+    IF sy-subrc EQ 0.
+      PERFORM call_bdc_migo_with_popup USING lv_asnno.
+    ENDIF.
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Form  CALL_BDC_MIGO_WITH_POPUP</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+<font color ="#0000FF">*  --&gt;  p1        text</font>
+<font color ="#0000FF">*  &lt;--  p2        text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+FORM call_bdc_migo_with_popup USING p_asnno TYPE submi.
+  DATA:
+        lv_date TYPE char10.
+  WRITE s_aedat-low TO lv_date.
+
+  PERFORM bdc_dynpro      USING 'SAPLMIGO' '0001'.
+  PERFORM bdc_field       USING 'BDC_OKCODE'
+                                '=MIGO_OK_GO'.
+  PERFORM bdc_field       USING 'GODYNPRO-ACTION'
+                                'A01'.   "Goods Receipt
+  PERFORM bdc_field       USING 'GODYNPRO-REFDOC'
+                                'R04'.    "Shipping notification / Inb. Del.
+  PERFORM bdc_field       USING 'GODEFAULT_TV-BWART'
+                                '107'.    " 107 Movement Type
+  PERFORM bdc_field       USING 'BDC_CURSOR'
+                                'GODYNPRO-INBOUND_DELIVERY'.
+  PERFORM bdc_field       USING 'GODYNPRO-INBOUND_DELIVERY'
+                                gv_inb_del.
+
+  PERFORM bdc_dynpro      USING 'SAPLMIGO' '1300'.
+  PERFORM bdc_field       USING 'BDC_CURSOR'
+                                'G_TIP_DONT_SHOW_AGAIN'.
+  PERFORM bdc_field       USING 'BDC_OKCODE'
+                                '=OK_TIP_GO'.
+  PERFORM bdc_field       USING 'G_TIP_DONT_SHOW_AGAIN'
+                                'X'.
+
+  PERFORM bdc_dynpro      USING 'SAPLMIGO' '0001'.
+  PERFORM bdc_field       USING 'BDC_OKCODE'
+                                '=MIGO_OK_GO'.
+  PERFORM bdc_field       USING 'GODYNPRO-ACTION'
+                                'A01'.   "Goods Receipt
+  PERFORM bdc_field       USING 'GODYNPRO-REFDOC'
+                                'R04'.    "Shipping notification / Inb. Del.
+  PERFORM bdc_field       USING 'GODEFAULT_TV-BWART'
+                                '107'.    " 107 Movement Type
+  PERFORM bdc_field       USING 'BDC_CURSOR'
+                                'GODYNPRO-INBOUND_DELIVERY'.
+  PERFORM bdc_field       USING 'GODYNPRO-INBOUND_DELIVERY'
+                                gv_inb_del.
+
+  PERFORM bdc_dynpro      USING 'SAPLMIGO' '0001'.
+  PERFORM bdc_field       USING 'BDC_OKCODE'
+                                '=OK_POST1'.
+  PERFORM bdc_field       USING 'GODEFAULT_TV-BWART'
+                                '107'.
+  PERFORM bdc_field       USING 'GOHEAD-BLDAT'
+                                lv_date.
+  PERFORM bdc_field       USING 'GOHEAD-LFSNR'
+                                p_asnno.
+  PERFORM bdc_field       USING 'GOHEAD-BUDAT'
+                                lv_date.
+  PERFORM bdc_field       USING 'GOHEAD-FRBNR'
+                                p_asnno.
+  PERFORM bdc_field       USING 'BDC_CURSOR'
+                                'GODYNPRO-DETAIL_TAKE'.
+  PERFORM bdc_field       USING 'GODYNPRO-DETAIL_TAKE'
+                                'X'.
+  PERFORM bdc_transaction USING 'MIGO'.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Form  BDC_VL31N</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+<font color ="#0000FF">*  --&gt;  p1        text</font>
+<font color ="#0000FF">*  &lt;--  p2        text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+FORM bdc_vl31n .
+  DATA:
+    lv_date TYPE char10.
+  WRITE sy-datum TO lv_date.
+  PERFORM bdc_dynpro      USING 'SAPMV50A' '4007'.
+  PERFORM bdc_field       USING 'BDC_CURSOR'
+                                'LV50C-BSTNR'.
+  PERFORM bdc_field       USING 'BDC_OKCODE'
+                                '/00'.
+  PERFORM bdc_field       USING 'LV50C-BSTNR'
+                                gv_ebeln.
+  PERFORM bdc_field       USING 'RV50A-LFDAT_LA'
+                                lv_date.
+  PERFORM bdc_field       USING 'RV50A-VERUR_LA'
+                                gv_asnno.
+
+<font color ="#0000FF">* Select all line items</font>
+  PERFORM bdc_dynpro      USING 'SAPMV50A' '1000'.
+  PERFORM bdc_field       USING 'BDC_OKCODE'
+                                '=MKAL_T'.
+
+<font color ="#0000FF">* Delete all lines except first line</font>
+  PERFORM bdc_dynpro      USING 'SAPMV50A' '1000'.
+  PERFORM bdc_field       USING 'BDC_OKCODE'
+                                '=POLO_T'.
+  PERFORM bdc_field       USING 'RV50A-LIPS_SELKZ(01)'
+                                ''.
+
+<font color ="#0000FF">* Select the Header button</font>
+  PERFORM bdc_dynpro      USING 'SAPMV50A' '1000'.
+  PERFORM bdc_field       USING 'BDC_OKCODE'
+                                '=HDET_T'.
+
+<font color ="#0000FF">* fill the External Id</font>
+  PERFORM bdc_dynpro      USING 'SAPMV50A' '2000'.
+  PERFORM bdc_field       USING 'BDC_OKCODE'
+                                '=T\03'.
+<font color ="#0000FF">* fill the External Id</font>
+  PERFORM bdc_dynpro      USING 'SAPMV50A' '2000'.
+  PERFORM bdc_field       USING 'BDC_OKCODE'
+                                '=SICH_T'.
+  PERFORM bdc_field       USING 'BDC_CURSOR'
+                                'LIKP-BOLNR'.
+  PERFORM bdc_field       USING 'LIKP-BOLNR'
+                                gv_asnno.
+  PERFORM bdc_transaction USING 'VL31N'.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Form  VALIDATE_LIFNR</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       Validate Supplier</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+FORM validate_lifnr .
+  SELECT SINGLE lifnr FROM lfa1 INTO @DATA(lv_lifnr)
+   WHERE lifnr IN @s_lifnr.
+  IF sy-subrc NE 0.
+    MESSAGE e029(sepm_fpm) WITH s_lifnr-low.
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Form  VALIDATE_BUKRS</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       Validate Company Code</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+FORM validate_bukrs .
+  IF s_bukrs IS INITIAL .
+    MESSAGE 'Enter company code' TYPE 'E'.
+  ELSE.
+    SELECT SINGLE bukrs FROM t001 INTO @DATA(lv_bukrs)
+     WHERE bukrs IN @s_bukrs.
+    IF sy-subrc NE 0.
+      MESSAGE e312(fieu_saft) WITH s_bukrs-low.
+    ENDIF.
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Form  VALIDATE_EKORG</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       Validate Purchase Organization</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+FORM validate_ekorg .
+  IF s_ekorg IS INITIAL .
+    MESSAGE 'Enter Purchase Organization' TYPE 'E'.
+  ELSE.
+    SELECT SINGLE ekorg FROM t024e INTO @DATA(lv_ekorg)
+      WHERE ekorg IN @s_ekorg.
+    IF sy-subrc NE 0.
+      MESSAGE e124(/atl/general) WITH s_ekorg-low.
+    ENDIF.
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Form  VALIDATE_WERKS</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       Validate Plant</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+FORM validate_werks .
+  SELECT SINGLE werks FROM t001w INTO @DATA(lv_werks)
+   WHERE werks IN @s_werks.
+  IF sy-subrc NE 0.
+    MESSAGE e025(/opt/vim_701) WITH s_werks-low.
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Form  VALIDATE_BSART</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       Validate Purchasing Doc. Type</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+FORM validate_bsart .
+  SELECT  bsart FROM t161 INTO @DATA(lv_bsart)
+    UP TO 1 ROWS
+   WHERE bsart IN @s_bsart.
+  ENDSELECT.
+  IF sy-subrc NE 0.
+    MESSAGE e610(vk) WITH s_bsart-low.
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Form  EXTEND_BATCH_PLANT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       Extend the batch to PO receiving Plant</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+<font color ="#0000FF">*  --&gt;  p1        text</font>
+<font color ="#0000FF">*  &lt;--  p2        text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+FORM extend_batch_plant CHANGING pv_error TYPE c.
+  DATA:
+    lt_bapiret    TYPE TABLE OF bapiret2,
+    lv_batch_ret  TYPE charg_d,
+    lv_msg        TYPE string,
+    lv_date_ch    TYPE char10,
+    ls_batchattr  TYPE bapibatchatt,
+    ls_batchattrx TYPE bapibatchattx,
+    ls_key        TYPE bapi1003_key,
+    lt_charvl     TYPE TABLE OF bapi1003_alloc_values_char,
+    lt_numcvl     TYPE TABLE OF bapi1003_alloc_values_num,
+    lt_currvl     TYPE TABLE OF bapi1003_alloc_values_curr,
+    lt_return     TYPE TABLE OF bapiret2,
+    lt_charval    TYPE  ich_dm_valueassign_in_tab,
+    lv_objek      TYPE  objnum,
+    lv_obtab      TYPE  tabelle,
+    lv_klart      TYPE  klassenart,
+    lv_class      TYPE  klasse_d.
+
+  ls_batchattr-available = sy-datum.
+  ls_batchattr-prod_date = gv_afnam.
+  ls_batchattr-expirydate = gv_bednr.
+  ls_batchattrx-available = 'X'.
+  ls_batchattrx-prod_date = 'X'.
+  ls_batchattrx-expirydate = 'X'.
+<font color ="#0000FF">*  extend the Batch</font>
+  CALL FUNCTION 'BAPI_BATCH_CREATE'
+    EXPORTING
+      material        = gv_matnr
+      batch           = gv_charg
+      plant           = gv_werks
+      batchattributes = ls_batchattr
+    IMPORTING
+      batch           = lv_batch_ret
+    TABLES
+      return          = lt_bapiret.
+
+  CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
+    EXPORTING
+      wait = 'X'.
+
+  LOOP AT lt_bapiret INTO DATA(ls_bapiret)
+    WHERE type CA 'EAX'.
+    MESSAGE ID ls_bapiret-id TYPE 'S' NUMBER ls_bapiret-number WITH
+        ls_bapiret-message_v1 ls_bapiret-message_v2 ls_bapiret-message_v3
+        ls_bapiret-message_v4
+      INTO lv_msg.
+    WRITE: / lv_msg.
+  ENDLOOP.
+
+  READ TABLE lt_bapiret WITH KEY id = 'M7' number = '838'
+     TRANSPORTING NO FIELDS.
+  IF sy-subrc EQ 0.
+<font color ="#0000FF">*    Batch already extended. Check the classification available.</font>
+<font color ="#0000FF">*      get class number and its characteristics</font>
+    lv_objek = gv_matnr && gv_charg.
+    SELECT atinn FROM inob INNER JOIN ausp ON inob~cuobj EQ ausp~objek
+      INTO @DATA(lv_atinn)
+      UP TO 1 ROWS
+      WHERE inob~objek EQ @lv_objek.
+    ENDSELECT.
+    IF sy-subrc EQ 0.
+<font color ="#0000FF">*  characteristics already exist. nothing to update</font>
+      RETURN.
+    ENDIF.
+  ENDIF.
+
+<font color ="#0000FF">* Update the Manufacturing date even if the batch is already created</font>
+<font color ="#0000FF">* BDC Program to update Manufacturing date in Classification</font>
+  PERFORM bdc_dynpro      USING 'SAPLCHRG' '1000'.
+  PERFORM bdc_field       USING 'BDC_OKCODE'
+                                'ENTR'.
+  PERFORM bdc_field       USING 'BDC_CURSOR'
+                                'DFBATCH-WERKS'.
+  PERFORM bdc_field       USING 'DFBATCH-MATNR'
+                                gv_matnr.
+  PERFORM bdc_field       USING 'DFBATCH-CHARG'
+                                gv_charg.
+  PERFORM bdc_field       USING 'DFBATCH-WERKS'
+                                gv_werks.
+
+  PERFORM bdc_dynpro      USING 'SAPLCHRG' '1000'.
+  PERFORM bdc_field       USING 'BDC_OKCODE'
+                                '=CLAS'.
+  PERFORM bdc_field       USING 'BDC_CURSOR'
+                                'MCHA-HSDAT'.
+
+  PERFORM bdc_dynpro      USING 'SAPLCHRG' '1000'.
+  PERFORM bdc_field       USING 'BDC_OKCODE'
+                                '=CLCR'.
+  PERFORM bdc_field       USING 'BDC_CURSOR'
+                                'DFBATCH-MATNR'.
+
+  PERFORM bdc_dynpro      USING 'SAPLCHRG' '1000'.
+  PERFORM bdc_field       USING 'BDC_OKCODE'
+                                '=SAVE'.
+  PERFORM bdc_field       USING 'BDC_CURSOR'
+                                'RCTMS-MWERT(01)'.
+  WRITE ls_batchattr-prod_date TO lv_date_ch.
+  PERFORM bdc_field       USING 'RCTMS-MWERT(01)'
+                                 lv_date_ch.
+  PERFORM bdc_transaction USING 'MSC2N'.
+
+
+  IF gv_error IS INITIAL.
+    COMMIT WORK AND WAIT.
+
+    WRITE: / 'Batch ', gv_charg,' is extended to plant',gv_werks,' and Material ',gv_matnr.
+  ELSE.
+    lv_msg = 'Error while extending batch-' && gv_charg && 'for Material ' && gv_matnr
+               && ' to Plant ' && gv_werks.
+    WRITE : / lv_msg.
+    pv_error = 'X'.
+<font color ="#0000FF">*    Update PI Log Table</font>
+    SELECT SINGLE MAX( sr_no ) INTO @DATA(lv_srno) FROM zacc_pi_log.
+    lv_srno = lv_srno + 1.
+    zacc_pi_log-sr_no = lv_srno.
+    zacc_pi_log-scenario  = 'AUTOIBD'.
+    zacc_pi_log-werks     = s_werks-low.
+<font color ="#0000FF">*    zacc_pi_log-refdocno  = inventoryno.</font>
+    zacc_pi_log-po_number  = gv_ebeln.
+    CONCATENATE sy-datum+6(2) sy-datum+4(2) sy-datum+0(4) INTO zacc_pi_log-post_date SEPARATED BY '.'.
+    zacc_pi_log-pi_status    = 'E'.
+    zacc_pi_log-sys_time   = sy-uzeit.
+    zacc_pi_log-createdon  = sy-datum.
+    zacc_pi_log-message   = lv_msg.
+    INSERT zacc_pi_log.
+    COMMIT WORK AND WAIT.
+  ENDIF.
+
+ENDFORM.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

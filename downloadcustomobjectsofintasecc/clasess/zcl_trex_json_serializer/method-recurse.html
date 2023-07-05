@@ -1,0 +1,85 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>RECURSE</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: RECURSE</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*   Method attributes.                                                   *</font>
+<font color ="#0000FF">**************************************************************************</font>
+Instantiation: Private
+<font color ="#0000FF">**************************************************************************</font>
+
+method RECURSE.
+  data:
+    l_type  type c ,
+    l_comps type i ,
+    l_lines type i ,
+    l_index type i ,
+    l_value type string .
+  field-symbols:
+    &lt;itab&gt; type any table ,
+    &lt;comp&gt; type any .
+
+  describe field data type l_type components l_comps .
+
+  if l_type = cl_abap_typedescr=&gt;typekind_table .
+<font color ="#0000FF">*   itab -&gt; array</font>
+    append '[' to me-&gt;fragments .
+    assign data to &lt;itab&gt; .
+    l_lines = lines( &lt;itab&gt; ) .
+    loop at &lt;itab&gt; assigning &lt;comp&gt; .
+      add 1 to l_index .
+      recurse( &lt;comp&gt; ) .
+      if l_index &lt; l_lines .
+        append c_comma to me-&gt;fragments .
+      endif .
+    endloop .
+    append ']' to fragments .
+  else .
+    if l_comps is initial .
+<font color ="#0000FF">*     field -&gt; scalar</font>
+<font color ="#0000FF">*     todo: format</font>
+      l_value = data .
+      replace all occurrences of '\' in l_value with '\\' .
+      replace all occurrences of '''' in l_value with '\''' .
+      replace all occurrences of '"' in l_value with '\"' .
+      replace all occurrences of '&' in l_value with '\&' .
+      replace all occurrences of cl_abap_char_utilities=&gt;cr_lf in l_value with '\r\n' .
+      replace all occurrences of cl_abap_char_utilities=&gt;newline in l_value with '\n' .
+      replace all occurrences of cl_abap_char_utilities=&gt;horizontal_tab in l_value with '\t' .
+      replace all occurrences of cl_abap_char_utilities=&gt;backspace in l_value with '\b' .
+      replace all occurrences of cl_abap_char_utilities=&gt;form_feed in l_value with '\f' .
+      concatenate '"' l_value '"' into l_value .
+      append l_value to me-&gt;fragments .
+    else .
+<font color ="#0000FF">*     structure -&gt; object</font>
+      data l_typedescr type ref to cl_abap_structdescr .
+      field-symbols &lt;abapcomp&gt; type abap_compdescr .
+
+      append '{' to me-&gt;fragments .
+      l_typedescr ?= cl_abap_typedescr=&gt;describe_by_data( data ) .
+      loop at l_typedescr-&gt;components assigning &lt;abapcomp&gt; .
+        l_index = sy-tabix .
+        concatenate &lt;abapcomp&gt;-name c_colon into l_value .
+        translate l_value to lower case .
+        append l_value to me-&gt;fragments .
+        assign component &lt;abapcomp&gt;-name of structure data to &lt;comp&gt; .
+        recurse( &lt;comp&gt; ) .
+        if l_index &lt; l_comps .
+          append c_comma to me-&gt;fragments .
+        endif .
+      endloop .
+      append '}' to me-&gt;fragments .
+    endif .
+  endif .
+endmethod.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

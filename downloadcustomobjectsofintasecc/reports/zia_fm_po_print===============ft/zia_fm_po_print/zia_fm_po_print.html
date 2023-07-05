@@ -1,0 +1,499 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZIA_FM_PO_PRINT</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for function: ZIA_FM_PO_PRINT</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  PO Print Function Module</b></font>
+<hr>
+<pre width="100">
+FUNCTION ZIA_FM_PO_PRINT.
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+<font color ="#0000FF">*"*"Local Interface:</font>
+<font color ="#0000FF">*"  IMPORTING</font>
+<font color ="#0000FF">*"     REFERENCE(EBELN) TYPE  EKKO-EBELN</font>
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+
+<font color ="#0000FF">*       <a href ="global-zia_fm_po_print.html">Global data declarations</a></font>
+  INCLUDE RVADTABL.
+<font color ="#0000FF">*INCLUDE ZM06PF01.</font>
+
+  DATA : G_KSCHL TYPE NAST-KSCHL,
+         W_TNAPR TYPE TNAPR.
+
+  DATA: C_FNAME TYPE TDSFNAME,
+        FM_NAME TYPE RS38L_FNAM.
+
+  DATA : G_NAST TYPE NAST.
+
+
+<font color ="#0000FF">* Structure Declarations...............................................</font>
+  TYPES:
+    BEGIN OF TYP_EKPO,
+      SNO   TYPE CHAR50,
+      MATNR TYPE EKPO-MATNR,
+      TXZ01 TYPE EKPO-TXZ01,
+      MENGE TYPE EKPO-MENGE,
+      NETPR TYPE EKPO-NETPR,
+      MEINS TYPE EKPO-MEINS,
+      BRTWR TYPE EKPO-BRTWR,
+      LBLKZ TYPE EKPO-LBLKZ,
+      EMLIF TYPE EKPO-EMLIF,
+    END OF TYP_EKPO.
+
+  DATA: WA_EKKO       TYPE EKKO,
+        WA_PEKKO      TYPE PEKKO,
+        WA_NAST       TYPE NAST,
+        WA_LDOC_XEKPO TYPE EKPO,
+        IT_EKPO       TYPE ZTT_EKPO,
+        WA_EKPO       TYPE ZTYP_EKPO,
+        IT_PEKPO      TYPE STANDARD TABLE OF PEKPO,
+        LV_VAR        TYPE CHAR50,
+        WA_TNAPR      TYPE TNAPR.
+  DATA : RECEPIENT_EMAIL TYPE ADR6-SMTP_ADDR,
+         USER_D          TYPE USR21.
+
+  TYPES: BEGIN OF TYP_EKET,
+           EBELN TYPE EKET-EBELN,
+           EBELP TYPE EKET-EBELP,
+           EINDT TYPE EKET-EINDT,
+         END OF TYP_EKET.
+
+  DATA: IT_EKET TYPE STANDARD TABLE OF TYP_EKET,
+        WA_EKET TYPE TYP_EKET.
+
+
+  DATA: L_DRUVO       TYPE T166K-DRUVO, ""
+        L_NAST        TYPE NAST, ""
+        L_FROM_MEMORY,
+        L_DOC         TYPE MEEIN_PURCHASE_DOC_PRINT.
+
+  "Internal Tables.
+  DATA: LT_OTFDATA        TYPE SSFCRESCL,
+        LT_BINARY_CONTENT TYPE SOLIX_TAB,
+        LT_TEXT           TYPE BCSY_TEXT,
+        LT_PDF_TAB        TYPE STANDARD TABLE OF TLINE,
+        LT_OTF            TYPE STANDARD TABLE OF ITCOO.
+
+  "Object References
+  DATA: LO_BCS         TYPE REF TO CL_BCS,
+        LO_DOC_BCS     TYPE REF TO CL_DOCUMENT_BCS,
+        LO_SENDER      TYPE REF TO IF_SENDER_BCS,
+        LO_RECEP       TYPE REF TO IF_RECIPIENT_BCS,
+        LO_SAPUSER_BCS TYPE REF TO CL_SAPUSER_BCS,
+        LO_CX_BCX      TYPE REF TO CX_BCS.
+
+  "Variables
+  DATA: LV_BIN_FILESIZE TYPE SO_OBJ_LEN,
+        LV_SENT_TO_ALL  TYPE OS_BOOLEAN,
+        LV_BIN_XSTR     TYPE XSTRING,
+        LV_FNAME        TYPE RS38L_FNAM,
+        LV_STRING_TEXT  TYPE STRING.
+
+  "Work Areas
+  DATA: LS_CTRLOP TYPE SSFCTRLOP,
+        LS_OUTOPT TYPE SSFCOMPOP.
+
+  DATA : ENT_RETCO.
+  DATA : ENT_SCREEN.
+
+<font color ="#0000FF">*  SELECT SINGLE KSCHL FROM NAST INTO G_KSCHL</font>
+<font color ="#0000FF">*      WHERE OBJKY = EBELN." AND KSCHL = 'ANEU'.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  IF SY-SUBRC = 0.</font>
+<font color ="#0000FF">*    SELECT SINGLE * INTO W_TNAPR FROM TNAPR</font>
+<font color ="#0000FF">*      WHERE KSCHL = G_KSCHL AND NACHA = '1'.</font>
+<font color ="#0000FF">*    IF SY-SUBRC = 0.</font>
+<font color ="#0000FF">*      C_FNAME = 'ZIA_SF_PO_ACCORDUK_PRINT'.</font>
+<font color ="#0000FF">*    ENDIF.</font>
+<font color ="#0000FF">*  ENDIF.</font>
+  C_FNAME = 'ZIA_SF_PO_ACCORDUK_PRINT'.
+<font color ="#0000FF">***---------------------------------------------Mail PDF Changes ---------------------------------</font>
+
+  WAIT UP TO 2 SECONDS.
+
+  SELECT SINGLE * FROM NAST INTO G_NAST
+    WHERE KAPPL = 'EF' AND OBJKY = EBELN." AND KSCHL = 'ANEU'.
+
+  CLEAR ENT_RETCO.
+
+  IF G_NAST-AENDE EQ SPACE.
+    L_DRUVO = '1'.
+  ELSE.
+    L_DRUVO = '2'.
+  ENDIF.
+
+  CALL FUNCTION 'ME_READ_PO_FOR_PRINTING'
+    EXPORTING
+      IX_NAST        = G_NAST
+      IX_SCREEN      = ENT_SCREEN
+    IMPORTING
+      EX_RETCO       = ENT_RETCO
+      EX_NAST        = L_NAST
+      DOC            = L_DOC
+    CHANGING
+      CX_DRUVO       = L_DRUVO
+      CX_FROM_MEMORY = L_FROM_MEMORY.
+<font color ="#0000FF">*    CHECK ENT_RETCO EQ 0.</font>
+
+  SELECT EBELN
+       EBELP
+       EINDT
+       FROM EKET INTO TABLE IT_EKET FOR ALL ENTRIES IN
+       L_DOC-XEKPO WHERE EBELN = L_DOC-XEKPO-EBELN
+                     AND EBELP = L_DOC-XEKPO-EBELP.
+
+  LOOP AT L_DOC-XEKPO INTO WA_LDOC_XEKPO WHERE LOEKZ &lt;&gt; 'L'.
+    LV_VAR        = LV_VAR + 1.
+    WA_EKPO-SNO   = LV_VAR.
+    WA_EKPO-EBELP = WA_LDOC_XEKPO-EBELP.
+    WA_EKPO-MATNR = WA_LDOC_XEKPO-MATNR.
+    WA_EKPO-TXZ01 = WA_LDOC_XEKPO-TXZ01.
+    WA_EKPO-MENGE = WA_LDOC_XEKPO-MENGE.
+    WA_EKPO-NETPR = WA_LDOC_XEKPO-NETPR.
+    WA_EKPO-MEINS = WA_LDOC_XEKPO-MEINS.
+    WA_EKPO-BRTWR = WA_LDOC_XEKPO-BRTWR.
+    WA_EKPO-LBLKZ = WA_LDOC_XEKPO-LBLKZ.
+    WA_EKPO-EMLIF = WA_LDOC_XEKPO-EMLIF.
+    WA_EKPO-PEINH = WA_LDOC_XEKPO-PEINH.
+    WA_EKPO-MWSKZ = WA_LDOC_XEKPO-MWSKZ.
+    WA_EKPO-LOEKZ = WA_LDOC_XEKPO-LOEKZ.
+
+    READ TABLE IT_EKET INTO WA_EKET WITH KEY EBELN = WA_LDOC_XEKPO-EBELN
+                                             EBELP = WA_LDOC_XEKPO-EBELP.
+
+
+    WA_EKPO-EINDT = WA_EKET-EINDT.
+    APPEND WA_EKPO TO IT_EKPO.
+  ENDLOOP.
+  APPEND LINES OF L_DOC-XPEKPO TO IT_PEKPO.
+
+
+  WA_EKKO  = L_DOC-XEKKO.
+  WA_PEKKO = L_DOC-XPEKKO.
+  WA_NAST  = L_NAST.
+
+  IF WA_EKKO-ERNAM IS NOT INITIAL.
+    SELECT SINGLE * INTO USER_D FROM USR21
+      WHERE BNAME =  WA_EKKO-ERNAM.
+    IF SY-SUBRC = 0.
+      SELECT SINGLE SMTP_ADDR INTO RECEPIENT_EMAIL
+        FROM ADR6 WHERE ADDRNUMBER = USER_D-ADDRNUMBER
+          AND PERSNUMBER = USER_D-PERSNUMBER.
+    ENDIF.
+  ENDIF.
+
+<font color ="#0000FF">*To get Function Module Name based on Smartform Name..................</font>
+  CALL FUNCTION 'SSF_FUNCTION_MODULE_NAME'
+    EXPORTING
+      FORMNAME           = C_FNAME
+    IMPORTING
+      FM_NAME            = FM_NAME
+    EXCEPTIONS
+      NO_FORM            = 1
+      NO_FUNCTION_MODULE = 2
+      OTHERS             = 3.
+
+
+  "Control Parameters
+  LS_CTRLOP-GETOTF    = 'X'.
+  LS_CTRLOP-NO_DIALOG = 'X'.
+  LS_CTRLOP-PREVIEW   = SPACE.
+
+  "Output Options
+  LS_OUTOPT-TDNOPREV  = 'X'.
+  LS_OUTOPT-TDDEST    = 'LP01'.
+  LS_OUTOPT-TDNOPRINT = 'X'.
+
+  CALL FUNCTION FM_NAME
+    EXPORTING
+      WA_EKKO            = WA_EKKO
+      WA_PEKKO           = WA_PEKKO
+      WA_NAST            = WA_NAST
+      IT_EKPO            = IT_EKPO
+      CONTROL_PARAMETERS = LS_CTRLOP
+      OUTPUT_OPTIONS     = LS_OUTOPT
+    IMPORTING
+      JOB_OUTPUT_INFO    = LT_OTFDATA
+    TABLES
+<font color ="#0000FF">*     IT_EKPO            = IT_EKPO</font>
+      IT_PEKPO           = IT_PEKPO.
+
+  LT_OTF[] = LT_OTFDATA-OTFDATA[].
+
+  CALL FUNCTION 'CONVERT_OTF'
+    EXPORTING
+      FORMAT                = 'PDF'
+    IMPORTING
+      BIN_FILESIZE          = LV_BIN_FILESIZE
+      BIN_FILE              = LV_BIN_XSTR
+    TABLES
+      OTF                   = LT_OTF[]
+      LINES                 = LT_PDF_TAB[]
+    EXCEPTIONS
+      ERR_MAX_LINEWIDTH     = 1
+      ERR_FORMAT            = 2
+      ERR_CONV_NOT_POSSIBLE = 3
+      OTHERS                = 4.
+  IF SY-SUBRC &lt;&gt; 0.
+    MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+            WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+  ENDIF.
+<font color ="#0000FF">*    **Xstring to binary</font>
+  CALL FUNCTION 'SCMS_XSTRING_TO_BINARY'
+    EXPORTING
+      BUFFER     = LV_BIN_XSTR
+    TABLES
+      BINARY_TAB = LT_BINARY_CONTENT.
+
+  TRY.
+<font color ="#0000FF">*     -------- create persistent send request --------</font>
+      LO_BCS = CL_BCS=&gt;CREATE_PERSISTENT( ).
+      "First line
+<font color ="#0000FF">*        CONCATENATE 'Dear User' CL_ABAP_CHAR_UTILITIES=&gt;NEWLINE</font>
+<font color ="#0000FF">*        INTO LV_STRING_TEXT.</font>
+<font color ="#0000FF">*        APPEND LV_STRING_TEXT TO LT_TEXT.</font>
+<font color ="#0000FF">*        CLEAR LV_STRING_TEXT.</font>
+      "Second line
+      CONCATENATE 'Please find attached Purchase order' EBELN 'Pdf File.'
+       CL_ABAP_CHAR_UTILITIES=&gt;NEWLINE INTO LV_STRING_TEXT SEPARATED BY SPACE.
+      APPEND LV_STRING_TEXT TO LT_TEXT.
+      CLEAR LV_STRING_TEXT.
+      DATA: LV_SUBJECT TYPE SO_OBJ_DES.
+      CONCATENATE 'PO Number' WA_EKKO-EBELN INTO LV_SUBJECT SEPARATED BY SPACE.
+      LO_DOC_BCS = CL_DOCUMENT_BCS=&gt;CREATE_DOCUMENT(
+                I_TYPE    = 'HTM'
+                I_TEXT    = LT_TEXT[]
+                I_LENGTH  = '12'
+                I_SUBJECT = LV_SUBJECT ).
+<font color ="#0000FF">*--------------------------------------------------------------</font>
+<font color ="#0000FF">*        -----------------&   Add attachment to document     *-</font>
+<font color ="#0000FF">*        ------------------------------------------------------</font>
+<font color ="#0000FF">*             BCS expects document content here e.g. from document up</font>
+<font color ="#0000FF">*             binary_content = ...</font>
+      CALL METHOD LO_DOC_BCS-&gt;ADD_ATTACHMENT
+        EXPORTING
+          I_ATTACHMENT_TYPE    = 'PDF'
+          I_ATTACHMENT_SIZE    = LV_BIN_FILESIZE
+          I_ATTACHMENT_SUBJECT = LV_SUBJECT
+          I_ATT_CONTENT_HEX    = LT_BINARY_CONTENT.
+
+<font color ="#0000FF">*            lo_sapuser_bcs = cl_sapuser_bcs=&gt;create( sy-uname ).</font>
+
+      LO_SENDER = CL_CAM_ADDRESS_BCS=&gt;CREATE_INTERNET_ADDRESS(
+                                  'do-not-reply@intaspharma.com' ).
+
+      CALL METHOD LO_BCS-&gt;SET_SENDER
+        EXPORTING
+          I_SENDER = LO_SENDER.
+
+      " set sendor email id.
+
+
+
+<font color ="#0000FF">*             add document to send request</font>
+      CALL METHOD LO_BCS-&gt;SET_DOCUMENT( LO_DOC_BCS ).
+
+      LO_RECEP = CL_CAM_ADDRESS_BCS=&gt;CREATE_INTERNET_ADDRESS(
+                                   RECEPIENT_EMAIL ).
+
+      "Add recipient with its respective attributes to send request
+      CALL METHOD LO_BCS-&gt;ADD_RECIPIENT
+        EXPORTING
+          I_RECIPIENT = LO_RECEP
+          I_EXPRESS   = 'X'.
+
+      CALL METHOD LO_BCS-&gt;SET_SEND_IMMEDIATELY
+        EXPORTING
+          I_SEND_IMMEDIATELY = 'X'.
+
+<font color ="#0000FF">*--------------------------------------------------------------------</font>
+<font color ="#0000FF">*            -----------------&   Send the email    *----------------</font>
+<font color ="#0000FF">*            --------------------------------------------------------</font>
+      CALL METHOD LO_BCS-&gt;SEND(
+        EXPORTING
+          I_WITH_ERROR_SCREEN = 'X'
+        RECEIVING
+          RESULT              = LV_SENT_TO_ALL ).
+
+      IF LV_SENT_TO_ALL IS NOT INITIAL.
+        COMMIT WORK.
+      ENDIF.
+
+
+<font color ="#0000FF">*            ----------------------------------------------------------</font>
+<font color ="#0000FF">*            -----------------&   Exception Handling     *-------------</font>
+<font color ="#0000FF">*            ----------------------------------------------------------</font>
+    CATCH CX_BCS INTO LO_CX_BCX.
+      "Appropriate Exception Handling
+      WRITE: 'Exception:', LO_CX_BCX-&gt;ERROR_TYPE.
+  ENDTRY.
+<font color ="#0000FF">***---------------------------------------------Mail PDF Changes ---------------------------------</font>
+
+ENDFUNCTION.
+
+
+<font color ="#0000FF">*Messages</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: ALE_MSGID</font>
+<font color ="#0000FF">*ALE</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: AM</font>
+<font color ="#0000FF">*287   Address cannot be maintained; entry in table TSADRV missing</font>
+<font color ="#0000FF">*290   Entry missing in TSADRV; new address maintenance cannot be called</font>
+<font color ="#0000FF">*291   Entry missing in TSADRV; new address maintenance cannot be called</font>
+<font color ="#0000FF">*298   Address group & not defined; delete flag for address not possible</font>
+<font color ="#0000FF">*I_M</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: EC</font>
+<font color ="#0000FF">*089   Internal error: Unable to read screen data</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: PM_ID</font>
+<font color ="#0000FF">*PM_</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: SCPR</font>
+<font color ="#0000FF">*026   Table & is too wide. It cannot be processed</font>
+<font color ="#0000FF">*028   The table/view & has no generated maintenance dialog</font>
+<font color ="#0000FF">*035   Dictionary interface error: Contact SAP</font>
+<font color ="#0000FF">*120   Table/view & not found</font>
+<font color ="#0000FF">*273   Function module call error</font>
+<font color ="#0000FF">*320   BC Set processing error</font>
+<font color ="#0000FF">*395   Internal field description read error</font>
+<font color ="#0000FF">*399   No data record activation information</font>
+<font color ="#0000FF">*408   Table key not supported by activation links</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: SV</font>
+<font color ="#0000FF">*001   The selected function is not supported</font>
+<font color ="#0000FF">*002   Number of retrieved entries: &</font>
+<font color ="#0000FF">*004   No entries found that match selection criteria</font>
+<font color ="#0000FF">*005   One entry chosen</font>
+<font color ="#0000FF">*006   Number of chosen entries: &</font>
+<font color ="#0000FF">*007   No previous entry exists</font>
+<font color ="#0000FF">*008   No next entry exists</font>
+<font color ="#0000FF">*009   An entry already exists with the same key</font>
+<font color ="#0000FF">*010   An entry with this key is marked for deletion</font>
+<font color ="#0000FF">*011   Number of deleted entries: &</font>
+<font color ="#0000FF">*012   Number of changed entries: &</font>
+<font color ="#0000FF">*013   Entry deleted</font>
+<font color ="#0000FF">*014   Number of entries copied: &</font>
+<font color ="#0000FF">*015   Target key must be different from source key</font>
+<font color ="#0000FF">*016   Number of reset entries: &</font>
+<font color ="#0000FF">*017   Entry reset</font>
+<font color ="#0000FF">*018   Data was saved</font>
+<font color ="#0000FF">*019   Choose the key from the allowed namespace</font>
+<font color ="#0000FF">*024   Specify target entries</font>
+<font color ="#0000FF">*025   Specify target entries</font>
+<font color ="#0000FF">*026   Select entries before performing the function</font>
+<font color ="#0000FF">*028   Table & not in DDIC</font>
+<font color ="#0000FF">*032   Position the cursor on a valid entry</font>
+<font color ="#0000FF">*033   Specify the key within the work area</font>
+<font color ="#0000FF">*037   The maintenance dialog for & is incomplete or not defined</font>
+<font color ="#0000FF">*039   Table & has no relevant fields</font>
+<font color ="#0000FF">*040   & entries reset, & original and & new entries are still marked</font>
+<font color ="#0000FF">*041   & entries reset, & original entries are still marked</font>
+<font color ="#0000FF">*042   & entries reset, & new entries are still marked</font>
+<font color ="#0000FF">*043   Data already saved</font>
+<font color ="#0000FF">*044   Read access only</font>
+<font color ="#0000FF">*045   Enter a start date that is before the end date</font>
+<font color ="#0000FF">*046   Enter an end date that is after the start date</font>
+<font color ="#0000FF">*047   Overlapping records are deleted or delimited</font>
+<font color ="#0000FF">*049   Data locked by user & (display only)</font>
+<font color ="#0000FF">*050   System error: Unable to lock table/view &</font>
+<font color ="#0000FF">*051   No data maintenance authorization; display only</font>
+<font color ="#0000FF">*053   No display authorization for requested data</font>
+<font color ="#0000FF">*054   Maintenance of data in current client & not permitted</font>
+<font color ="#0000FF">*055   Address for object & not found</font>
+<font color ="#0000FF">*056   Mark at least one entry before selecting this function</font>
+<font color ="#0000FF">*057   The selected entry is new and has no original</font>
+<font color ="#0000FF">*058   The selected entries are new and have no original</font>
+<font color ="#0000FF">*059   The selected entry is still in its original state</font>
+<font color ="#0000FF">*060   The selected entries are still in their original state</font>
+<font color ="#0000FF">*061   & entries are still originals, & new entries have no original</font>
+<font color ="#0000FF">*065   No entries exist, double-click for long text</font>
+<font color ="#0000FF">*066   Select block end</font>
+<font color ="#0000FF">*084   No values can be displayed</font>
+<font color ="#0000FF">*092   Change task & is being processed</font>
+<font color ="#0000FF">*095   System error changing change task &</font>
+<font color ="#0000FF">*096   Task & was changed</font>
+<font color ="#0000FF">*098   Entry flagged for inclusion in task &</font>
+<font color ="#0000FF">*099   Entry was flagged for deletion from task &</font>
+<font color ="#0000FF">*105   & entries were flagged for inclusion in task &</font>
+<font color ="#0000FF">*106   & entries were flagged for deletion from task &</font>
+<font color ="#0000FF">*107   Entry was already in task &</font>
+<font color ="#0000FF">*108   & entries were already in task &</font>
+<font color ="#0000FF">*109   & entries included, & entries were contained: &</font>
+<font color ="#0000FF">*110   Entry was not in task &</font>
+<font color ="#0000FF">*111   & entries deleted, & entries were not included: &</font>
+<font color ="#0000FF">*112   & entries were not in task &</font>
+<font color ="#0000FF">*113   Entry could not be retrieved</font>
+<font color ="#0000FF">*114   & entries could not be retrieved</font>
+<font color ="#0000FF">*115   Entry could not be deleted</font>
+<font color ="#0000FF">*116   & entries could not be deleted</font>
+<font color ="#0000FF">*117   Do not make any changes (SAP entry)</font>
+<font color ="#0000FF">*120   Other entries are retrieved and modified if necessary</font>
+<font color ="#0000FF">*121   Deleted entry will be recovered and possibly changed</font>
+<font color ="#0000FF">*122   Entry was delimited</font>
+<font color ="#0000FF">*123   Number of delimited entries: &</font>
+<font color ="#0000FF">*124   Process delimited entries</font>
+<font color ="#0000FF">*125   Process delimited entry</font>
+<font color ="#0000FF">*127   Delimit area of validity</font>
+<font color ="#0000FF">*128   Delivery class &, transport not possible</font>
+<font color ="#0000FF">*129   Related objects in various tasks</font>
+<font color ="#0000FF">*130   Client & is local, transport not permitted</font>
+<font color ="#0000FF">*132   Object locked for task &1, user &2 only display permitted</font>
+<font color ="#0000FF">*134   Inconsistency in object definition, only display permitted</font>
+<font color ="#0000FF">*136   Change with caution, entry belongs to customer</font>
+<font color ="#0000FF">*138   Check maintenance object &1 or update function group &2</font>
+<font color ="#0000FF">*139   Address data not applied</font>
+<font color ="#0000FF">*140   &1 entries deleted; &2 entries added</font>
+<font color ="#0000FF">*141   Individual entries not added to the change request</font>
+<font color ="#0000FF">*142   Transport is not possible for the specified data</font>
+<font color ="#0000FF">*153   No language was chosen</font>
+<font color ="#0000FF">*160   The installed system code page does not allow any other languages</font>
+<font color ="#0000FF">*161   Put the cursor on a form name</font>
+<font color ="#0000FF">*162   The object &1 &2 &3 cannot be put in a request</font>
+<font color ="#0000FF">*164   Table/view &1 is not in the Dictionary</font>
+<font color ="#0000FF">*173   Function group &1 inconsistent</font>
+<font color ="#0000FF">*174   Enter values in work area for non-key fields</font>
+<font color ="#0000FF">*175   The selected BC Set function is not supported</font>
+<font color ="#0000FF">*177   Data record contains fix value from BC Set and cannot be deleted</font>
+<font color ="#0000FF">*183   Error in remote access to central Customizing Distribution system</font>
+<font color ="#0000FF">*184   Data record contains fixed value from BC Set and cannot be changed</font>
+<font color ="#0000FF">*202   You are not authorized to change fields with fixed BC Set values</font>
+<font color ="#0000FF">*306   Table/view & is not active</font>
+<font color ="#0000FF">*413   & selected entries cannot be deleted</font>
+<font color ="#0000FF">*538   Dropdown lists are not supported in view clusters</font>
+<font color ="#0000FF">*757   You have no maintenance authorization for this table key</font>
+<font color ="#0000FF">*763   You have no maintenance authorization for the displayed data records</font>
+<font color ="#0000FF">*764   Changed data record selection</font>
+<font color ="#0000FF">*766   Restricted display of datasets</font>
+<font color ="#0000FF">*808   Not all columns in the table can be displayed in the list</font>
+<font color ="#0000FF">*810   View &1 is more than 1000 characters long</font>
+<font color ="#0000FF">*818   &1 of &2 Business Configuration Set entries imported</font>
+<font color ="#0000FF">*819   Business Configuration Set imported</font>
+<font color ="#0000FF">*830   Last selected entry has been reached</font>
+<font color ="#0000FF">*831   First selected entry has been reached</font>
+<font color ="#0000FF">*863   Number of copied entries (including translations): &</font>
+<font color ="#0000FF">*MSG</font>
+<font color ="#0000FF">*P_M</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: TB</font>
+<font color ="#0000FF">*109   No maintenance authorization for cross-client tables (see Help)</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: TK</font>
+<font color ="#0000FF">*430   Client &1 has status 'not modifiable'</font>
+<font color ="#0000FF">*729   Changes to repository objects are not permitted in this client</font>
+<font color ="#0000FF">*730   Changes to repository or cross-client customizing are not permitted</font>
+<font color ="#0000FF">*731   Cross-client customizing cannot be modified</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: VIM_AUTH_MSGID</font>
+<font color ="#0000FF">*VIM</font>
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

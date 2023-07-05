@@ -1,0 +1,107 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>M_2LIS_03_BF</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: M_2LIS_03_BF</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Business Add-Ins Method for General Data Transfer</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*   Method attributes.                                                   *</font>
+<font color ="#0000FF">**************************************************************************</font>
+Instantiation: Private
+<font color ="#0000FF">**************************************************************************</font>
+
+  METHOD m_2lis_03_bf.
+
+<font color ="#0000FF">*  declaring a field symbol with type of extract structure</font>
+    FIELD-SYMBOLS: &lt;l_s_data&gt;      TYPE mc03bf0,
+                   &lt;l_s_data_n&gt;    TYPE mc03bf0,
+                   &lt;l_s_data_temp&gt; TYPE mc03bf0..
+
+
+<font color ="#0000FF">*   Declare an internal table and work area with above type</font>
+    DATA: l_t_data      TYPE STANDARD TABLE OF mc03bf0,
+          l_t_data_temp TYPE STANDARD TABLE OF mc03bf0.
+
+    DATA: lv_prd_date TYPE sy-datum.
+
+
+<font color ="#0000FF">*   move the entire content into another internal table</font>
+    l_t_data[] = c_t_data[].
+
+
+
+    LOOP AT l_t_data ASSIGNING &lt;l_s_data&gt;.
+
+      &lt;l_s_data&gt;-zzcalmonat = &lt;l_s_data&gt;-budat+4(2).
+
+<font color ="#0000FF">*      IF &lt;l_s_data&gt;-shkzg = 'H'.   "12.06.2023</font>
+<font color ="#0000FF">*        &lt;l_s_data&gt;-zzcumamt1 = &lt;l_s_data&gt;-dmbtr * ( -1 ).</font>
+<font color ="#0000FF">*        &lt;l_s_data&gt;-zzcumqua1 = &lt;l_s_data&gt;-menge * ( -1 ).</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      ELSE.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*        &lt;l_s_data&gt;-zzcumamt1 = &lt;l_s_data&gt;-dmbtr.</font>
+<font color ="#0000FF">*        &lt;l_s_data&gt;-zzcumqua1 = &lt;l_s_data&gt;-menge.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      ENDIF.   "12.06.2023</font>
+
+
+    ENDLOOP.
+<font color ="#0000FF">*</font>
+    c_t_data[] = l_t_data[].              "12.06.2023
+    REFRESH: l_t_data.
+
+
+<font color ="#0000FF">*    l_t_data_temp[] = l_t_data[].    "12.06.2023</font>
+<font color ="#0000FF">*    SORT l_t_data_temp BY budat.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    LOOP AT l_t_data ASSIGNING &lt;l_s_data_n&gt;.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      CALL FUNCTION 'SN_LAST_DAY_OF_MONTH'</font>
+<font color ="#0000FF">*        EXPORTING</font>
+<font color ="#0000FF">*          day_in       = &lt;l_s_data_n&gt;-budat</font>
+<font color ="#0000FF">*        IMPORTING</font>
+<font color ="#0000FF">*          end_of_month = lv_prd_date.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      LOOP AT l_t_data_temp INTO DATA(wa_data_temp) WHERE werks = &lt;l_s_data_n&gt;-werks  AND</font>
+<font color ="#0000FF">*                                                          prctr = &lt;l_s_data_n&gt;-prctr  AND</font>
+<font color ="#0000FF">*                                                          matnr = &lt;l_s_data_n&gt;-matnr AND</font>
+<font color ="#0000FF">*                                                          charg = &lt;l_s_data_n&gt;-charg AND</font>
+<font color ="#0000FF">*                                                          lgort = &lt;l_s_data_n&gt;-lgort AND</font>
+<font color ="#0000FF">*                                                          bukrs = &lt;l_s_data_n&gt;-bukrs AND</font>
+<font color ="#0000FF">*                                                          budat LE lv_prd_date ."&lt;l_s_data_n&gt;-budat.</font>
+<font color ="#0000FF">**                                                          mjahr LT &lt;l_s_data_n&gt;-mjahr AND</font>
+<font color ="#0000FF">**                                                          zzcalmonat LT &lt;l_s_data_n&gt;-zzcalmonat.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*        &lt;l_s_data_n&gt;-zzcumamt = &lt;l_s_data_n&gt;-zzcumamt + wa_data_temp-zzcumamt1.         "wa_data_temp-dmbtr.</font>
+<font color ="#0000FF">*        &lt;l_s_data_n&gt;-zzcumqua = &lt;l_s_data_n&gt;-zzcumqua + wa_data_temp-zzcumqua1.         "wa_data_temp-menge.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*        CLEAR wa_data_temp.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      ENDLOOP.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      CLEAR lv_prd_date.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    ENDLOOP.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    c_t_data[] = l_t_data[].</font>
+<font color ="#0000FF">*    REFRESH: l_t_data.             "12.06.2023</font>
+
+
+
+
+
+
+  ENDMETHOD.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>M_0FI_AP_4</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: M_0FI_AP_4</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Business Add-Ins Method for General Data Transfer</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*   Method attributes.                                                   *</font>
+<font color ="#0000FF">**************************************************************************</font>
+Instantiation: Private
+<font color ="#0000FF">**************************************************************************</font>
+
+METHOD m_0fi_ap_4.
+
+<font color ="#0000FF">*  declaring a field symbol with type of extract structure of 0FI_AP_4</font>
+  FIELD-SYMBOLS: &lt;l_s_data&gt; TYPE dtfiap_3.
+  DATA:  l_t_data TYPE STANDARD TABLE OF dtfiap_3.
+
+<font color ="#0000FF">*    * move the entire content into another internal table</font>
+  l_t_data[] = c_t_data[].
+  IF NOT l_t_data IS INITIAL.
+
+    SELECT lifnr, name1, name2
+    FROM lfa1 INTO TABLE @DATA(lt_lfa1)
+    FOR ALL ENTRIES IN @l_t_data
+    WHERE lifnr = @l_t_data-lifnr.
+
+    SORT lt_lfa1 BY lifnr.
+
+    LOOP AT l_t_data ASSIGNING &lt;l_s_data&gt;.
+
+      READ TABLE lt_lfa1 INTO DATA(lw_lfa1) WITH KEY lifnr = &lt;l_s_data&gt;-lifnr BINARY SEARCH.
+      IF sy-subrc EQ 0.
+        &lt;l_s_data&gt;-zzlifnr_name1 = lw_lfa1-name1.
+        &lt;l_s_data&gt;-zzlifnr_name2 = lw_lfa1-name2.
+      ENDIF.
+
+    ENDLOOP.
+  ENDIF.
+
+
+  c_t_data[] = l_t_data[].
+  REFRESH: l_t_data.
+
+
+ENDMETHOD.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>CHECK_SUPERTYPES</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: CHECK_SUPERTYPES</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Get Super Type for Object</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*   Method attributes.                                                   *</font>
+<font color ="#0000FF">**************************************************************************</font>
+Instantiation: Protected
+<font color ="#0000FF">**************************************************************************</font>
+
+METHOD CHECK_SUPERTYPES .
+<font color ="#0000FF">* ...</font>
+
+  DATA: lp_objtype TYPE swo_objtyp.
+  data: ls_supertype type swotip.
+
+  IF gs_lporb-catid = 'BO' and gt_supertype IS INITIAL.
+<font color ="#0000FF">*- for archiv we must check all supertypes of the actual object</font>
+    lp_objtype = gs_lporb-typeid.
+    CALL FUNCTION 'SWO_QUERY_SUPERTYPES'
+         EXPORTING
+              objtype           = lp_objtype
+         TABLES
+              supertypes        = gt_supertype
+         EXCEPTIONS
+              OTHERS            = 0.
+    CLEAR ls_supertype.
+    ls_supertype-parent = lp_objtype.
+    APPEND ls_supertype TO gt_supertype.
+  ENDIF.
+
+ENDMETHOD.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

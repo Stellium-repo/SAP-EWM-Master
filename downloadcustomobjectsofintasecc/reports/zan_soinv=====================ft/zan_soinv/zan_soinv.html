@@ -1,0 +1,579 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZAN_SOINV</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for function: ZAN_SOINV</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Sales Order - Invoice Process</b></font>
+<hr>
+<pre width="100">
+FUNCTION ZAN_SOINV.
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+<font color ="#0000FF">*"*"Local Interface:</font>
+<font color ="#0000FF">*"  TABLES</font>
+<font color ="#0000FF">*"      I_ORDER TYPE  ZAN_T_SODET</font>
+<font color ="#0000FF">*"      I_COND TYPE  ZAN_T_SOCOND</font>
+<font color ="#0000FF">*"      MESSAGE TYPE  ZERROR_T_MSG</font>
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+
+<font color ="#0000FF">*       <a href ="global-zan_soinv.html">Global data declarations</a></font>
+  TABLES : ZACC_PI_LOG,ZAN_SOINV_H,ZAN_SOINV_D,ZAN_SOINV_COND."ZACC_CS_MAPPING.
+
+  DATA : RECEXIST(1),
+         ERROR(1).
+  DATA : WA_ORDER TYPE ZAN_S_SODET,
+         WA_COND TYPE ZAN_S_SOCOND,
+         LT_KNVI TYPE STANDARD TABLE OF KNVI,
+         LS_KNVI TYPE KNVI.
+
+  DATA : V_CONDCOUNT TYPE ZAN_SOINV_COND-COND_COUNT.
+  DATA : LV_KUNNR LIKE KNA1-KUNNR,
+         LV_SRNO(7) TYPE N.
+  DATA : DD(2)       TYPE C,
+         MM(2)       TYPE C,
+         YY(4)       TYPE C,
+         LV_DATE(10) TYPE C,
+         LV_SD_NUM(20) TYPE C.
+  DATA : SD_NUMBER TYPE ZAN_SOINV_H-SD_NUMBER.
+  DATA : LV_MES(200) TYPE C,
+         LV_LOG(100) TYPE C.
+
+  DATA : FLG_R TYPE I,
+       MULTIPLECOND(1),
+       CHECKMULTIPLE(2) TYPE N.
+  DATA : BEGIN OF I_CHECKCOND OCCURS 0,
+          SD_NUMBER   LIKE ZSD_SOINV_IT10_D-SD_NUMBER,
+          ITM_NUMBER  LIKE ZSD_SOINV_IT10_D-ITM_NUMBER,
+          COND_TYP    LIKE ZSD_SOCOND_IT10-COND_TYP,
+         END OF I_CHECKCOND.
+
+  CLEAR:I_ORDER.
+  DATA:V_PENDING TYPE C.
+  DATA:LS_MAP TYPE ZACC_CS_MAPPING,
+       LT_MAP TYPE TABLE OF ZACC_CS_MAPPING.
+
+  LOOP AT I_ORDER INTO WA_ORDER.
+
+    CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'
+      EXPORTING
+        INPUT  = WA_ORDER-SOLD_TO_PARTY
+      IMPORTING
+        OUTPUT = WA_ORDER-SOLD_TO_PARTY.
+
+    SELECT SINGLE KUNNR INTO LV_KUNNR FROM KNA1
+      WHERE KUNNR = WA_ORDER-SOLD_TO_PARTY.
+
+    IF SY-SUBRC NE 0.
+      ERROR = 'X'.
+      LV_LOG = 'No Customer master record exist for sold-to-party'.
+      CONCATENATE LV_LOG WA_ORDER-SOLD_TO_PARTY INTO LV_MES SEPARATED BY '-'.
+
+      MESSAGE-MESSAGE = LV_MES.
+      MESSAGE-STATUS  = 'WRONG'.
+      APPEND MESSAGE.
+
+      SELECT SINGLE MAX( SR_NO ) INTO LV_SRNO FROM ZACC_PI_LOG.
+
+      LV_SRNO = LV_SRNO + 1.
+
+      ZACC_PI_LOG-SR_NO = LV_SRNO.
+      ZACC_PI_LOG-SCENARIO = 'PNSSOINV'.
+      ZACC_PI_LOG-REFDOCNO = WA_ORDER-SD_NUMBER.
+      ZACC_PI_LOG-MESSAGE = LV_MES.
+
+      INSERT ZACC_PI_LOG.
+      COMMIT WORK.
+      EXIT.
+    ENDIF.
+
+    CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'
+      EXPORTING
+        INPUT  = WA_ORDER-SHIP_TO_PARTY
+      IMPORTING
+        OUTPUT = WA_ORDER-SHIP_TO_PARTY.
+
+    SELECT SINGLE KUNNR INTO LV_KUNNR FROM KNA1
+      WHERE KUNNR = WA_ORDER-SHIP_TO_PARTY.
+    IF SY-SUBRC NE 0.
+      ERROR = 'X'.
+      REFRESH : MESSAGE.
+      CLEAR : LV_LOG,
+              LV_MES.
+      LV_LOG = 'No Customer master record exist for ship-to-party'.
+      CONCATENATE LV_LOG WA_ORDER-SHIP_TO_PARTY INTO LV_MES SEPARATED BY '-'.
+
+      MESSAGE-MESSAGE = LV_MES.
+      MESSAGE-STATUS  = 'WRONG'.
+      APPEND MESSAGE.
+
+      SELECT SINGLE MAX( SR_NO ) INTO LV_SRNO FROM ZACC_PI_LOG.
+
+      LV_SRNO = LV_SRNO + 1.
+
+      ZACC_PI_LOG-SR_NO = LV_SRNO.
+      ZACC_PI_LOG-SCENARIO = 'PNSSOINV'.
+      ZACC_PI_LOG-REFDOCNO = WA_ORDER-SD_NUMBER.
+      ZACC_PI_LOG-MESSAGE = LV_MES.
+
+      INSERT ZACC_PI_LOG.
+      COMMIT WORK.
+      EXIT.
+    ENDIF.
+
+    IF WA_ORDER-SD_NUMBER IS INITIAL.
+      WA_ORDER-SD_NUMBER = WA_ORDER-SO_NUMBER.
+      MODIFY I_ORDER FROM WA_ORDER TRANSPORTING SD_NUMBER.
+    ENDIF.
+
+    SELECT SINGLE * FROM ZAN_SOINV_H
+      WHERE SD_NUMBER = WA_ORDER-SD_NUMBER.
+    IF SY-SUBRC EQ 0.
+      RECEXIST = 'X'.
+      CONCATENATE 'Record with SD number' WA_ORDER-SD_NUMBER 'already exists' into MESSAGE-MESSAGE.
+      MESSAGE-STATUS  = 'EXIST'.
+      MESSAGE-INV_NO  = ''.
+      APPEND MESSAGE.
+      EXIT.
+    ENDIF.
+  ENDLOOP.
+
+<font color ="#0000FF">***********************Begin of Validation Ankita - 06/07/2017</font>
+<font color ="#0000FF">*  SELECT * FROM KNVI INTO TABLE LT_KNVI</font>
+<font color ="#0000FF">*    FOR ALL ENTRIES IN I_ORDER</font>
+<font color ="#0000FF">*    WHERE KUNNR = I_ORDER-SHIP_TO_PARTY</font>
+<font color ="#0000FF">*    AND  ALAND = 'IT'</font>
+<font color ="#0000FF">*    AND  TAXKD = '2'</font>
+<font color ="#0000FF">*    AND  TATYP IN ('MWST', 'LCIT').</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  LOOP AT I_COND INTO WA_COND .</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    READ TABLE LT_KNVI INTO LS_KNVI WITH KEY TATYP = WA_COND-COND_TYP.</font>
+<font color ="#0000FF">*    IF SY-SUBRC &lt;&gt; 0.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      CLEAR : LV_LOG,</font>
+<font color ="#0000FF">*              LV_MES.</font>
+<font color ="#0000FF">*      LV_LOG = 'Tax records do not match with PNS customer master and SAP master'.</font>
+<font color ="#0000FF">*      CONCATENATE LV_LOG LS_KNVI-KUNNR INTO LV_MES SEPARATED BY '-'.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      MESSAGE-MESSAGE = LV_MES.</font>
+<font color ="#0000FF">*      MESSAGE-STATUS  = 'WRONG'.</font>
+<font color ="#0000FF">*      APPEND MESSAGE.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      SELECT SINGLE MAX( SR_NO ) INTO LV_SRNO FROM ZACC_PI_LOG.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      LV_SRNO = LV_SRNO + 1.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      ZACC_PI_LOG-SR_NO = LV_SRNO.</font>
+<font color ="#0000FF">*      ZACC_PI_LOG-SCENARIO = 'PNSSOINV'.</font>
+<font color ="#0000FF">*      ZACC_PI_LOG-REFDOCNO = WA_ORDER-SD_NUMBER.</font>
+<font color ="#0000FF">*      ZACC_PI_LOG-MESSAGE = LV_MES.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      INSERT ZACC_PI_LOG.</font>
+<font color ="#0000FF">*      COMMIT WORK.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    ENDIF.</font>
+<font color ="#0000FF">*    CLEAR : LS_KNVI, WA_COND.</font>
+<font color ="#0000FF">*  ENDLOOP.</font>
+<font color ="#0000FF">**********************End of Validation Ankita - 06/07/2017</font>
+
+
+  IF RECEXIST &lt;&gt; 'X' AND ERROR &lt;&gt; 'X'.
+
+    LOOP AT I_ORDER INTO WA_ORDER .
+
+<font color ="#0000FF">*      IF WA_ORDER-ITM_NUMBER = 10.</font>
+      IF SY-TABIX = '1'.
+
+        ZAN_SOINV_H-SD_NUMBER = WA_ORDER-SD_NUMBER.
+        ZAN_SOINV_H-SHIP_TO_PARTY = WA_ORDER-SHIP_TO_PARTY.
+        ZAN_SOINV_H-SOLD_TO_PARTY = WA_ORDER-SOLD_TO_PARTY.
+        ZAN_SOINV_H-SALES_ORG = WA_ORDER-SALES_ORG.
+        ZAN_SOINV_H-DISTR_CHANNEL = WA_ORDER-DISTR_CHANNEL.
+        ZAN_SOINV_H-DIVISION = WA_ORDER-DIVISION.
+        ZAN_SOINV_H-CUST_PURCH_NO = WA_ORDER-CUST_PURCH_NO.
+
+        CONCATENATE WA_ORDER-BILLING_DATE+6(4) WA_ORDER-BILLING_DATE+3(2)
+         WA_ORDER-BILLING_DATE+0(2) INTO ZAN_SOINV_H-BILLING_DATE.
+
+        CONCATENATE WA_ORDER-PURCH_DATE+6(4) WA_ORDER-PURCH_DATE+3(2)
+         WA_ORDER-PURCH_DATE+0(2) INTO ZAN_SOINV_H-PURCH_DATE.
+
+        CONCATENATE WA_ORDER-REQ_DEL_DATE+6(4) WA_ORDER-REQ_DEL_DATE+3(2)
+         WA_ORDER-REQ_DEL_DATE+0(2) INTO ZAN_SOINV_H-REQ_DEL_DATE.
+<font color ="#0000FF">*        ZAN_SOINV_H-BILLING_DATE = WA_ORDER-BILLING_DATE.</font>
+
+        ZAN_SOINV_H-SO_NO = ''.
+        ZAN_SOINV_H-DEL_NO = ''.
+        ZAN_SOINV_H-INV_NO = ''.
+        ZAN_SOINV_H-CURRENCY = WA_ORDER-CURRENCY.
+        ZAN_SOINV_H-INDI = ''.
+        ZAN_SOINV_H-GR_GI_NO = WA_ORDER-GR_GI_NO.
+        ZAN_SOINV_H-PRIORITY   = WA_ORDER-PRIORITY.
+        ZAN_SOINV_H-SO_NUMBER  = WA_ORDER-SO_NUMBER.
+
+        DD = SY-DATUM+6(2).
+        MM = SY-DATUM+4(2).
+        YY = SY-DATUM+0(4).
+<font color ="#0000FF">*</font>
+
+        ZAN_SOINV_H-CREATEDON = SY-DATUM.
+        ZAN_SOINV_H-MESSAGE = ''.
+
+        ZAN_SOINV_H-ORD_TYP = WA_ORDER-ORD_TYP.
+        IF WA_ORDER-ORD_TYP = 'ZEUR'.
+          ZAN_SOINV_H-SCENARIO = 'SALESRET'.
+<font color ="#0000FF">*          I_SCENARIO = 'SALESRET'.</font>
+        ELSEIF WA_ORDER-ORD_TYP = 'ZEUP'.
+          ZAN_SOINV_H-SCENARIO = 'INVREP'.
+<font color ="#0000FF">*          I_SCENARIO = 'INVREP'.</font>
+        ELSEIF WA_ORDER-ORD_TYP = 'ZEUS'.
+          ZAN_SOINV_H-SCENARIO = 'FOC'.
+<font color ="#0000FF">*          I_SCENARIO = 'FOC'.</font>
+        ELSEIF WA_ORDER-ORD_TYP = 'ZEUZ'.
+          ZAN_SOINV_H-SCENARIO = 'RETREP'.
+<font color ="#0000FF">*          I_SCENARIO = 'RETREP'.</font>
+        ELSE.
+          ZAN_SOINV_H-SCENARIO = 'PNSSOINV'.
+<font color ="#0000FF">*      ZSD_SOINV_IT10_H-STATUS_PNS_PN = ''.</font>
+<font color ="#0000FF">*          I_SCENARIO = 'PNSSOINV'.</font>
+        ENDIF.
+
+        CALL FUNCTION 'ENQUEUE_EZAN_SOINV_H'
+         EXPORTING
+           MODE_ZAN_SOINV_H       = 'E'
+           MANDT                  = SY-MANDT
+           SD_NUMBER              = ZAN_SOINV_H-SD_NUMBER
+<font color ="#0000FF">*           X_SD_NUMBER            = ' '</font>
+<font color ="#0000FF">*           _SCOPE                 = '2'</font>
+           _WAIT                  = '5'
+<font color ="#0000FF">*           _COLLECT               = ' '</font>
+         EXCEPTIONS
+           FOREIGN_LOCK           = 1
+           SYSTEM_FAILURE         = 2
+           OTHERS                 = 3
+                  .
+        IF SY-SUBRC &lt;&gt; 0.
+
+          MESSAGE-MESSAGE = 'Table ZAN_SOINV_H is Locked'.
+          MESSAGE-STATUS  = 'WRONG'.
+          APPEND MESSAGE.
+
+          SELECT SINGLE MAX( SR_NO ) INTO LV_SRNO FROM ZACC_PI_LOG.
+
+          LV_SRNO = LV_SRNO + 1.
+
+          ZACC_PI_LOG-SR_NO = LV_SRNO.
+          ZACC_PI_LOG-SCENARIO = 'PNSSOINV'.
+          ZACC_PI_LOG-REFDOCNO = WA_ORDER-SD_NUMBER.
+          ZACC_PI_LOG-MESSAGE = 'Table ZAN_SOINV_H is Locked'.
+
+          INSERT ZACC_PI_LOG.
+          COMMIT WORK.
+
+          ERROR = 'X'.
+          EXIT.
+
+        ELSE.
+          INSERT ZAN_SOINV_H.
+          COMMIT WORK.
+
+          CALL FUNCTION 'DEQUEUE_EZAN_SOINV_H'
+           EXPORTING
+             MODE_ZAN_SOINV_H       = 'E'
+             MANDT                  = SY-MANDT
+             SD_NUMBER              =  ZAN_SOINV_H-SD_NUMBER
+<font color ="#0000FF">*         X_SD_NUMBER            = ' '</font>
+<font color ="#0000FF">*         _SCOPE                 = '3'</font>
+<font color ="#0000FF">*         _SYNCHRON              = ' '</font>
+<font color ="#0000FF">*         _COLLECT               = ' '</font>
+                    .
+        ENDIF.
+      ENDIF.
+
+      ZAN_SOINV_D-SD_NUMBER = WA_ORDER-SD_NUMBER.
+      ZAN_SOINV_D-ORD_TYP = WA_ORDER-ORD_TYP.
+      ZAN_SOINV_D-SHIP_TO_PARTY = WA_ORDER-SHIP_TO_PARTY.
+      ZAN_SOINV_D-SOLD_TO_PARTY = WA_ORDER-SOLD_TO_PARTY.
+      ZAN_SOINV_D-SALES_ORG = WA_ORDER-SALES_ORG.
+      ZAN_SOINV_D-DISTR_CHANNEL = WA_ORDER-DISTR_CHANNEL.
+      ZAN_SOINV_D-DIVISION = WA_ORDER-DIVISION.
+      ZAN_SOINV_D-CUST_PURCH_NO = WA_ORDER-CUST_PURCH_NO.
+
+      CONCATENATE WA_ORDER-BILLING_DATE+6(4) WA_ORDER-BILLING_DATE+3(2)
+       WA_ORDER-BILLING_DATE+0(2) INTO ZAN_SOINV_D-BILLING_DATE.
+
+      CONCATENATE WA_ORDER-PURCH_DATE+6(4) WA_ORDER-PURCH_DATE+3(2)
+       WA_ORDER-PURCH_DATE+0(2) INTO ZAN_SOINV_D-PURCH_DATE.
+
+      CONCATENATE WA_ORDER-REQ_DEL_DATE+6(4) WA_ORDER-REQ_DEL_DATE+3(2)
+       WA_ORDER-REQ_DEL_DATE+0(2) INTO ZAN_SOINV_D-REQ_DEL_DATE.
+
+      ZAN_SOINV_D-INCOTERMS1 = WA_ORDER-INCOTERMS1.
+      ZAN_SOINV_D-INCOTERMS2 = WA_ORDER-INCOTERMS2.
+      ZAN_SOINV_D-MATERIAL = WA_ORDER-MATERIAL.
+      ZAN_SOINV_D-TARGET_QTY = WA_ORDER-TARGET_QTY.
+      ZAN_SOINV_D-PLANT = WA_ORDER-PLANT.
+      ZAN_SOINV_D-BATCH = WA_ORDER-BATCH.
+<font color ="#0000FF">*---------------Added by Vivek-----27.10.2020------------------*</font>
+      ZAN_SOINV_D-PO_NUMBER = WA_ORDER-PO_NUMBER.
+      ZAN_SOINV_D-DOC_DATE = WA_ORDER-DOC_DATE.
+<font color ="#0000FF">*-----------------------------------------------------------*</font>
+      ZAN_SOINV_D-SALES_OFC = WA_ORDER-SALES_OFC.
+      ZAN_SOINV_D-SALES_GRP = WA_ORDER-SALES_GRP.
+      ZAN_SOINV_D-SHIP_POINT = WA_ORDER-PLANT.
+      ZAN_SOINV_D-STORAGE_LOC = WA_ORDER-STORAGE_LOC.
+
+<font color ="#0000FF">*      ZAN_SOINV_D-REQ_DEL_DATE = WA_ORDER-REQ_DEL_DATE.</font>
+
+      ZAN_SOINV_D-GROSS_WEIGHT = WA_ORDER-GROSS_WEIGHT.
+      ZAN_SOINV_D-NET_WEIGHT = WA_ORDER-NET_WEIGHT.
+      ZAN_SOINV_D-ORDER_RESION = WA_ORDER-ORDER_RESION.
+<font color ="#0000FF">*      ZAN_SOINV_D-BILLING_DATE = WA_ORDER-BILLING_DATE.</font>
+      ZAN_SOINV_D-ITM_NUMBER = WA_ORDER-ITM_NUMBER.
+      ZAN_SOINV_D-TARGET_QUOM = WA_ORDER-TARGET_QUOM.
+      ZAN_SOINV_D-UNTOF_WGHT = WA_ORDER-UNTOF_WGHT.
+      ZAN_SOINV_D-LOCALCODE = WA_ORDER-LOCALCODE.
+      ZAN_SOINV_D-CIGNO = WA_ORDER-CIGNO.
+      ZAN_SOINV_D-PAYMENT_TERMS = WA_ORDER-PAYMENT_TERMS.
+      ZAN_SOINV_D-REJECT_REASON = WA_ORDER-REJECT_REASON.
+      ZAN_SOINV_D-GR_GI_NO = WA_ORDER-GR_GI_NO.
+      ZAN_SOINV_D-PEPPOLOLINENO = WA_ORDER-PEPPOLOLINENO.
+
+      ZAN_SOINV_D-ITEM_CATEGORY = WA_ORDER-ITEM_CATEGORY.  "ADDED BY KARTIKEY DEVK972361 13.03.2023 8000006711 IT11 FOC Line Item
+
+
+      INSERT ZAN_SOINV_D.
+      COMMIT WORK.
+      LV_SD_NUM = WA_ORDER-SD_NUMBER.
+      CLEAR : ZAN_SOINV_H,ZAN_SOINV_D.
+    ENDLOOP.
+
+<font color ="#0000FF">*    DELETE GIT_SALES_ORDER_COND WHERE COND_RATE = 0.</font>
+    DELETE I_COND WHERE ( COND_TYP = 'PR00' AND COND_RATE = 0 ).  "Changed By Mahir(Told By Mani Sir)
+
+    SORT I_COND BY SD_NUMBER ITM_NO.
+
+    LOOP AT I_COND INTO WA_COND.
+
+      ZAN_SOINV_COND-SD_NUMBER = LV_SD_NUM.
+      ZAN_SOINV_COND-ITM_NO = WA_COND-ITM_NO.
+      V_CONDCOUNT  = V_CONDCOUNT + 01.
+      ZAN_SOINV_COND-COND_COUNT = V_CONDCOUNT.
+      ZAN_SOINV_COND-COND_RATE = WA_COND-COND_RATE.
+      ZAN_SOINV_COND-COND_VALUE = WA_COND-COND_VALUE.
+      ZAN_SOINV_COND-COND_TYP = WA_COND-COND_TYP.
+
+<font color ="#0000FF">*      ON CHANGE OF I_COND-ITM_NO OR LV_SD_NUM.</font>
+<font color ="#0000FF">*        CLEAR ZAN_SOINV_COND-COND_COUNT.</font>
+<font color ="#0000FF">*        ZAN_SOINV_COND-COND_COUNT = 00."ZAN_SOINV_COND-COND_COUNT + 01.</font>
+<font color ="#0000FF">*      ENDON.</font>
+
+
+      IF WA_COND-COND_TYP = 'LCIT' AND WA_COND-COND_RATE &gt; 0.
+        ZAN_SOINV_COND-COND_RATE = WA_COND-COND_RATE * -1.
+<font color ="#0000FF">*      ELSE.</font>
+<font color ="#0000FF">*        ZAN_SOINV_COND-COND_RATE = WA_COND-COND_RATE.</font>
+      ENDIF.
+      IF WA_COND-COND_TYP = 'LCIT' AND WA_COND-COND_VALUE &gt; 0.
+        ZAN_SOINV_COND-COND_VALUE = WA_COND-COND_VALUE * -1.
+<font color ="#0000FF">*      ELSE.</font>
+<font color ="#0000FF">*        ZAN_SOINV_COND-COND_VALUE = WA_COND-COND_VALUE.</font>
+      ENDIF.
+
+      IF WA_COND-COND_TYP = 'K007' AND WA_COND-COND_RATE &gt; 0.
+        ZAN_SOINV_COND-COND_RATE = WA_COND-COND_RATE * -1.
+<font color ="#0000FF">*      ELSE.</font>
+<font color ="#0000FF">*        ZAN_SOINV_COND-COND_RATE = WA_COND-COND_RATE.</font>
+      ENDIF.
+      IF WA_COND-COND_TYP = 'K007' AND WA_COND-COND_VALUE &gt; 0.
+        ZAN_SOINV_COND-COND_VALUE = WA_COND-COND_VALUE * -1.
+<font color ="#0000FF">*      ELSE.</font>
+<font color ="#0000FF">*        ZAN_SOINV_COND-COND_VALUE = WA_COND-COND_VALUE.</font>
+      ENDIF.
+
+      ZAN_SOINV_COND-TAXCODE = WA_COND-TAXCODE.
+
+      INSERT ZAN_SOINV_COND.
+      COMMIT WORK.
+
+      AT END OF ITM_NO.
+        V_CONDCOUNT = 0.
+      ENDAT.
+
+      CLEAR : ZAN_SOINV_COND.
+    ENDLOOP.
+
+    LOOP AT I_COND INTO WA_COND.
+
+      I_CHECKCOND-SD_NUMBER = WA_COND-SD_NUMBER.
+      I_CHECKCOND-ITM_NUMBER = WA_COND-ITM_NO.
+      I_CHECKCOND-COND_TYP  = WA_COND-COND_TYP.
+      APPEND I_CHECKCOND.
+      CLEAR : I_CHECKCOND.
+
+    ENDLOOP.
+
+    SORT I_CHECKCOND BY SD_NUMBER ITM_NUMBER COND_TYP ASCENDING.
+
+    LOOP AT I_CHECKCOND.
+      AT END OF COND_TYP.
+        FLG_R = 1.
+      ENDAT.
+
+      CHECKMULTIPLE = CHECKMULTIPLE + 1.
+
+      IF FLG_R = 1.
+        IF CHECKMULTIPLE &gt; 1.
+          MULTIPLECOND = 'X'.
+
+          UPDATE ZAN_SOINV_H
+                 SET MULCONDITION = 'X'
+                 WHERE SD_NUMBER = I_CHECKCOND-SD_NUMBER.
+          COMMIT WORK.
+        ENDIF.
+        CHECKMULTIPLE = 0.
+        FLG_R = 0.
+      ENDIF.
+    ENDLOOP.
+
+<font color ="#0000FF">*    IF MULTIPLECOND = 'X'.</font>
+<font color ="#0000FF">*      MESSAGE 'Multiple price condition in same item' TYPE 'I'.</font>
+<font color ="#0000FF">*      RETURN.</font>
+<font color ="#0000FF">*      CONTINUE.</font>
+<font color ="#0000FF">*    ENDIF.</font>
+
+    WAIT UP TO 5 SECONDS.
+
+<font color ="#0000FF">************************************************************************</font>
+<font color ="#0000FF">* Back date Pending Invoice                                            *</font>
+<font color ="#0000FF">************************************************************************</font>
+
+
+<font color ="#0000FF">*    DATA:LS_P_PENDING TYPE ZAN_SOINV_H,</font>
+<font color ="#0000FF">*         LT_P_PENDING TYPE TABLE OF ZAN_SOINV_H,</font>
+<font color ="#0000FF">*         LS_D_PENDING TYPE ZAN_DISPATCH_H,</font>
+<font color ="#0000FF">*         LT_D_PENDING TYPE TABLE OF ZAN_DISPATCH_H.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    DATA:V_AWKEY TYPE BKPF-AWKEY . "Mahir</font>
+
+<font color ="#0000FF">*    DATA : LS_BKPF TYPE BKPF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    TYPES:BEGIN OF TY_AWKEY,</font>
+<font color ="#0000FF">*          AWKEY TYPE BKPF-AWKEY,</font>
+<font color ="#0000FF">*          END OF TY_AWKEY.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    DATA:LS_AWKEY TYPE TY_AWKEY,</font>
+<font color ="#0000FF">*         LT_AWKEY TYPE TABLE OF TY_AWKEY.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    DATA:LS_DOC TYPE BKPF,</font>
+<font color ="#0000FF">*         LT_DOC TYPE TABLE OF BKPF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    SELECT * FROM ZAN_SOINV_H INTO TABLE LT_P_PENDING.</font>
+<font color ="#0000FF">*    SELECT * FROM ZAN_DISPATCH_H INTO TABLE LT_D_PENDING.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    LOOP AT LT_P_PENDING INTO LS_P_PENDING.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      IF LS_P_PENDING-SO_NO IS INITIAL OR</font>
+<font color ="#0000FF">*           LS_P_PENDING-DEL_NO IS INITIAL.</font>
+<font color ="#0000FF">*        V_PENDING  = 'X'.</font>
+<font color ="#0000FF">*      ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      IF LS_P_PENDING-DEL_NO IS NOT INITIAL.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*        SELECT SINGLE * FROM VBFA</font>
+<font color ="#0000FF">*          WHERE VBELV = LS_P_PENDING-DEL_NO</font>
+<font color ="#0000FF">*          AND VBTYP_N = 'M'.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*        IF SY-SUBRC = 0.</font>
+<font color ="#0000FF">*          V_AWKEY = VBFA-VBELN.</font>
+<font color ="#0000FF">*          IF V_AWKEY IS NOT INITIAL.</font>
+<font color ="#0000FF">*            SELECT SINGLE * INTO LS_BKPF FROM BKPF</font>
+<font color ="#0000FF">*                                      WHERE AWKEY = V_AWKEY.</font>
+<font color ="#0000FF">*            IF LS_BKPF-XBLNR_ALT IS INITIAL.</font>
+<font color ="#0000FF">*              V_PENDING  = 'X'.</font>
+<font color ="#0000FF">*            ENDIF.</font>
+<font color ="#0000FF">*          ENDIF.</font>
+<font color ="#0000FF">*        ENDIF.</font>
+<font color ="#0000FF">*      ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      CLEAR:LS_P_PENDING.</font>
+<font color ="#0000FF">*    ENDLOOP.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    CLEAR:VBFA,LS_BKPF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    LOOP AT LT_D_PENDING INTO LS_D_PENDING.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      IF LS_D_PENDING-SO_NO IS INITIAL OR</font>
+<font color ="#0000FF">*           LS_D_PENDING-DELV_NO IS INITIAL.</font>
+<font color ="#0000FF">*        V_PENDING  = 'X'.</font>
+<font color ="#0000FF">*      ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      IF LS_D_PENDING-DELV_NO  IS NOT INITIAL.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*        SELECT SINGLE * FROM VBFA</font>
+<font color ="#0000FF">*          WHERE VBELV = LS_D_PENDING-DELV_NO</font>
+<font color ="#0000FF">*          AND VBTYP_N = 'M'.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*        IF SY-SUBRC = 0.</font>
+<font color ="#0000FF">*          V_AWKEY = VBFA-VBELN.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*          IF V_AWKEY IS NOT INITIAL.</font>
+<font color ="#0000FF">*            SELECT SINGLE * INTO LS_BKPF FROM BKPF</font>
+<font color ="#0000FF">*                                      WHERE AWKEY = V_AWKEY.</font>
+<font color ="#0000FF">*            IF LS_BKPF-XBLNR_ALT IS INITIAL.</font>
+<font color ="#0000FF">*              V_PENDING  = 'X'.</font>
+<font color ="#0000FF">*            ENDIF.</font>
+<font color ="#0000FF">*          ENDIF.</font>
+<font color ="#0000FF">*        ENDIF.</font>
+<font color ="#0000FF">*      ENDIF.</font>
+<font color ="#0000FF">*      CLEAR:LS_D_PENDING.</font>
+<font color ="#0000FF">*    ENDLOOP.</font>
+<font color ="#0000FF">*</font>
+    IF ERROR &lt;&gt; 'X'.
+      IF I_ORDER[] IS NOT INITIAL.
+      SELECT * FROM ZACC_CS_MAPPING INTO TABLE LT_MAP FOR ALL ENTRIES IN I_ORDER WHERE WERKS = I_ORDER-PLANT.
+      ENDIF.
+      READ TABLE I_ORDER INTO WA_ORDER INDEX 1.
+      IF SY-SUBRC EQ 0.
+
+        READ TABLE LT_MAP INTO LS_MAP WITH KEY WERKS = WA_ORDER-PLANT
+                                               AUART = WA_ORDER-ORD_TYP.
+        IF SY-SUBRC EQ 0.
+          IF LS_MAP-PICKLIST EQ 'X'.
+            IF MULTIPLECOND NE 'X'.
+              PERFORM XML IN PROGRAM ZAN_PICKLIST_XML
+                          USING WA_ORDER-SD_NUMBER.
+              CLEAR:MULTIPLECOND.
+            ENDIF.
+          ELSE.
+            IF MULTIPLECOND NE 'X' AND V_PENDING NE 'X'.
+              PERFORM GENERATE IN PROGRAM ZACC_CS_SCENARIO USING WA_ORDER-SD_NUMBER.
+            ENDIF.
+          ENDIF.
+        ENDIF.
+      ENDIF.
+    ENDIF.
+  ENDIF.
+<font color ="#0000FF">*                      USING WA_ORDER-SD_NUMBER.</font>
+<font color ="#0000FF">*        PERFORM EMAIL IN PROGRAM ZAN_EMAIL.</font>
+<font color ="#0000FF">*      ENDIF.</font>
+<font color ="#0000FF">*    ENDLOOP.</font>
+<font color ="#0000FF">*  ENDIF.</font>
+
+ENDFUNCTION.
+
+
+<font color ="#0000FF">*Messages</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: Hard coded</font>
+<font color ="#0000FF">*   Error Occured while transferring data</font>
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

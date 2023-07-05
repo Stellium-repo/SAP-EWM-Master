@@ -1,0 +1,102 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>LZF043TOP</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: LZF043TOP</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Auswahl der Anzeigewährung</b></font>
+<hr>
+<pre width="100">
+FUNCTION-POOL ZF043      MESSAGE-ID F4.
+
+
+tables:  bsegp.
+tables:  knb1.
+tables:  bsid, bsad, bsas.
+tables:  t021s,
+         t021v.
+tables:  t061s.
+tables:  tcclg, tccfi, tcclgt.
+tables:  rfpos.                             " Hilfsfelder Währungen
+tables:  rfxpo.                             " Hilfsfelder Währungen
+TABLES:  T041A.
+
+type-pools: slis.
+
+<font color ="#0000FF">* -----  Hinzuzufügende Zeilen zu REPTAB--------------------------------</font>
+data:    begin of addtab occurs 30,
+           line(72),
+         end   of addtab.
+
+<font color ="#0000FF">* -----  Sonderfelder aus T021S ----------------------------------------</font>
+data:    begin of it021s occurs 2,
+           tname         like t021s-tname,  " Tabelle
+           fname         like t021s-fname,  " Feld
+           sntab(1)      type c,            " Sondertabelle?
+         end   of it021s.
+
+<font color ="#0000FF">* -----  NAMETAB einer Sondertabelle -----------------------------------</font>
+data:    begin of namtab occurs 5.
+        include structure dntab.
+data:    end   of namtab.
+
+<font color ="#0000FF">* -----  Sondertabellen aus T021S --------------------------------------</font>
+data:    begin of sontab occurs 2,
+           tname         like t021s-tname,    " Tabelle
+           funcname      like t021s-funcname, " Funktionsbaustein
+         end   of sontab.
+
+<font color ="#0000FF">* -----  Zu generierender Report ---------------------------------------</font>
+data:    begin of reptab occurs 30,
+           line(72),
+         end   of reptab.
+
+<font color ="#0000FF">* ------ Buchungskreise zum Kontrollbereich (gesamt)--------------------</font>
+data:    begin of tcmtab occurs 10.
+        include structure t001cm.
+data:    end   of tcmtab.
+
+<font color ="#0000FF">* -----  Währungen -----------------------------------------------------</font>
+data:    begin of waetab occurs 5,
+           xpos1         like rfxpo-xpos1,
+           watyp(1)      type c,                            "H/F/2/3/B
+           azei1         like rfxpo-azei1,
+           waers         like rfxpo-waers,
+         end   of waetab.
+
+<font color ="#0000FF">* -----  INCLUDEs für Einzelpostenaufruf -------------------------------</font>
+data:    begin of common part cp1.          " Tabelle POSTAB
+include rfeposc1.
+data:    end of common part.
+data:    begin of common part cp3.          " Tabelle KONTAB
+include rfeposc3.
+data:    end of common part.
+data:    begin of common part cp7.          " sonstige Felder
+include rfeposc7.
+data:    end of common part.
+data:    begin of common part cp8.          " SEFTAB,SELTAB,EINTAB
+include rfeposc8.
+data:    end of common part.
+include rfeposcc.
+
+<font color ="#0000FF">* -----  Ranges --------------------------------------------------------</font>
+ranges:  bukrs          for t001-bukrs.     " Buchungskreise
+
+<font color ="#0000FF">* -----  Einzelfelder --------------------------------------------------</font>
+data:    cname          like t021i-fname.   " Kompletter Feldname
+data:    csfield(15)    type c.             " Cursor Feldname
+data:    csline         like sy-loopc.      " Cursor Loopzeile
+data:    i              type i.             " Zähler
+data:    longline(200)  type c.             " Long Line für REPTAB
+data:    ok-code(4)     type c.             " OK-Code
+data:    rc             like sy-subrc.      " Returncode
+data:    tabix          like sy-tabix.      " SY-TABIX gerettet
+data:    xfis(1)        type c.             " Wie FIS?
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

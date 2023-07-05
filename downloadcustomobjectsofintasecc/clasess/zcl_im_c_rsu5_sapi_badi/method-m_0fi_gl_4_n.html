@@ -1,0 +1,64 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>M_0FI_GL_4_N</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: M_0FI_GL_4_N</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Business Add-Ins Method for General Data Transfer</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*   Method attributes.                                                   *</font>
+<font color ="#0000FF">**************************************************************************</font>
+Instantiation: Private
+<font color ="#0000FF">**************************************************************************</font>
+
+  METHOD m_0fi_gl_4_n.
+
+<font color ="#0000FF">*    FIELD-SYMBOLS: &lt;l_s_data&gt;      TYPE dtfigl_4,</font>
+<font color ="#0000FF">*                   &lt;l_s_data_n&gt;    TYPE dtfigl_4,</font>
+<font color ="#0000FF">*                   &lt;l_s_data_temp&gt; TYPE dtfigl_4.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    DATA: l_t_data      TYPE STANDARD TABLE OF dtfigl_4.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    l_t_data[] = c_t_data[].</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    LOOP AT l_t_data ASSIGNING &lt;l_s_data&gt;.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      &lt;l_s_data&gt;-zzcalmonat = &lt;l_s_data&gt;-budat+4(2).</font>
+<font color ="#0000FF">*      &lt;l_s_data&gt;-zzcalyear = &lt;l_s_data&gt;-budat+0(4).</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    ENDLOOP.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    c_t_data[] = l_t_data[].</font>
+<font color ="#0000FF">*    REFRESH: l_t_data.</font>
+
+
+    FIELD-SYMBOLS: &lt;l_s_data&gt;      TYPE dtfigl_4,
+                   &lt;l_s_data_n&gt;    TYPE dtfigl_4,
+                   &lt;l_s_data_temp&gt; TYPE dtfigl_4.
+    DATA: l_t_data TYPE STANDARD TABLE OF dtfigl_4..
+    l_t_data[] = c_t_data[].
+
+
+    LOOP AT l_t_data ASSIGNING &lt;l_s_data&gt;.
+      &lt;l_s_data&gt;-zzcalmonat = &lt;l_s_data&gt;-budat+4(2).
+      &lt;l_s_data&gt;-zzcalyear = &lt;l_s_data&gt;-budat+0(4).
+    ENDLOOP.
+
+
+    c_t_data[] = l_t_data[].
+    CLEAR: l_t_data.
+
+
+  ENDMETHOD.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

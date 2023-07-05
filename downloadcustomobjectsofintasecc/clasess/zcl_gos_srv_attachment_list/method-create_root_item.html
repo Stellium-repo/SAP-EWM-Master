@@ -1,0 +1,110 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>CREATE_ROOT_ITEM</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: CREATE_ROOT_ITEM</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Generate Start Item for Browser</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*   Method attributes.                                                   *</font>
+<font color ="#0000FF">**************************************************************************</font>
+Instantiation: Protected
+<font color ="#0000FF">**************************************************************************</font>
+
+<font color ="#0000FF">*---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*  METHOD CREATE_ROOT_ITEM</font>
+<font color ="#0000FF">*---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*---------------------------------------------------------------------*</font>
+METHOD CREATE_ROOT_ITEM .
+  DATA:
+    lo_bitem TYPE REF TO cl_browser_item,
+    ls_borident TYPE borident,
+    ls_lpor TYPE sibflpor,
+    ls_lporb TYPE sibflporb,
+    lt_lporb TYPE sibflporbt,
+    lt_items TYPE bitem_t,
+    lo_mitem TYPE REF TO cl_container_item,
+    lp_lines TYPE i.
+
+  CREATE OBJECT go_badi.
+  CLEAR lt_lporb.
+  APPEND gs_lporb TO lt_lporb.
+  CALL METHOD go_badi-&gt;if_ex_gos_mult_publish~add_objects
+    EXPORTING
+      flt_val  = gc_srvc
+    CHANGING
+      ct_lporb = lt_lporb.
+
+<font color ="#0000FF">*  sort lt_lporb.                            " ad 20.01.2005</font>
+<font color ="#0000FF">*  delete adjacent duplicates from lt_lporb. " ad 20.01.2005</font>
+  do.                                        " ad 02.12.2005
+    delete table lt_lporb from gs_lporb.     " ad 02.12.2005
+    if sy-subrc &lt;&gt; 0.                        " ad 02.12.2005
+      exit.                                  " ad 02.12.2005
+    endif.                                   " ad 02.12.2005
+  enddo.                                     " ad 02.12.2005
+  insert gs_lporb into lt_lporb index 1.     " ad 02.12.2005
+
+  DESCRIBE TABLE lt_lporb LINES lp_lines.
+  IF lp_lines = 1.
+    READ TABLE lt_lporb INDEX 1 INTO ls_lporb.
+    CASE ls_lporb-catid.
+      WHEN 'BO'.
+        ls_borident-objkey = ls_lporb-instid.
+        ls_borident-objtype = ls_lporb-typeid.
+
+        CREATE OBJECT lo_bitem TYPE cl_sobl_bor_item
+          EXPORTING
+            is_bor = ls_borident.
+      WHEN OTHERS.
+        MOVE-CORRESPONDING ls_lporb TO ls_lpor.
+        CREATE OBJECT lo_bitem TYPE cl_obl_bc_item
+          EXPORTING
+            is_lpor = ls_lpor.
+    ENDCASE.
+    result ?= lo_bitem.
+  ELSE.
+
+    LOOP AT lt_lporb INTO ls_lporb.
+
+      CASE ls_lporb-catid.
+        WHEN 'BO'.
+          ls_borident-objkey = ls_lporb-instid.
+          ls_borident-objtype = ls_lporb-typeid.
+
+          CREATE OBJECT lo_bitem TYPE cl_sobl_bor_item
+            EXPORTING
+              is_bor = ls_borident.
+        WHEN OTHERS.
+          MOVE-CORRESPONDING ls_lporb TO ls_lpor.
+          CREATE OBJECT lo_bitem TYPE cl_obl_bc_item
+            EXPORTING
+              is_lpor = ls_lpor.
+      ENDCASE.
+
+      IF NOT lo_bitem IS INITIAL.
+        APPEND lo_bitem TO lt_items.
+      ENDIF.
+
+    ENDLOOP.
+    CREATE OBJECT lo_mitem.
+    CALL METHOD lo_mitem-&gt;if_container_item~set_items
+      EXPORTING
+        it_bitem = lt_items.
+    lo_mitem-&gt;gp_descr = gp_def_attrib.
+
+    result ?= lo_mitem.
+
+  ENDIF.
+ENDMETHOD.                    "CREATE_ROOT_ITEM
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

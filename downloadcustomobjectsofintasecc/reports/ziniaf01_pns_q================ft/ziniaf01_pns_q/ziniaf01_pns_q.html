@@ -1,0 +1,672 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZINIAF01_PNS_Q</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for function: ZINIAF01_PNS_Q</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  PNS Q to SAP</b></font>
+<hr>
+<pre width="100">
+FUNCTION ZINIAF01_PNS_Q.
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+<font color ="#0000FF">*"*"Local Interface:</font>
+<font color ="#0000FF">*"  TABLES</font>
+<font color ="#0000FF">*"      GT_FINAL TYPE  ZINIAIT01_PNS_Q</font>
+<font color ="#0000FF">*"      IT_RES TYPE  ZIA_T_RES_PNS</font>
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+
+<font color ="#0000FF">*       <a href ="global-ziniaf01_pns_q.html">Global data declarations</a></font>
+
+  TABLES: ZIA_PNS_TO_SAP.
+
+  DATA:A TYPE C,
+       B TYPE C,
+       D TYPE C.
+
+  DATA:P_DOC_DATE TYPE DATUM,
+       P_POS_DATE TYPE DATUM,
+       P_EXP_DATE TYPE DATUM,
+       P_MFG_DATE TYPE DATUM.
+
+  DATA:V_CLABS TYPE MENGE_D,
+       V_CINSM TYPE MENGE_D,
+       V_CSPEM TYPE MENGE_D.
+
+
+  DATA : HEAD            LIKE BAPI_PHYSINV_CREATE_HEAD.
+  DATA : ITEMS  LIKE BAPI_PHYSINV_CREATE_ITEMS OCCURS 0 WITH HEADER LINE,
+         ITEMS1 LIKE BAPI_PHYSINV_COUNT_ITEMS OCCURS 0 WITH HEADER LINE,
+         RETURN LIKE BAPIRET2 OCCURS 0 WITH HEADER LINE.
+  DATA : INVENTORYNO TYPE IKPF-IBLNR.
+  DATA : MATERIAL_DOC TYPE MKPF-MBLNR.
+  DATA : LV_SRNO(7) TYPE N.
+  DATA:  ZACC_PI_LOG TYPE ZACC_PI_LOG.
+
+  DATA:LS_MSEG TYPE ZMM_STOCK_RECO,
+       LT_MSEG TYPE TABLE OF ZMM_STOCK_RECO.
+
+
+  DATA: P_YEAR1  TYPE CHAR4.
+  DATA: P_YEAR  LIKE IKPF-GJAHR.
+  DATA: DATE_TMP  LIKE SY-DATUM.
+
+
+  DATA: GS_FINAL      TYPE ZINIA01STR_PNS_Q,
+<font color ="#0000FF">*        WA_TRN_I TYPE ZIA_S_PNS_TRN_I,</font>
+        IT_PNS_TO_SAP TYPE TABLE OF ZIA_PNS_TO_SAP,
+        WA_PNS_TO_SAP TYPE ZIA_PNS_TO_SAP,
+        WA_PILOG      TYPE ZIA_PILOG,
+        IT_ERR_MSG    TYPE TABLE OF ZIA_S_RES_PNS,
+        WA_ERR_MSG    TYPE ZIA_S_RES_PNS,
+        WA_RES        TYPE ZIA_S_RES_PNS.
+
+  DATA : V_TEXT(255)  TYPE C.
+
+  DATA: PNS_Q_NO TYPE ZPNS_Q_NO.
+
+
+  DATA : IT_ZINIAIT02_PNS_Q_5  TYPE TABLE OF ZINIAIT02_PNS_Q.
+  DATA : IT_ZINIAIT02_PNS_Q  TYPE TABLE OF ZINIAIT02_PNS_Q,
+         WA_ZINIAIT02_PNS_Q  TYPE ZINIAIT02_PNS_Q,
+         WA_ZINIAIT02_PNS_Q1 TYPE ZINIAIT02_PNS_Q.
+
+  DATA: LS_HEADER  TYPE BAPI2017_GM_HEAD_01,
+        LS_CODE    TYPE BAPI2017_GM_CODE,
+        LS_HEADRET TYPE BAPI2017_GM_HEAD_RET,
+        LT_ITEM    TYPE STANDARD TABLE OF BAPI2017_GM_ITEM_CREATE,
+        LS_ITEM    TYPE BAPI2017_GM_ITEM_CREATE,
+        WA_ITEM    TYPE BAPI2017_GM_ITEM_CREATE,
+        LT_RETURN  TYPE STANDARD TABLE OF BAPIRET2,
+        LS_RETURN  TYPE BAPIRET2.
+
+  DATA : MATERIALDOCUMENT TYPE MKPF-MBLNR,
+         MATDOCUMENTYEAR  TYPE MKPF-MJAHR.
+
+  CLEAR: IT_ZINIAIT02_PNS_Q.
+  DATA : V_SCENARIO TYPE BEZEI20 VALUE 'PNS_Q'.     "Add By Ravi on 09.01.2023
+
+  DATA: GW_AFPO TYPE AFPO.
+  CLEAR: GW_AFPO.
+
+<font color ="#0000FF">***************************************SOA      Add By Ravi on 21.01.2023</font>
+  DATA: LV_IND TYPE SY-INDEX.
+
+  LOOP AT GT_FINAL INTO GS_FINAL.
+    LV_IND = SY-TABIX.
+    IF GS_FINAL-MOVEMENT_TYPE BETWEEN '501' AND '508'.
+      CONCATENATE GS_FINAL-PNS_Q_NO SY-DATUM INTO GS_FINAL-PNS_Q_NO SEPARATED BY '_'.
+      MODIFY GT_FINAL FROM GS_FINAL INDEX LV_IND.
+    ENDIF.
+    CLEAR GS_FINAL.
+  ENDLOOP .
+<font color ="#0000FF">***************************************SOE      Add By Ravi on 21.01.2023</font>
+
+  IF GT_FINAL[] IS NOT INITIAL.
+    CLEAR IT_ZINIAIT02_PNS_Q.
+    SELECT * FROM ZINIAIT02_PNS_Q
+      INTO TABLE IT_ZINIAIT02_PNS_Q
+      FOR ALL ENTRIES IN GT_FINAL
+      WHERE PNS_Q_NO = GT_FINAL-PNS_Q_NO.
+    IF IT_ZINIAIT02_PNS_Q IS NOT INITIAL.
+      CLEAR WA_ZINIAIT02_PNS_Q.
+      READ TABLE IT_ZINIAIT02_PNS_Q INTO WA_ZINIAIT02_PNS_Q INDEX 1.
+      IF SY-SUBRC = 0.
+        WA_RES-DOCNO   = WA_ZINIAIT02_PNS_Q-PNS_Q_NO.
+        WA_RES-SAPDOCNO   = WA_ZINIAIT02_PNS_Q-MBLNR.
+        WA_RES-STATUS  = '1'.
+        WA_RES-MESSAGE = 'Document is already exist / processed.'.
+        APPEND WA_RES TO IT_RES.
+        CLEAR : WA_RES.
+<font color ="#0000FF">*****************************************************************SOA    Add by Ravi on 09.01.2023</font>
+        WA_PILOG-PROCESS_TYPE = V_SCENARIO.
+<font color ="#0000FF">*            WA_PILOG-COMP_CODE = WA_ADJ_H-COMPANYCODE.</font>
+        WA_PILOG-TX_DATE = SY-DATUM.
+        WA_PILOG-DOC_NO = WA_ZINIAIT02_PNS_Q-PNS_Q_NO.
+        WA_PILOG-PLANT = WA_ZINIAIT02_PNS_Q-PLANT.
+        WA_PILOG-STATUS = 'E'.
+        WA_PILOG-MESSAGE = 'Document is already exist / processed.'.
+        WA_PILOG-CREATED_ON = SY-DATUM.
+        WA_PILOG-TIME = SY-UZEIT.
+        WA_PILOG-CREATED_BY = SY-UNAME.
+
+        IF IT_RES[] IS NOT INITIAL.
+          PERFORM PI_LOG IN PROGRAM ZIA_PILOG_AND_EMAIL
+                       TABLES IT_RES
+                        USING WA_PILOG.
+<font color ="#0000FF">*          EXIT.</font>
+        ENDIF.
+<font color ="#0000FF">*****************************************************************SOE    Add by Ravi on 09.01.2023</font>
+      ENDIF.
+      CLEAR: IT_ZINIAIT02_PNS_Q, WA_ZINIAIT02_PNS_Q, WA_PILOG, IT_RES.
+      EXIT.
+    ELSE.
+    ENDIF.
+  ENDIF.
+
+
+  LOOP AT GT_FINAL INTO GS_FINAL WHERE MOVEMENT_TYPE = '501' OR
+                                       MOVEMENT_TYPE = '502' OR
+                                       MOVEMENT_TYPE = '503' OR
+                                       MOVEMENT_TYPE = '504' OR
+                                       MOVEMENT_TYPE = '505' OR
+                                       MOVEMENT_TYPE = '506'  .
+
+    CLEAR:A,B,D.
+    CLEAR:RETURN,INVENTORYNO,MATERIAL_DOC,HEAD,ITEMS,LV_SRNO,ITEMS1,LS_MSEG.
+    REFRESH:RETURN,ITEMS,ITEMS1.
+
+    CLEAR: DATE_TMP.
+    CONCATENATE GS_FINAL-DATE+6(4) GS_FINAL-DATE+3(2) GS_FINAL-DATE+0(2)
+    INTO DATE_TMP.
+
+    IF DATE_TMP IS NOT INITIAL.
+
+      CALL FUNCTION 'GM_GET_FISCAL_YEAR'
+        EXPORTING
+          I_DATE                     = DATE_TMP
+          I_FYV                      = 'V3'
+        IMPORTING
+          E_FY                       = P_YEAR1
+        EXCEPTIONS
+          FISCAL_YEAR_DOES_NOT_EXIST = 1
+          NOT_DEFINED_FOR_DATE       = 2
+          OTHERS                     = 3.
+      IF SY-SUBRC &lt;&gt; 0.
+<font color ="#0000FF">* Implement suitable error handling here</font>
+      ELSE.
+        P_YEAR = P_YEAR1.
+      ENDIF.
+    ENDIF.
+
+
+    HEAD-PLANT = GS_FINAL-PLANT.
+    HEAD-STGE_LOC = GS_FINAL-SENDING_STORAGE_LOCATION .
+    HEAD-DOC_DATE = DATE_TMP.
+    HEAD-PLAN_DATE = DATE_TMP.
+
+    ITEMS-MATERIAL = GS_FINAL-MATERIAL.
+    ITEMS-BATCH = GS_FINAL-BATCH.
+    APPEND ITEMS.
+
+    CALL FUNCTION 'BAPI_MATPHYSINV_CREATE'
+      EXPORTING
+        HEAD   = HEAD
+      TABLES
+        ITEMS  = ITEMS
+        RETURN = RETURN.
+
+    CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'.
+
+    LOOP AT RETURN WHERE TYPE = 'E'.
+
+      SELECT SINGLE MAX( SR_NO ) INTO LV_SRNO FROM ZACC_PI_LOG.
+      LV_SRNO = LV_SRNO + 1.
+
+      ZACC_PI_LOG-SR_NO = LV_SRNO.
+      ZACC_PI_LOG-SCENARIO  = 'STKRECO'.
+      ZACC_PI_LOG-WERKS     = GS_FINAL-PLANT.
+      ZACC_PI_LOG-REFDOCNO  = GS_FINAL-ADDFIELD3..
+
+<font color ="#0000FF">*          CONCATENATE P_DATE+6(2) P_DATE+4(2) P_DATE+0(4) INTO ZACC_PI_LOG-POST_DATE SEPARATED BY '.'.</font>
+      ZACC_PI_LOG-POST_DATE = GS_FINAL-DATE.
+      ZACC_PI_LOG-PI_STATUS    = 'E'.
+      ZACC_PI_LOG-MESSAGE   = RETURN-MESSAGE.
+      ZACC_PI_LOG-SYS_TIME   = SY-UZEIT.
+      ZACC_PI_LOG-CREATEDON  = SY-DATUM.
+      INSERT ZACC_PI_LOG FROM ZACC_PI_LOG.
+      COMMIT WORK.
+      WAIT UP TO 2 SECONDS.
+
+      WA_RES-DOCNO   = GS_FINAL-PNS_Q_NO.
+      WA_RES-STATUS  = '1'.
+      WA_RES-MESSAGE = RETURN-MESSAGE.
+      APPEND WA_RES TO IT_RES.
+      CLEAR : WA_RES.
+
+    ENDLOOP.
+
+    CLEAR WA_ZINIAIT02_PNS_Q.
+    MOVE-CORRESPONDING GS_FINAL TO WA_ZINIAIT02_PNS_Q.
+
+    WA_ZINIAIT02_PNS_Q-ZDATE = GS_FINAL-DATE.
+    WA_ZINIAIT02_PNS_Q-ENTRY_DATE = SY-DATUM.
+    WA_ZINIAIT02_PNS_Q-ENTRY_TIME = SY-UZEIT.
+    WA_ZINIAIT02_PNS_Q-USER_NAME = SY-UNAME.
+
+    APPEND WA_ZINIAIT02_PNS_Q TO IT_ZINIAIT02_PNS_Q_5.
+    CLEAR : WA_ZINIAIT02_PNS_Q, GS_FINAL.
+
+
+    IF SY-SUBRC EQ 0.
+      CONTINUE.
+    ENDIF.
+
+    LOOP AT RETURN WHERE TYPE EQ 'S'.
+      A = 'X'.
+      INVENTORYNO = RETURN-MESSAGE_V1.
+    ENDLOOP.
+
+    CLEAR:RETURN..
+    REFRESH:RETURN.
+
+    IF INVENTORYNO IS NOT INITIAL.
+
+      CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'
+        EXPORTING
+          INPUT  = INVENTORYNO
+        IMPORTING
+          OUTPUT = INVENTORYNO.
+
+      ITEMS1-ITEM = '001'.
+      ITEMS1-MATERIAL = GS_FINAL-MATERIAL.
+      ITEMS1-BATCH = GS_FINAL-BATCH.
+      ITEMS1-ENTRY_QNT = GS_FINAL-QTY.     "I_FINAL-PNSQTY.
+
+
+      CALL FUNCTION 'CONVERSION_EXIT_MATN1_INPUT'
+        EXPORTING
+          INPUT        = GS_FINAL-MATERIAL
+        IMPORTING
+          OUTPUT       = GS_FINAL-MATERIAL
+        EXCEPTIONS
+          LENGTH_ERROR = 1
+          OTHERS       = 2.
+      IF SY-SUBRC &lt;&gt; 0.
+<font color ="#0000FF">* Implement suitable error handling here</font>
+      ENDIF.
+
+
+      SELECT SINGLE * INTO GW_AFPO
+        FROM AFPO
+        WHERE  MATNR = GS_FINAL-MATERIAL AND
+               CHARG = GS_FINAL-BATCH AND
+               PWERK = GS_FINAL-PLANT.
+      IF SY-SUBRC = 0.
+        ITEMS1-ENTRY_UOM = 'NOS'.     "I_FINAL-PNSUOM.
+      ELSE.
+        ITEMS1-ENTRY_UOM = 'PAK'.     "I_FINAL-PNSUOM.
+      ENDIF.
+
+      CALL FUNCTION 'CONVERSION_EXIT_MATN1_OUTPUT'
+        EXPORTING
+          INPUT        = GS_FINAL-MATERIAL
+        IMPORTING
+          OUTPUT       = GS_FINAL-MATERIAL
+        EXCEPTIONS
+          LENGTH_ERROR = 1
+          OTHERS       = 2.
+      IF SY-SUBRC &lt;&gt; 0.
+<font color ="#0000FF">* Implement suitable error handling here</font>
+      ENDIF.
+
+<font color ="#0000FF">*      ITEMS1-ENTRY_UOM = 'PAK'.     "I_FINAL-PNSUOM.</font>
+      APPEND ITEMS1.
+      CLEAR  ITEMS1.
+
+      WA_RES-SAPDOCNO   = INVENTORYNO.
+      WA_RES-DOCNO   = GS_FINAL-ADDFIELD3..
+      WA_RES-STATUS  = '0'.
+      WA_RES-MESSAGE = 'Successful'.
+      APPEND WA_RES TO IT_RES.
+      CLEAR : WA_RES.
+
+      CALL FUNCTION 'BAPI_MATPHYSINV_COUNT'
+        EXPORTING
+          PHYSINVENTORY = INVENTORYNO
+          FISCALYEAR    = P_YEAR
+        TABLES
+          ITEMS         = ITEMS1
+          RETURN        = RETURN.
+
+      CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'.
+
+      LOOP AT RETURN WHERE TYPE = 'E'.
+
+        SELECT SINGLE MAX( SR_NO ) INTO LV_SRNO FROM ZACC_PI_LOG.
+        LV_SRNO = LV_SRNO + 1.
+
+        ZACC_PI_LOG-SR_NO = LV_SRNO.
+        ZACC_PI_LOG-SCENARIO  = 'STKRECO'.
+        ZACC_PI_LOG-WERKS     = GS_FINAL-PLANT.
+        ZACC_PI_LOG-REFDOCNO  = INVENTORYNO.
+<font color ="#0000FF">*            ZACC_PI_LOG-POST_DATE = P_DATE.</font>
+<font color ="#0000FF">*            CONCATENATE P_DATE+6(2) P_DATE+4(2) P_DATE+0(4) INTO ZACC_PI_LOG-POST_DATE SEPARATED BY '.'.</font>
+        ZACC_PI_LOG-POST_DATE = GS_FINAL-DATE.
+        ZACC_PI_LOG-PI_STATUS    = 'E'.
+        ZACC_PI_LOG-SYS_TIME   = SY-UZEIT.
+        ZACC_PI_LOG-CREATEDON  = SY-DATUM.
+        ZACC_PI_LOG-MESSAGE   = RETURN-MESSAGE.
+        INSERT ZACC_PI_LOG FROM ZACC_PI_LOG.
+        COMMIT WORK.
+        WAIT UP TO 2 SECONDS.
+
+        WA_RES-DOCNO   = GS_FINAL-PNS_Q_NO.
+        WA_RES-STATUS  = '1'.
+        WA_RES-MESSAGE = RETURN-MESSAGE.
+        APPEND WA_RES TO IT_RES.
+        CLEAR : WA_RES.
+
+      ENDLOOP.
+
+      CLEAR WA_ZINIAIT02_PNS_Q.
+      MOVE-CORRESPONDING GS_FINAL TO WA_ZINIAIT02_PNS_Q.
+
+      WA_ZINIAIT02_PNS_Q-ZDATE = GS_FINAL-DATE.
+      WA_ZINIAIT02_PNS_Q-ENTRY_DATE = SY-DATUM.
+      WA_ZINIAIT02_PNS_Q-ENTRY_TIME = SY-UZEIT.
+      WA_ZINIAIT02_PNS_Q-USER_NAME = SY-UNAME.
+
+      APPEND WA_ZINIAIT02_PNS_Q TO IT_ZINIAIT02_PNS_Q_5.
+      CLEAR : WA_ZINIAIT02_PNS_Q, GS_FINAL.
+
+      IF SY-SUBRC EQ 0.
+        CONTINUE.
+      ENDIF.
+
+      LOOP AT RETURN WHERE TYPE EQ 'S'.
+        B = 'X'.
+      ENDLOOP.
+
+      CALL FUNCTION 'BAPI_MATPHYSINV_POSTDIFF'
+        EXPORTING
+          PHYSINVENTORY = INVENTORYNO
+          FISCALYEAR    = P_YEAR
+<font color ="#0000FF">*         PSTNG_DATE    =</font>
+<font color ="#0000FF">*         THRESHOLD_VALUE       =</font>
+        TABLES
+<font color ="#0000FF">*         ITEMS         =</font>
+          RETURN        = RETURN.
+
+      CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'.
+      WAIT UP TO 2 SECONDS.
+
+      LOOP AT RETURN WHERE TYPE = 'E'.
+
+        SELECT SINGLE MAX( SR_NO ) INTO LV_SRNO FROM ZACC_PI_LOG.
+        LV_SRNO = LV_SRNO + 1.
+
+        ZACC_PI_LOG-SR_NO = LV_SRNO.
+        ZACC_PI_LOG-SCENARIO  = 'STKRECO'.
+        ZACC_PI_LOG-WERKS     = GS_FINAL-PLANT.
+        ZACC_PI_LOG-REFDOCNO  = INVENTORYNO.
+
+<font color ="#0000FF">*            CONCATENATE P_DATE+6(2) P_DATE+4(2) P_DATE+0(4) INTO ZACC_PI_LOG-POST_DATE SEPARATED BY '.'.</font>
+
+        ZACC_PI_LOG-POST_DATE = GS_FINAL-DATE.
+
+        ZACC_PI_LOG-PI_STATUS    = 'E'.
+        ZACC_PI_LOG-SYS_TIME   = SY-UZEIT.
+        ZACC_PI_LOG-CREATEDON  = SY-DATUM.
+        ZACC_PI_LOG-MESSAGE   = RETURN-MESSAGE.
+        INSERT ZACC_PI_LOG FROM ZACC_PI_LOG.
+        COMMIT WORK.
+        WAIT UP TO 2 SECONDS.
+
+        WA_RES-DOCNO   = GS_FINAL-PNS_Q_NO.
+        WA_RES-STATUS  = '1'.
+        WA_RES-MESSAGE = RETURN-MESSAGE.
+        APPEND WA_RES TO IT_RES.
+        CLEAR : WA_RES.
+
+      ENDLOOP.
+
+      CLEAR WA_ZINIAIT02_PNS_Q.
+      MOVE-CORRESPONDING GS_FINAL TO WA_ZINIAIT02_PNS_Q.
+
+      WA_ZINIAIT02_PNS_Q-ZDATE = GS_FINAL-DATE.
+      WA_ZINIAIT02_PNS_Q-ENTRY_DATE = SY-DATUM.
+      WA_ZINIAIT02_PNS_Q-ENTRY_TIME = SY-UZEIT.
+      WA_ZINIAIT02_PNS_Q-USER_NAME = SY-UNAME.
+
+      APPEND WA_ZINIAIT02_PNS_Q TO IT_ZINIAIT02_PNS_Q_5.
+      CLEAR : WA_ZINIAIT02_PNS_Q, GS_FINAL.
+
+      IF SY-SUBRC EQ 0.
+        CONTINUE.
+      ENDIF.
+
+    ENDIF.
+
+    REFRESH:ITEMS,ITEMS1,RETURN.
+    CLEAR:LS_HEADER,V_CLABS, V_CINSM,V_CSPEM.
+
+
+  ENDLOOP.
+
+  IF IT_ZINIAIT02_PNS_Q_5 IS NOT INITIAL.
+    INSERT ZINIAIT02_PNS_Q FROM TABLE IT_ZINIAIT02_PNS_Q_5.
+    CLEAR: IT_ZINIAIT02_PNS_Q_5.
+    COMMIT WORK.
+  ENDIF.
+
+  CLEAR: PNS_Q_NO, LT_ITEM, LS_HEADER.
+
+  LOOP AT GT_FINAL INTO GS_FINAL WHERE MOVEMENT_TYPE &lt;&gt; '501' AND
+                                       MOVEMENT_TYPE &lt;&gt; '502' AND
+                                       MOVEMENT_TYPE &lt;&gt; '503' AND
+                                       MOVEMENT_TYPE &lt;&gt; '504' AND
+                                       MOVEMENT_TYPE &lt;&gt; '505' AND
+                                       MOVEMENT_TYPE &lt;&gt; '506'  ..
+
+    PNS_Q_NO = GS_FINAL-PNS_Q_NO.
+
+    CONCATENATE GS_FINAL-DATE+6(4) GS_FINAL-DATE+3(2) GS_FINAL-DATE+0(2)
+    INTO LS_HEADER-PSTNG_DATE.
+
+    CONCATENATE GS_FINAL-DATE+6(4) GS_FINAL-DATE+3(2) GS_FINAL-DATE+0(2)
+    INTO LS_HEADER-DOC_DATE.
+
+    LS_HEADER-REF_DOC_NO = GS_FINAL-ADDFIELD3.
+    LS_HEADER-HEADER_TXT = GS_FINAL-PNS_Q_NO.
+
+    WA_ITEM-MOVE_TYPE = GS_FINAL-MOVEMENT_TYPE.
+
+    IF GS_FINAL-MOVEMENT_TYPE = '321' OR
+       GS_FINAL-MOVEMENT_TYPE = '331' OR
+       GS_FINAL-MOVEMENT_TYPE = '339' OR
+       GS_FINAL-MOVEMENT_TYPE = '349' OR
+       GS_FINAL-MOVEMENT_TYPE = '501' OR
+       GS_FINAL-MOVEMENT_TYPE = '502' OR
+       GS_FINAL-MOVEMENT_TYPE = '503' OR
+       GS_FINAL-MOVEMENT_TYPE = '350' OR
+       GS_FINAL-MOVEMENT_TYPE = '504' OR
+       GS_FINAL-MOVEMENT_TYPE = '343' .
+      WA_ITEM-STGE_LOC  = GS_FINAL-SENDING_STORAGE_LOCATION."From Storage Location
+
+    ENDIF.
+
+    IF GS_FINAL-MOVEMENT_TYPE = '344' .
+      WA_ITEM-STGE_LOC  = GS_FINAL-RECEIVING_STORAGE_LOCATION."From Storage Location.
+    ENDIF.
+
+    IF GS_FINAL-MOVEMENT_TYPE = '343' OR
+       GS_FINAL-MOVEMENT_TYPE = '344'.
+      WA_ITEM-MOVE_REAS = '01'.
+    ENDIF.
+
+    WA_ITEM-PLANT     = GS_FINAL-PLANT."From Plant
+    WA_ITEM-MOVE_PLANT  = GS_FINAL-PLANT."receive  Plant
+    WA_ITEM-BATCH      = GS_FINAL-BATCH."From Batch
+
+    WA_ITEM-ENTRY_QNT = GS_FINAL-QTY.     "Entry Quantity
+    WA_ITEM-QUANTITY  = GS_FINAL-QTY.     "Quantity
+    WA_ITEM-ITEM_TEXT = GS_FINAL-ADDFIELD3.
+
+
+    CALL FUNCTION 'CONVERSION_EXIT_MATN1_INPUT'
+      EXPORTING
+        INPUT        = GS_FINAL-MATERIAL
+      IMPORTING
+        OUTPUT       = GS_FINAL-MATERIAL
+      EXCEPTIONS
+        LENGTH_ERROR = 1
+        OTHERS       = 2.
+    IF SY-SUBRC &lt;&gt; 0.
+<font color ="#0000FF">* Implement suitable error handling here</font>
+    ENDIF.
+
+
+    CLEAR GW_AFPO.
+    SELECT SINGLE * INTO GW_AFPO
+      FROM AFPO
+      WHERE  MATNR = GS_FINAL-MATERIAL AND
+             CHARG = GS_FINAL-BATCH AND
+             PWERK = GS_FINAL-PLANT.
+    IF SY-SUBRC = 0.
+      WA_ITEM-ENTRY_UOM = 'NOS'.
+    ELSE.
+      WA_ITEM-ENTRY_UOM = 'PAK'.
+    ENDIF.
+
+    CALL FUNCTION 'CONVERSION_EXIT_MATN1_OUTPUT'
+      EXPORTING
+        INPUT        = GS_FINAL-MATERIAL
+      IMPORTING
+        OUTPUT       = GS_FINAL-MATERIAL
+      EXCEPTIONS
+        LENGTH_ERROR = 1
+        OTHERS       = 2.
+    IF SY-SUBRC &lt;&gt; 0.
+<font color ="#0000FF">* Implement suitable error handling here</font>
+    ENDIF.
+
+<font color ="#0000FF">*    WA_ITEM-ENTRY_UOM = 'PAK'.</font>
+    WA_ITEM-UNLOAD_PT = ''.
+
+    LS_ITEM-MOVE_BATCH     = GS_FINAL-BATCH.
+
+    WA_ITEM-MATERIAL = GS_FINAL-MATERIAL."From Material
+    CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'
+      EXPORTING
+        INPUT  = WA_ITEM-MATERIAL
+      IMPORTING
+        OUTPUT = WA_ITEM-MATERIAL.
+
+    WA_ITEM-MOVE_MAT = WA_ITEM-MATERIAL.
+
+
+    APPEND WA_ITEM TO LT_ITEM.
+    CLEAR WA_ITEM.
+
+    CASE GS_FINAL-MOVEMENT_TYPE.
+      WHEN '321' OR '349' OR '350' OR '343' OR '344'.
+        LS_CODE-GM_CODE = '04'.
+      WHEN '331'.
+        LS_CODE-GM_CODE = '03'.
+      WHEN '501' OR '502' OR '503' OR '504'.
+        LS_CODE-GM_CODE = '05'.
+      WHEN OTHERS.
+    ENDCASE.
+
+    MOVE-CORRESPONDING GS_FINAL TO WA_ZINIAIT02_PNS_Q.
+
+    WA_ZINIAIT02_PNS_Q-ZDATE = GS_FINAL-DATE.
+    WA_ZINIAIT02_PNS_Q-ENTRY_DATE = SY-DATUM.
+    WA_ZINIAIT02_PNS_Q-ENTRY_TIME = SY-UZEIT.
+    WA_ZINIAIT02_PNS_Q-USER_NAME = SY-UNAME.
+
+    APPEND WA_ZINIAIT02_PNS_Q TO IT_ZINIAIT02_PNS_Q.
+    CLEAR : WA_ZINIAIT02_PNS_Q, GS_FINAL.
+
+  ENDLOOP.
+
+  IF IT_ZINIAIT02_PNS_Q IS NOT INITIAL.
+    INSERT ZINIAIT02_PNS_Q FROM TABLE IT_ZINIAIT02_PNS_Q.
+    COMMIT WORK.
+
+    CLEAR: MATERIALDOCUMENT, MATDOCUMENTYEAR, LT_RETURN.
+
+    CALL FUNCTION 'BAPI_GOODSMVT_CREATE'
+      EXPORTING
+        GOODSMVT_HEADER  = LS_HEADER
+        GOODSMVT_CODE    = LS_CODE
+      IMPORTING
+        GOODSMVT_HEADRET = LS_HEADRET
+        MATERIALDOCUMENT = MATERIALDOCUMENT
+        MATDOCUMENTYEAR  = MATDOCUMENTYEAR
+      TABLES
+        GOODSMVT_ITEM    = LT_ITEM
+        RETURN           = LT_RETURN.
+
+    IF MATERIALDOCUMENT IS NOT INITIAL.
+      CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'.
+      WAIT UP TO 2 SECONDS.
+
+      WA_RES-SAPDOCNO   = MATERIALDOCUMENT.
+      WA_RES-DOCNO   = PNS_Q_NO.
+      WA_RES-STATUS  = '0'.
+      WA_RES-MESSAGE = 'Successful'.
+      APPEND WA_RES TO IT_RES.
+      CLEAR : WA_RES.
+
+      LOOP AT IT_ZINIAIT02_PNS_Q INTO WA_ZINIAIT02_PNS_Q.
+        WA_ZINIAIT02_PNS_Q-MBLNR =  MATERIALDOCUMENT.
+        WA_ZINIAIT02_PNS_Q-MJAHR =  MATDOCUMENTYEAR.
+        MODIFY IT_ZINIAIT02_PNS_Q FROM WA_ZINIAIT02_PNS_Q INDEX SY-TABIX
+                TRANSPORTING  MBLNR MJAHR.
+      ENDLOOP.
+
+      IF IT_ZINIAIT02_PNS_Q IS NOT INITIAL.
+        MODIFY ZINIAIT02_PNS_Q FROM TABLE IT_ZINIAIT02_PNS_Q.
+        CLEAR IT_ZINIAIT02_PNS_Q.
+      ENDIF.
+    ELSE.
+
+      LOOP AT LT_RETURN INTO LS_RETURN.
+
+        CLEAR: V_TEXT.
+        CALL FUNCTION 'MESSAGE_TEXT_BUILD'
+          EXPORTING
+            MSGID               = LS_RETURN-ID
+            MSGNR               = LS_RETURN-NUMBER
+            MSGV1               = LS_RETURN-MESSAGE_V1
+            MSGV2               = LS_RETURN-MESSAGE_V2
+            MSGV3               = LS_RETURN-MESSAGE_V3
+            MSGV4               = LS_RETURN-MESSAGE_V4
+          IMPORTING
+            MESSAGE_TEXT_OUTPUT = V_TEXT.
+
+        WA_RES-DOCNO   = PNS_Q_NO.
+        WA_RES-STATUS  = '1'.
+        WA_RES-MESSAGE = V_TEXT.
+        APPEND WA_RES TO IT_RES.
+        CLEAR : WA_RES.
+<font color ="#0000FF">******************************* SOA  Add by Ravi on 09.01.2023</font>
+
+        READ TABLE LT_ITEM INTO WA_ITEM INDEX 1.
+        WA_PILOG-PROCESS_TYPE = V_SCENARIO.
+<font color ="#0000FF">*      wa_pilog-comp_code = v_bukrs.</font>
+        WA_PILOG-TX_DATE = SY-DATUM.
+        WA_PILOG-DOC_NO = PNS_Q_NO.
+        WA_PILOG-PLANT = WA_ITEM-PLANT .
+        WA_PILOG-STATUS = 'E'.
+        WA_PILOG-MESSAGE = V_TEXT.
+        WA_PILOG-CREATED_ON = SY-DATUM.
+        WA_PILOG-TIME = SY-UZEIT.
+        WA_PILOG-CREATED_BY = SY-UNAME.
+
+        IF IT_RES[] IS NOT INITIAL.
+          PERFORM PI_LOG IN PROGRAM ZIA_PILOG_AND_EMAIL
+                       TABLES IT_RES
+                        USING WA_PILOG.
+          CLEAR : WA_PILOG, IT_RES.
+          EXIT.
+        ENDIF.
+<font color ="#0000FF">******************************* SOA  Add by Ravi on 09.01.2023</font>
+      ENDLOOP.
+
+    ENDIF.
+
+  ENDIF.
+
+
+
+ENDFUNCTION.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

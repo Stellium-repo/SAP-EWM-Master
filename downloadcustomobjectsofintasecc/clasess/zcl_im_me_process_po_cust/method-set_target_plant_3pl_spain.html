@@ -1,0 +1,81 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>SET_TARGET_PLANT_3PL_SPAIN</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: SET_TARGET_PLANT_3PL_SPAIN</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Processing of Header Data</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*   Method attributes.                                                   *</font>
+<font color ="#0000FF">**************************************************************************</font>
+Instantiation: Protected
+<font color ="#0000FF">**************************************************************************</font>
+
+METHOD SET_TARGET_PLANT_3PL_SPAIN.
+<font color ="#0000FF">************************************************************************</font>
+<font color ="#0000FF">* Program Name      :                           Object ID:             *</font>
+<font color ="#0000FF">* Description       : Set target plant at header for message           *</font>
+<font color ="#0000FF">*                     determination                                    *</font>
+<font color ="#0000FF">* Create Date       :                                                  *</font>
+<font color ="#0000FF">* FO Owner          :                                                  *</font>
+<font color ="#0000FF">* Tech Owner        :                                                  *</font>
+<font color ="#0000FF">* Project Module    :                                                  *</font>
+<font color ="#0000FF">************************************************************************</font>
+<font color ="#0000FF">*                        Change Log                                    *</font>
+<font color ="#0000FF">************************************************************************</font>
+<font color ="#0000FF">*  REQ#         DATE         WHO            CHANGE_ID        DESCR     *</font>
+<font color ="#0000FF">*-----------------------------------------------------------------------</font>
+<font color ="#0000FF">*  001                                                      Initial    *</font>
+<font color ="#0000FF">************************************************************************</font>
+
+
+  DATA: L_HEADER TYPE MEPOHEADER,
+        L_ITEMS TYPE  PURCHASE_ORDER_ITEMS,
+        L_ITEM  TYPE MEPOITEM.
+
+  FIELD-SYMBOLS: &lt;FS_ITEM&gt; TYPE PURCHASE_ORDER_ITEM.
+
+  CALL METHOD IM_HEADER-&gt;GET_DATA
+    RECEIVING
+      RE_DATA = L_HEADER.
+
+
+  CALL METHOD IM_HEADER-&gt;GET_ITEMS
+    RECEIVING
+      RE_ITEMS = L_ITEMS.
+
+  LOOP AT L_ITEMS ASSIGNING &lt;FS_ITEM&gt;.
+    CALL METHOD &lt;FS_ITEM&gt;-ITEM-&gt;GET_DATA
+      RECEIVING
+        RE_DATA = L_ITEM.
+    CHECK L_ITEM-LOEKZ IS INITIAL.
+    EXIT.
+
+  ENDLOOP.
+
+<font color ="#0000FF">* 3PL as center or 3PL as Storage Location (Intercompany)</font>
+  CHECK ( L_ITEM-WERKS EQ 'ES11' OR ( L_ITEM-WERKS = 'GB53' AND L_ITEM-LGORT EQ 'ES11' )
+       OR L_ITEM-WERKS EQ 'ES12' OR ( L_ITEM-WERKS = 'GB53' AND L_ITEM-LGORT EQ 'ES12' )
+       OR L_ITEM-WERKS EQ 'ES13' OR ( L_ITEM-WERKS = 'GB53' AND L_ITEM-LGORT EQ 'ES13' )
+       OR L_ITEM-WERKS EQ 'PT11' OR ( L_ITEM-WERKS = 'GB53' AND L_ITEM-LGORT EQ 'PT11' )
+       OR L_ITEM-WERKS EQ 'PT11' OR ( L_ITEM-WERKS = 'NL15' AND L_ITEM-LGORT EQ 'PT11' ) ).  "Added by Vaibhav on 08.10.2020
+
+  L_HEADER-ZZTARGET_PLANT = L_ITEM-WERKS.
+  L_HEADER-ZZTARGET_STOLOC = L_ITEM-LGORT.
+
+  CALL METHOD IM_HEADER-&gt;SET_DATA
+    EXPORTING
+      IM_DATA = L_HEADER.
+
+
+ENDMETHOD.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

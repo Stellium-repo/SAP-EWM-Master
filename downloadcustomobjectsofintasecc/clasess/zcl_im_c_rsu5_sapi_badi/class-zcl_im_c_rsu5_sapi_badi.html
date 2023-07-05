@@ -1,0 +1,131 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCL_IM_C_RSU5_SAPI_BADI</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for class: ZCL_IM_C_RSU5_SAPI_BADI</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Imp. class for BAdI imp. ZC_RSU5_SAPI_BADI</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*   Class attributes.                                                    *</font>
+<font color ="#0000FF">**************************************************************************</font>
+Instantiation: Public
+Message class:
+State: Implemented
+Final Indicator: X
+R/3 Release: 700
+
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*   Public section of class.                                             *</font>
+<font color ="#0000FF">**************************************************************************</font>
+class ZCL_IM_C_RSU5_SAPI_BADI definition
+  public
+  final
+  create public .
+
+<font color ="#0000FF">*"* public components of class ZCL_IM_C_RSU5_SAPI_BADI</font>
+<font color ="#0000FF">*"* do not include other source files here!!</font>
+public section.
+
+  interfaces IF_EX_RSU5_SAPI_BADI .
+
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*   Private section of class.                                            *</font>
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*"* private components of class ZCL_IM_C_RSU5_SAPI_BADI</font>
+<font color ="#0000FF">*"* do not include other source files here!!</font>
+private section.
+
+  class-methods M_0FI_AR_4
+    importing
+      value(I_DATASOURCE) type RSAOT_OLTPSOURCE
+      value(I_UPDMODE) type SBIWA_S_INTERFACE-UPDMODE
+      value(I_T_SELECT) type SBIWA_T_SELECT
+      value(I_T_FIELDS) type SBIWA_T_FIELDS
+    changing
+      C_T_DATA type ANY TABLE
+      C_T_MESSAGES type RSU5_T_MESSAGES optional
+    exceptions
+      RSAP_BADI_EXIT_ERROR .
+  class-methods M_0FI_AR_45
+    importing
+      I_UPDMODE type SBIWA_S_INTERFACE-UPDMODE
+      I_T_SELECT type SBIWA_T_SELECT
+      I_T_FIELDS type SBIWA_T_FIELDS
+    changing
+      C_T_DATA type ANY TABLE
+      C_T_MESSAGES type RSU5_T_MESSAGES optional .
+  class-methods M_0FI_GL_4
+    importing
+      value(I_DATASOURCE) type RSAOT_OLTPSOURCE
+      value(I_UPDMODE) type SBIWA_S_INTERFACE-UPDMODE
+      value(I_T_SELECT) type SBIWA_T_SELECT
+      value(I_T_FIELDS) type SBIWA_T_FIELDS
+    changing
+      C_T_DATA type ANY TABLE
+      C_T_MESSAGES type RSU5_T_MESSAGES optional
+    exceptions
+      RSAP_BADI_EXIT_ERROR .
+  class-methods M_0FI_AP_4
+    importing
+      value(I_DATASOURCE) type RSAOT_OLTPSOURCE
+      value(I_UPDMODE) type SBIWA_S_INTERFACE-UPDMODE
+      value(I_T_SELECT) type SBIWA_T_SELECT
+      value(I_T_FIELDS) type SBIWA_T_FIELDS
+    changing
+      C_T_DATA type ANY TABLE
+      C_T_MESSAGES type RSU5_T_MESSAGES optional
+    exceptions
+      RSAP_BADI_EXIT_ERROR .
+  class-methods M_0FI_AA_11
+    importing
+      value(I_DATASOURCE) type RSAOT_OLTPSOURCE
+      value(I_UPDMODE) type SBIWA_S_INTERFACE-UPDMODE
+      value(I_T_SELECT) type SBIWA_T_SELECT
+      value(I_T_FIELDS) type SBIWA_T_FIELDS
+    changing
+      C_T_DATA type ANY TABLE
+      C_T_MESSAGES type RSU5_T_MESSAGES optional
+    exceptions
+      RSAP_BADI_EXIT_ERROR .
+  class-methods M_2LIS_03_BF
+    importing
+      value(I_DATASOURCE) type RSAOT_OLTPSOURCE
+      value(I_UPDMODE) type SBIWA_S_INTERFACE-UPDMODE
+      value(I_T_SELECT) type SBIWA_T_SELECT
+      value(I_T_FIELDS) type SBIWA_T_FIELDS
+    changing
+      C_T_DATA type ANY TABLE
+      C_T_MESSAGES type RSU5_T_MESSAGES optional .
+  class-methods M_0FI_GL_4_N
+    importing
+      value(I_DATASOURCE) type RSAOT_OLTPSOURCE
+      value(I_UPDMODE) type SBIWA_S_INTERFACE-UPDMODE
+      value(I_T_SELECT) type SBIWA_T_SELECT
+      value(I_T_FIELDS) type SBIWA_T_FIELDS
+    changing
+      C_T_DATA type ANY TABLE
+      C_T_MESSAGES type RSU5_T_MESSAGES optional .
+
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*   Protected section of class.                                          *</font>
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*"* protected components of class ZCL_IM_C_RSU5_SAPI_BADI</font>
+<font color ="#0000FF">*"* do not include other source files here!!</font>
+protected section.
+
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*   Types section of class.                                              *</font>
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*"* dummy include to reduce generation dependencies between</font>
+<font color ="#0000FF">*"* class ZCL_IM_C_RSU5_SAPI_BADI and it's users.</font>
+<font color ="#0000FF">*"* touched if any type reference has been changed</font>
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

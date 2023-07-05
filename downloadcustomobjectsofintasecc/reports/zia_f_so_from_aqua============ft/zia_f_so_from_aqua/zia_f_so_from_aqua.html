@@ -1,0 +1,1052 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZIA_F_SO_FROM_AQUA</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for function: ZIA_F_SO_FROM_AQUA</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Quotation Creation From ESKER</b></font>
+<hr>
+<pre width="100">
+FUNCTION ZIA_F_SO_FROM_AQUA.
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+<font color ="#0000FF">*"*"Local Interface:</font>
+<font color ="#0000FF">*"  IMPORTING</font>
+<font color ="#0000FF">*"     VALUE(I_FILENAME) TYPE  CHAR50</font>
+<font color ="#0000FF">*"  TABLES</font>
+<font color ="#0000FF">*"      IT_QUAT TYPE  ZIA_T_QUAT_FROM_AQUA</font>
+<font color ="#0000FF">*"      IT_RES TYPE  ZIA_T_RES_SPAIN</font>
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+
+<font color ="#0000FF">*       <a href ="global-zia_f_so_from_aqua.html">Global data declarations</a></font>
+
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+<font color ="#0000FF">*"*"Local Interface:</font>
+<font color ="#0000FF">*"  TABLES</font>
+<font color ="#0000FF">*"      IT_QUAT TYPE  ZIA_T_QUAT_FROM_AQUA</font>
+<font color ="#0000FF">*"      IT_RES TYPE  ZIA_T_RES_SPAIN</font>
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+
+
+<font color ="#0000FF">*&----------------------Change Log-------------------------------------*</font>
+
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& SRNO   CHARM         TR                RequestBy        ChangeBy</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& 01     8000004498    DEVK964914        Abhinash           Nagraj</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*  TABLES: ZIA_LOG_TABLE.</font>
+
+<font color ="#0000FF">*bapi BAPI_PRICES_CONDITIONS</font>
+<font color ="#0000FF">*INCLUDE BDCRECX1.</font>
+
+  DATA: MESSTAB1 TYPE TABLE OF BDCMSGCOLL.
+
+  DATA: DATE1 LIKE BDCDATA-FVAL,
+        CUST1 LIKE BDCDATA-FVAL,
+        CUST2 LIKE BDCDATA-FVAL,
+        CUST3 LIKE BDCDATA-FVAL,
+        CUST4 LIKE BDCDATA-FVAL,
+        MAT1  LIKE BDCDATA-FVAL,
+        MAT2  LIKE BDCDATA-FVAL,
+        MAT3  LIKE BDCDATA-FVAL,
+        MAT4  LIKE BDCDATA-FVAL,
+        PRICE LIKE BDCDATA-FVAL,
+        LV_VTWEG LIKE BDCDATA-FVAL.
+
+  TYPES: BEGIN OF TY_KNVV,
+          KUNNR TYPE KNVV-KUNNR,
+          VKORG TYPE KNVV-VKORG,
+          VTWEG TYPE KNVV-VTWEG,
+          SPART TYPE KNVV-SPART,
+          WAERS TYPE KNVV-WAERS,
+          VKGRP TYPE KNVV-VKGRP,
+          VKBUR TYPE KNVV-VKBUR,
+          VWERK TYPE KNVV-VWERK,
+         END OF TY_KNVV.
+<font color ="#0000FF">************Add by Nagraj dt: 12.11.2021 CR#8000004498 *********************</font>
+ TYPES: BEGIN OF TY_VAPMA,
+        MATNR TYPE VAPMA-MATNR,
+        VKORG TYPE VAPMA-VKORG,
+        TRVOG TYPE VAPMA-TRVOG,
+        AUDAT TYPE VAPMA-AUDAT,
+        VTWEG TYPE VAPMA-VTWEG,
+        SPART TYPE VAPMA-SPART,
+        AUART TYPE VAPMA-AUART,
+        KUNNR TYPE VAPMA-KUNNR,
+        VKBUR TYPE VAPMA-VKBUR,
+        VKGRP TYPE VAPMA-VKGRP,
+        VBELN TYPE VAPMA-VBELN,
+        DATAB TYPE VAPMA-DATAB,
+        DATBI TYPE VAPMA-DATBI,
+    END OF TY_VAPMA.
+
+<font color ="#0000FF">************End by nagraj  dt: 12.11.2021 CR#8000004498 *********************</font>
+
+  DATA: V1   TYPE CHAR10,
+        LEN  TYPE CHAR10,
+        LEN1 TYPE CHAR10,
+        LEN2 TYPE CHAR10,
+        V2   TYPE CHAR10,
+        V3   TYPE CHAR10,
+        V4   TYPE CHAR10,
+        V5   TYPE CHAR10,
+        V6   TYPE CHAR10,
+        V7   TYPE CHAR10,
+        V8   TYPE CHAR10,
+        V9   TYPE CHAR10,
+        V10  TYPE CHAR10,
+        V11  TYPE CHAR10,
+        V12  TYPE CHAR10,
+        V13  TYPE CHAR10,
+        V14  TYPE CHAR10,
+        V15  TYPE CHAR10,
+        V16  TYPE CHAR10,
+        V17  TYPE P DECIMALS 2,
+        V18  TYPE P DECIMALS 2.
+
+  DATA: IT_H TYPE TABLE OF ZIA_S_SO_FROM_ESKER_H,
+        WA_H TYPE ZIA_S_SO_FROM_ESKER_H.
+
+  DATA: IT_I TYPE TABLE OF ZIA_S_SO_FROM_ESKER_I,
+        WA_I TYPE ZIA_S_SO_FROM_ESKER_I.
+
+  DATA: WA_QUAT TYPE ZIA_S_QUAT_FROM_AQUA,
+        I_VKORG TYPE VBAK-VKORG.
+
+  DATA: IT_KNVV TYPE TABLE OF TY_KNVV,
+        WA_KNVV TYPE TY_KNVV.
+
+<font color ="#0000FF">*********Add by Nagraj dt: 12.11.2021 CR#8000004498 *******************</font>
+
+ DATA: IT_VAPMA TYPE  TABLE OF TY_VAPMA,
+       WA_VAPMA TYPE TY_VAPMA.
+
+
+ DATA:R_MATNR TYPE RANGE OF VAPMA-MATNR WITH HEADER LINE,
+      R_AUDAT TYPE RANGE OF VAPMA-AUDAT WITH HEADER LINE,
+      R_VTWEG TYPE RANGE OF VAPMA-VTWEG WITH HEADER LINE,
+      R_KUNNR TYPE RANGE OF VAPMA-KUNNR WITH HEADER LINE,
+      R_VKBUR TYPE RANGE OF VAPMA-VKBUR WITH HEADER LINE,
+      R_VKGRP TYPE RANGE OF VAPMA-VKGRP WITH HEADER LINE.
+
+<font color ="#0000FF">*********End by Nagraj dt: 12.11.2021 CR#8000004498 ********************</font>
+<font color ="#0000FF">*  DATA:WA_QUAT TYPE ZIA_T_QUAT_FROM_AQUA.</font>
+
+  DATA: IT_RETURN     TYPE TABLE OF BAPIRET2,
+        IT_RETURN1    TYPE TABLE OF BAPIRET2,
+        WA_RETURN     TYPE BAPIRET2,
+        IT_ITEM       TYPE TABLE OF BAPISDITM,
+        WA_ITEM       TYPE BAPISDITM,
+        IT_ITEMX      TYPE TABLE OF BAPISDITMX,
+        WA_ITEMX      TYPE BAPISDITMX,
+        IT_PARTNER    TYPE TABLE OF BAPIPARNR,
+        WA_PARTNER    TYPE BAPIPARNR,
+        IT_COND       TYPE TABLE OF BAPICOND,
+        WA_COND       TYPE BAPICOND,
+        IT_CONDX      TYPE TABLE OF BAPICONDX,
+        WA_CONDX      TYPE BAPICONDX,
+<font color ="#0000FF">*********Start of mod by Nagraj dt: 16.11.2021  CR#8000004498 **************</font>
+        WA_HEADER     TYPE BAPISDH1,
+        WA_HEADERX    TYPE BAPISDH1X,
+        WA_HEADERQ TYPE BAPISDHD1,
+        WA_HEADERQX    TYPE BAPISDHD1X,
+<font color ="#0000FF">*********End of mod by Nagraj dt: 16.11.2021  CR#8000004498 ****************</font>
+        WA_LOG_SWITCH TYPE BAPISDLS,
+        I_S_LOG       TYPE BAL_S_LOG,
+        I_S_MSG       TYPE BAL_S_MSG,
+        E_NEW_LOGNUMBERS TYPE BAL_T_LGNM,
+        E_LOG_HANDLE  TYPE BALLOGHNDL.
+
+
+  DATA: IT_SCHEDULES TYPE TABLE OF BAPISCHDL,
+        WA_SCHEDULES TYPE BAPISCHDL.
+
+  DATA: IT_SCHEDULESX TYPE TABLE OF BAPISCHDLX,
+        WA_SCHEDULESX TYPE BAPISCHDLX.
+<font color ="#0000FF">*       IT_SCHEDULESX type TABLE OF BAPISCHDLX,</font>
+<font color ="#0000FF">*       WA_SCHEDULESX type BAPISCHDLX.</font>
+
+  CONSTANTS: OBJECT TYPE BALOBJ_D VALUE 'ZSPAIN'.
+
+  DATA: V_TEXT(255) TYPE C,
+        LV_SRNO(8)  TYPE N,
+        I_TIME      TYPE SY-TIMLO,
+        I_DATE      TYPE SY-DATLO,
+        V_PLANT     TYPE T001W-NAME1,
+        TIMESTAMP   TYPE TZONREF-TSTAMPS,
+        LV_PRICE    TYPE P DECIMALS 3,
+        LV_PRICE2   TYPE P DECIMALS 2.
+<font color ="#0000FF">**        LV_PRICE3    TYPE KONP-KBETR,</font>
+<font color ="#0000FF">**        LV_PRICE4    TYPE KONP-KBETR.</font>
+
+  TYPES: BEGIN OF TT_LOCSKU,
+          FGEX TYPE ZAN_UPID_LOCSKU-FGEX,
+          WHPLANT TYPE ZAN_UPID_LOCSKU-WHPLANT,
+          LOCALMATNR TYPE ZAN_UPID_LOCSKU-LOCALMATNR,
+          LOCALMAKTX TYPE ZAN_UPID_LOCSKU-LOCALMAKTX,
+         END OF TT_LOCSKU.
+
+  DATA: IT_LOCSKU TYPE TABLE OF TT_LOCSKU,
+        WA_LOCSKU TYPE TT_LOCSKU.
+
+  RANGES: MAT_CODE1 FOR ZAN_UPID_LOCSKU-LOCALMATNR.
+
+  I_VKORG = 'ES10'.
+
+  LOOP AT IT_QUAT INTO WA_QUAT.
+
+    MAT_CODE1-SIGN   = 'I'.
+    MAT_CODE1-OPTION = 'EQ'.
+    MAT_CODE1-LOW    = WA_QUAT-MAT_CODE.
+    APPEND MAT_CODE1.
+    CLEAR: MAT_CODE1.
+
+  ENDLOOP.
+
+  IF MAT_CODE1[] IS NOT INITIAL.          "ADDED BY VIVEK --21.12.2020
+    SORT MAT_CODE1 BY LOW.
+    DELETE ADJACENT DUPLICATES FROM MAT_CODE1 COMPARING ALL FIELDS.
+  ENDIF.
+
+  LOOP AT IT_QUAT INTO WA_QUAT.
+
+    CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'
+      EXPORTING
+        INPUT  = WA_QUAT-CUST_CODE
+      IMPORTING
+        OUTPUT = WA_QUAT-CUST_CODE.
+
+    MODIFY IT_QUAT FROM WA_QUAT.
+    CLEAR: WA_QUAT.
+
+  ENDLOOP.
+
+  SELECT KUNNR
+         VKORG
+         VTWEG
+         SPART
+         WAERS
+         VKGRP
+         VKBUR
+         VWERK FROM KNVV
+               INTO TABLE IT_KNVV
+               FOR ALL ENTRIES IN IT_QUAT
+               WHERE KUNNR = IT_QUAT-CUST_CODE
+                 AND VKORG = I_VKORG
+                 AND LOEVM &lt;&gt; 'X'. "" Added by DMODI DT: 06-01-2021
+
+
+  SELECT FGEX
+         WHPLANT
+         LOCALMATNR
+         LOCALMAKTX FROM ZAN_UPID_LOCSKU
+                    INTO TABLE IT_LOCSKU
+<font color ="#0000FF">*                    FOR ALL ENTRIES IN IT_QUAT</font>
+                    WHERE LOCALMATNR IN MAT_CODE1.
+
+
+  IF IT_LOCSKU[] IS NOT INITIAL .            "" Added by DMODI DT: 12-01-2021
+    SORT IT_LOCSKU BY FGEX.
+    DELETE ADJACENT DUPLICATES FROM IT_LOCSKU COMPARING FGEX.
+  ENDIF.
+  SORT IT_KNVV BY KUNNR VKORG VTWEG SPART.
+<font color ="#0000FF">*  SORT IT_LOCSKU BY FGEX WHPLANT.</font>
+<font color ="#0000FF">*  SORT IT_QUAT BY CUST_CODE.</font>
+  SORT IT_LOCSKU BY LOCALMATNR.
+  SORT IT_QUAT BY MAT_CODE.
+  DELETE IT_QUAT WHERE CUST_CODE IS INITIAL.
+  DATA: P_ITM_NUMBER1(6),
+        P_ITM_NUMBER(6).
+
+  P_ITM_NUMBER1 = '000010'.
+
+  CLEAR: WA_KNVV, WA_HEADERQ, IT_ITEM[], IT_ITEMX[], IT_PARTNER[], IT_COND[], IT_CONDX, "mod by Nagraj dt: 16.11.2021 CR#8000004498
+         LV_VTWEG.
+
+
+
+<font color ="#0000FF">********Replaced********21.12.2020*********</font>
+<font color ="#0000FF">*****The possibility of 2 FGEX codes having the same local code.</font>
+  LOOP AT IT_LOCSKU INTO WA_LOCSKU.
+
+    LOOP AT IT_QUAT INTO WA_QUAT WHERE MAT_CODE = WA_LOCSKU-LOCALMATNR
+                                   AND     QUOT = 'S'.
+
+
+      WA_ITEM-MATERIAL = WA_LOCSKU-FGEX.
+
+      IF WA_ITEM-MATERIAL IS INITIAL.
+        WA_ITEM-MATERIAL = WA_QUAT-MAT_CODE.
+      ENDIF.
+
+      P_ITM_NUMBER = P_ITM_NUMBER + P_ITM_NUMBER1.
+
+      IF WA_QUAT-PRICE1 IS NOT INITIAL.
+        CLEAR LV_PRICE2.
+        CONCATENATE SY-DATUM+6(2) '.' SY-DATUM+4(2) '.' SY-DATUM+0(4) INTO DATE1.
+        REPLACE ALL OCCURRENCES OF ',' IN WA_QUAT-PRICE1 WITH '.'.
+        CLEAR : PRICE.
+        LV_PRICE2 = WA_QUAT-PRICE1.
+        PRICE = LV_PRICE2.
+        CONDENSE PRICE.
+
+        WA_COND-COND_VALUE = WA_QUAT-PRICE1.
+        WA_COND-ITM_NUMBER = P_ITM_NUMBER.
+        WA_COND-COND_ST_NO = '001'.
+        WA_COND-COND_TYPE  = 'ZESP'.
+        WA_COND-CURRENCY   = 'EUR'.
+        WA_COND-COND_UNIT  = 'PAK'. ""  CH-8000003702 by DMODI
+        APPEND WA_COND TO IT_COND.
+        CLEAR: WA_COND.
+
+        WA_CONDX-ITM_NUMBER = P_ITM_NUMBER.         " WA_I-ITEM_NO.
+        WA_CONDX-COND_ST_NO = '001'.
+        WA_CONDX-COND_TYPE  = 'ZESP'.
+        WA_CONDX-COND_VALUE = 'X'.
+        WA_CONDX-CURRENCY   = 'X'.
+        WA_CONDX-COND_P_UNT = 'X'.
+        WA_CONDX-COND_UNIT = 'X'. ""  CH-8000003702 by DMODI
+        APPEND WA_CONDX TO IT_CONDX.
+        CLEAR: WA_CONDX.
+      ENDIF.
+
+
+      IF WA_QUAT-PRICE2 IS NOT INITIAL.
+        CLEAR LV_PRICE.
+        REPLACE ALL OCCURRENCES OF ',' IN WA_QUAT-PRICE2 WITH '.'.
+        CLEAR : PRICE.
+        LV_PRICE = WA_QUAT-PRICE2 * 10. "" 11-06-2021
+        PRICE = LV_PRICE.
+        CONDENSE PRICE.
+
+
+        WA_COND-COND_VALUE = PRICE.
+        WA_COND-ITM_NUMBER = P_ITM_NUMBER.
+        WA_COND-COND_ST_NO = '001'.
+        WA_COND-COND_TYPE  = 'ZESD'.
+        WA_COND-CURRENCY   = 'EUR'.
+        APPEND WA_COND TO IT_COND.
+        CLEAR: WA_COND.
+
+        WA_CONDX-ITM_NUMBER = P_ITM_NUMBER."WA_I-ITEM_NO.
+        WA_CONDX-COND_ST_NO = '001'.
+        WA_CONDX-COND_TYPE  = 'ZESD'.
+        WA_CONDX-COND_VALUE = 'X'.
+        WA_CONDX-CURRENCY   = 'X'.
+        WA_CONDX-COND_P_UNT = 'X'.
+        APPEND WA_CONDX TO IT_CONDX.
+        CLEAR: WA_CONDX.
+
+      ENDIF.
+
+
+      IF WA_QUAT-PRICE3 IS NOT INITIAL.
+        CLEAR LV_PRICE.
+        REPLACE ALL OCCURRENCES OF ',' IN WA_QUAT-PRICE3 WITH '.'.
+        CLEAR : PRICE.
+        LV_PRICE = WA_QUAT-PRICE3 * 10. "" 11-06-2021
+        PRICE = LV_PRICE.
+        CONDENSE PRICE.
+
+        WA_COND-COND_VALUE = PRICE.
+        WA_COND-ITM_NUMBER = P_ITM_NUMBER.
+        WA_COND-COND_ST_NO = '001'.
+        WA_COND-COND_TYPE  = 'ZESC'.
+        WA_COND-CURRENCY   = 'EUR'.
+        APPEND WA_COND TO IT_COND.
+        CLEAR: WA_COND.
+
+        WA_CONDX-ITM_NUMBER = P_ITM_NUMBER."WA_I-ITEM_NO.
+        WA_CONDX-COND_ST_NO = '001'.
+        WA_CONDX-COND_TYPE  = 'ZESC'.
+        WA_CONDX-COND_VALUE = 'X'.
+        WA_CONDX-CURRENCY   = 'X'.
+        WA_CONDX-COND_P_UNT = 'X'.
+        APPEND WA_CONDX TO IT_CONDX.
+        CLEAR: WA_CONDX.
+
+      ENDIF.
+
+
+      IF WA_QUAT-PRICE4 IS NOT INITIAL.
+        CLEAR LV_PRICE2.
+        CONCATENATE SY-DATUM+6(2) '.' SY-DATUM+4(2) '.' SY-DATUM+0(4) INTO DATE1.
+        REPLACE ALL OCCURRENCES OF ',' IN WA_QUAT-PRICE4 WITH '.'.
+        CLEAR : PRICE.
+        LV_PRICE2 = WA_QUAT-PRICE4.
+        PRICE = LV_PRICE2.
+        CONDENSE PRICE.
+
+        WA_COND-COND_VALUE = PRICE.
+        WA_COND-ITM_NUMBER = P_ITM_NUMBER.
+        WA_COND-COND_ST_NO = '001'.
+        WA_COND-COND_TYPE  = 'ZESN'.
+        WA_COND-CURRENCY   = 'EUR'.
+        WA_COND-COND_UNIT  = 'PAK'. ""  CH-8000003702 by DMODI
+        APPEND WA_COND TO IT_COND.
+        CLEAR: WA_COND.
+
+        WA_CONDX-ITM_NUMBER = P_ITM_NUMBER."WA_I-ITEM_NO.
+        WA_CONDX-COND_ST_NO = '001'.
+        WA_CONDX-COND_TYPE  = 'ZESN'.
+        WA_CONDX-COND_VALUE = 'X'.
+        WA_CONDX-CURRENCY   = 'X'.
+        WA_CONDX-COND_P_UNT = 'X'.
+        WA_CONDX-COND_UNIT  = 'X'. ""  CH-8000003702 by DMODI
+        APPEND WA_CONDX TO IT_CONDX.
+        CLEAR: WA_CONDX.
+
+      ENDIF.
+
+
+      IF IT_PARTNER[] IS INITIAL.
+
+        WA_PARTNER-PARTN_ROLE = 'AG'. "" 11-06-2021
+        WA_PARTNER-PARTN_NUMB = WA_QUAT-CUST_CODE.
+        APPEND WA_PARTNER TO IT_PARTNER.
+        CLEAR: WA_PARTNER.
+
+<font color ="#0000FF">***        WA_PARTNER-PARTN_ROLE = 'WE'.</font>
+<font color ="#0000FF">***        WA_PARTNER-PARTN_NUMB = WA_QUAT-CUST_CODE.</font>
+<font color ="#0000FF">***        CUST1                 = WA_QUAT-CUST_CODE.</font>
+<font color ="#0000FF">***        APPEND WA_PARTNER TO IT_PARTNER.</font>
+<font color ="#0000FF">***        CLEAR: WA_PARTNER.</font>
+
+        READ TABLE IT_KNVV INTO WA_KNVV WITH KEY KUNNR = WA_QUAT-CUST_CODE
+                                                 VKORG = I_VKORG BINARY SEARCH.
+        IF SY-SUBRC = 0.
+<font color ="#0000FF">*********Start of Comment by Nagraj dt: 16.11.2021  CR#8000004498 **************</font>
+<font color ="#0000FF">*          WA_HEADER-DOC_TYPE    = 'ZESQ'.</font>
+<font color ="#0000FF">*          WA_HEADER-DISTR_CHAN  = WA_KNVV-VTWEG.</font>
+<font color ="#0000FF">*          WA_HEADER-DIVISION    = WA_KNVV-SPART.</font>
+<font color ="#0000FF">*          WA_HEADER-SALES_ORG   = I_VKORG.</font>
+<font color ="#0000FF">*          WA_HEADER-QT_VALID_F  = SY-DATUM.            "IT IS ALWAY SY-DATUM AS PER FORMAT</font>
+<font color ="#0000FF">*          WA_HEADER-QT_VALID_T  = '99991231'.          "IT IS ALWAY 31.12.9999 AS PER FORMAT</font>
+<font color ="#0000FF">*          WA_HEADER-SALES_OFF   = 'ES00'.</font>
+<font color ="#0000FF">*          WA_HEADER-SALES_GRP   = 'YA1'.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*          WA_HEADERX-DOC_TYPE   = 'X'.</font>
+<font color ="#0000FF">*          WA_HEADERX-DISTR_CHAN = 'X'.</font>
+<font color ="#0000FF">*          WA_HEADERX-DIVISION   = 'X'.</font>
+<font color ="#0000FF">*          WA_HEADERX-SALES_ORG  = 'X'.</font>
+<font color ="#0000FF">*          WA_HEADERX-QT_VALID_F = 'X'.</font>
+<font color ="#0000FF">*          WA_HEADERX-QT_VALID_T = 'X'.</font>
+<font color ="#0000FF">*          WA_HEADERX-SALES_OFF  = 'X'.</font>
+<font color ="#0000FF">*          WA_HEADERX-SALES_GRP  = 'X'.</font>
+
+<font color ="#0000FF">*********End of Comment by Nagraj dt: 16.11.2021  CR#8000004498 ****************</font>
+
+<font color ="#0000FF">*********Start of mod by Nagraj dt: 16.11.2021  CR#8000004498 **************</font>
+
+          WA_HEADERQ-DOC_TYPE    = 'ZESQ'.
+          WA_HEADERQ-DISTR_CHAN  = WA_KNVV-VTWEG.
+          WA_HEADERQ-DIVISION    = WA_KNVV-SPART.
+          WA_HEADERQ-SALES_ORG   = I_VKORG.
+          WA_HEADERQ-QT_VALID_F  = SY-DATUM.            "IT IS ALWAY SY-DATUM AS PER FORMAT
+          WA_HEADERQ-QT_VALID_T  = '99991231'.          "IT IS ALWAY 31.12.9999 AS PER FORMAT
+          WA_HEADERQ-SALES_OFF   = 'ES00'.
+          WA_HEADERQ-SALES_GRP   = 'YA1'.
+
+          WA_HEADERQX-DOC_TYPE   = 'X'.
+          WA_HEADERQX-DISTR_CHAN = 'X'.
+          WA_HEADERQX-DIVISION   = 'X'.
+          WA_HEADERQX-SALES_ORG  = 'X'.
+          WA_HEADERQX-QT_VALID_F = 'X'.
+          WA_HEADERQX-QT_VALID_T = 'X'.
+          WA_HEADERQX-SALES_OFF  = 'X'.
+          WA_HEADERQX-SALES_GRP  = 'X'.
+<font color ="#0000FF">*********End of mod by Nagraj dt: 16.11.2021  CR#8000004498 **************</font>
+        ENDIF.
+
+        IF WA_KNVV-VWERK IS INITIAL.
+          WA_KNVV-VWERK = 'ES11'.
+
+        ENDIF.
+      ENDIF.
+
+      WA_ITEM-ITM_NUMBER = P_ITM_NUMBER."WA_I-ITEM_NO.
+
+<font color ="#0000FF">*******************commented by Vivek 21.12.2020******************************</font>
+<font color ="#0000FF">*    READ TABLE IT_LOCSKU INTO WA_LOCSKU WITH KEY LOCALMATNR = WA_QUAT-MAT_CODE</font>
+<font color ="#0000FF">*                                                 WHPLANT    = WA_KNVV-VWERK.</font>
+<font color ="#0000FF">*    IF SY-SUBRC = 0.</font>
+<font color ="#0000FF">*      WA_ITEM-MATERIAL = WA_LOCSKU-FGEX.</font>
+<font color ="#0000FF">*    ELSE.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      WA_ITEM-MATERIAL = WA_QUAT-MAT_CODE.</font>
+<font color ="#0000FF">*    ENDIF.</font>
+<font color ="#0000FF">*****************************************************************************</font>
+      WA_ITEM-TARGET_QTY = '1'. "WA_ITEM-TARGET_QTY.
+      WA_ITEM-PLANT      = WA_KNVV-VWERK.
+      APPEND WA_ITEM TO IT_ITEM.
+      CLEAR: WA_ITEM.
+
+      WA_ITEMX-ITM_NUMBER = P_ITM_NUMBER.
+      WA_ITEMX-MATERIAL   = 'X'.
+      WA_ITEMX-TARGET_QTY = 'X'.
+      WA_ITEMX-PLANT      = 'X'.
+      APPEND WA_ITEMX TO IT_ITEMX.
+      CLEAR: WA_ITEMX.
+
+      WA_SCHEDULES-ITM_NUMBER = P_ITM_NUMBER.
+      WA_SCHEDULES-REQ_QTY    = '1'.
+<font color ="#0000FF">*    WA_ITEM-TARGET_QTY.</font>
+      APPEND WA_SCHEDULES TO IT_SCHEDULES.
+      CLEAR: WA_SCHEDULES.
+
+      WA_SCHEDULESX-ITM_NUMBER = P_ITM_NUMBER.
+      WA_SCHEDULESX-REQ_QTY    = 'X'.
+      APPEND WA_SCHEDULESX TO IT_SCHEDULESX.
+      CLEAR: WA_SCHEDULESX.
+
+<font color ="#0000FF">*****************Add by Nagaraj dt: 12.11.2021 CR#8000004498 *************</font>
+      IF IT_ITEM[] IS NOT INITIAL.
+      WA_LOG_SWITCH-PRICING = 'G'.
+ CALL FUNCTION 'BAPI_QUOTATION_CREATEFROMDATA2'
+    EXPORTING
+<font color ="#0000FF">*       QUOTATION_HEADER_IN = WA_HEADER  "Commeted By Nagraj Dt: 16.11.2021 CR#8000004498</font>
+<font color ="#0000FF">*       QUOTATION_HEADER_INX = WA_HEADERX "Commeted By Nagraj Dt: 16.11.2021 CR#8000004498</font>
+       QUOTATION_HEADER_IN = WA_HEADERQ   "Modify By Nagraj Dt: 16.11.2021 CR#8000004498
+       QUOTATION_HEADER_INX = WA_HEADERQX "Modify By Nagraj Dt: 16.11.2021 CR#8000004498
+       LOGIC_SWITCH = WA_LOG_SWITCH
+   TABLES
+      RETURN = IT_RETURN
+      QUOTATION_ITEMS_IN = IT_ITEM
+      QUOTATION_ITEMS_INX = IT_ITEMX
+      QUOTATION_PARTNERS = IT_PARTNER
+      QUOTATION_SCHEDULES_IN = IT_SCHEDULES
+      QUOTATION_SCHEDULES_INX = IT_SCHEDULESX
+      QUOTATION_CONDITIONS_IN = IT_COND
+      QUOTATION_CONDITIONS_INX = IT_CONDX.
+    APPEND LINES OF IT_RETURN TO IT_RETURN1.
+    CLEAR IT_RETURN[].
+   FREE IT_RETURN[].
+<font color ="#0000FF">*************Added by Nagaraju DT:23.12.2021 CR#8000004498 **************</font>
+   CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'.
+CLEAR: WA_HEADERQ, WA_HEADERQX, IT_ITEM[],IT_ITEMX[],
+IT_PARTNER[],IT_SCHEDULES[],IT_SCHEDULESX[], IT_COND[], IT_CONDX[].
+  CLEAR:P_ITM_NUMBER.  "Added by Nagaraj DT:18.01.2022 CR#8000005018
+<font color ="#0000FF">*     P_ITM_NUMBER1 = '000010'.   "Added by Nagaraj DT:18.01.2022 CR#8000005018</font>
+<font color ="#0000FF">*****************End by Nagaraj dt:23.12.2021 CR#8000004498 ***************</font>
+   ENDIF.
+<font color ="#0000FF">*****************End by Nagaraj dt: 12.11.2021 CR#8000004498 ***************</font>
+    ENDLOOP.
+<font color ="#0000FF">***    CLEAR: WA_LOCSKU, WA_QUAT.</font>
+    CLEAR: WA_QUAT.    "" DT:08-02-2021
+  ENDLOOP.
+
+<font color ="#0000FF">*****************Commet Ended by Nagaraj dt: 23.12.2021 CR#8000004498 ***************</font>
+<font color ="#0000FF">*  IF IT_ITEM[] IS NOT INITIAL.</font>
+<font color ="#0000FF">*    WA_LOG_SWITCH-PRICING = 'G'.</font>
+<font color ="#0000FF">*    CALL FUNCTION 'BAPI_QUOTATION_CREATEFROMDATA2'</font>
+<font color ="#0000FF">*      EXPORTING</font>
+<font color ="#0000FF">*        QUOTATION_HEADER_IN      = WA_HEADERQ</font>
+<font color ="#0000FF">*        QUOTATION_HEADER_INX     = WA_HEADERQX</font>
+<font color ="#0000FF">*        LOGIC_SWITCH             = WA_LOG_SWITCH</font>
+<font color ="#0000FF">*      TABLES</font>
+<font color ="#0000FF">*        RETURN                   = IT_RETURN</font>
+<font color ="#0000FF">*        QUOTATION_ITEMS_IN       = IT_ITEM</font>
+<font color ="#0000FF">*        QUOTATION_ITEMS_INX      = IT_ITEMX</font>
+<font color ="#0000FF">*        QUOTATION_PARTNERS       = IT_PARTNER</font>
+<font color ="#0000FF">*        QUOTATION_SCHEDULES_IN   = IT_SCHEDULES</font>
+<font color ="#0000FF">*        QUOTATION_SCHEDULES_INX  = IT_SCHEDULESX</font>
+<font color ="#0000FF">*        QUOTATION_CONDITIONS_IN  = IT_COND</font>
+<font color ="#0000FF">*        QUOTATION_CONDITIONS_INX = IT_CONDX.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    APPEND LINES OF IT_RETURN TO IT_RETURN1.</font>
+<font color ="#0000FF">*    CLEAR IT_RETURN[].</font>
+<font color ="#0000FF">*    FREE  IT_RETURN[].</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'.</font>
+<font color ="#0000FF">******************Add by Nagaraj dt: 12.11.2021 CR#8000004498 *************</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    CLEAR: WA_HEADERQ, WA_HEADERQX, IT_ITEM[],IT_ITEMX[],</font>
+<font color ="#0000FF">*IT_PARTNER[],IT_SCHEDULES[],IT_SCHEDULESX[], IT_COND[], IT_CONDX[].</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">******************End by Nagaraj DT:12.11.2021 CR#8000004498 ***************</font>
+<font color ="#0000FF">*    CLEAR: WA_QUAT.</font>
+<font color ="#0000FF">*  ENDIF.</font>
+<font color ="#0000FF">****************Commeted by Nagarju DT:23.12.2021 CR#8000004498******************</font>
+
+
+<font color ="#0000FF">********Replaced********21.12.2020***by Vivek******</font>
+<font color ="#0000FF">*****The possibility of 2 FGEX codes having the same local code.</font>
+  LOOP AT IT_LOCSKU INTO WA_LOCSKU.
+
+  LOOP AT IT_QUAT INTO WA_QUAT WHERE MAT_CODE = WA_LOCSKU-LOCALMATNR
+                                AND QUOT = 'N' OR QUOT IS INITIAL.
+<font color ="#0000FF">*    LOOP AT IT_QUAT INTO WA_QUAT WHERE WA_QUAT-QUOT = 'N' OR WA_QUAT-QUOT IS INITIAL.</font>
+
+    READ TABLE IT_KNVV INTO WA_KNVV WITH KEY KUNNR = WA_QUAT-CUST_CODE
+                                             VKORG = I_VKORG.
+    IF SY-SUBRC = 0.
+    LV_VTWEG = WA_KNVV-VTWEG.
+    ENDIF.
+
+    CUST1 = WA_QUAT-CUST_CODE.
+    MAT1 = WA_LOCSKU-FGEX.
+<font color ="#0000FF">**    READ TABLE IT_LOCSKU INTO WA_LOCSKU WITH KEY LOCALMATNR = WA_QUAT-MAT_CODE</font>
+<font color ="#0000FF">**                                                 WHPLANT    = WA_KNVV-VWERK.</font>
+<font color ="#0000FF">**    IF SY-SUBRC = 0.</font>
+<font color ="#0000FF">**      MAT1 = WA_LOCSKU-FGEX.</font>
+<font color ="#0000FF">**    ENDIF.</font>
+
+<font color ="#0000FF">*    IF WA_QUAT-PRICE1 IS NOT INITIAL.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      CONCATENATE SY-DATUM+6(2) '.' SY-DATUM+4(2) '.' SY-DATUM+0(4) INTO DATE1.</font>
+<font color ="#0000FF">*      REPLACE ALL OCCURRENCES OF ',' IN WA_QUAT-PRICE1 WITH '.'.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      CLEAR : PRICE.</font>
+<font color ="#0000FF">*      PRICE = WA_QUAT-PRICE1.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      CALL FUNCTION 'ZVK11_CONDITION'</font>
+<font color ="#0000FF">*        EXPORTING</font>
+<font color ="#0000FF">*          CTU          = 'X'</font>
+<font color ="#0000FF">*          MODE         = 'N'</font>
+<font color ="#0000FF">*          UPDATE       = 'L'</font>
+<font color ="#0000FF">*          NODATA       = '/'</font>
+<font color ="#0000FF">*          KSCHL_001    = 'ZESP'</font>
+<font color ="#0000FF">*          SELKZ_01_002 = ''</font>
+<font color ="#0000FF">*          SELKZ_04_003 = 'X'</font>
+<font color ="#0000FF">*          VKORG_004    = 'ES10'</font>
+<font color ="#0000FF">*          VTWEG_005    = 'HX'</font>
+<font color ="#0000FF">*          KUNNR_006    = CUST1        " '7000005'</font>
+<font color ="#0000FF">*          MATNR_01_007 = MAT1         " '200000916'</font>
+<font color ="#0000FF">*          KBETR_01_008 = PRICE</font>
+<font color ="#0000FF">*          KONWA_01_009 = 'EUR'</font>
+<font color ="#0000FF">*          KPEIN_01_010 = '    1'</font>
+<font color ="#0000FF">*          KMEIN_01_011 = 'NOS'</font>
+<font color ="#0000FF">*          DATAB_01_012 = DATE1</font>
+<font color ="#0000FF">*          DATBI_01_013 = '31.12.9999'</font>
+<font color ="#0000FF">*        TABLES</font>
+<font color ="#0000FF">*          MESSTAB      = MESSTAB1.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    ENDIF.</font>
+
+    IF WA_QUAT-PRICE2 IS NOT INITIAL.
+      CLEAR LV_PRICE.
+      CONCATENATE SY-DATUM+6(2) '.' SY-DATUM+4(2) '.' SY-DATUM+0(4) INTO DATE1.
+      REPLACE ALL OCCURRENCES OF ',' IN WA_QUAT-PRICE2 WITH '.'.
+      CLEAR : PRICE.
+      LV_PRICE = WA_QUAT-PRICE2.
+      PRICE = LV_PRICE.
+      CONDENSE PRICE.
+
+      call function <a href ="../zvk11_condition/zvk11_condition.html">'ZVK11_CONDITION'</a>
+        EXPORTING
+          CTU          = 'X'
+          MODE         = 'N'
+          UPDATE       = 'L'
+          NODATA       = '/'
+          KSCHL_001    = 'ZESD'
+          SELKZ_01_002 = ''
+          SELKZ_04_003 = 'X'
+          VKORG_004    = 'ES10'
+          VTWEG_005    = LV_VTWEG "'HX'
+          KUNNR_006    = CUST1
+          MATNR_01_007 = MAT1
+          KBETR_01_008 = PRICE
+          KONWA_01_009 = 'EUR'
+          KPEIN_01_010 = '    1'
+          KMEIN_01_011 = 'PAC' " 'NOS'
+          DATAB_01_012 = DATE1
+          DATBI_01_013 = '31.12.9999'
+          QUAT         = WA_QUAT
+        TABLES
+          MESSTAB      = MESSTAB1.
+
+    ENDIF.
+
+    IF WA_QUAT-PRICE3 IS NOT INITIAL.
+      CLEAR LV_PRICE.
+      CONCATENATE SY-DATUM+6(2) '.' SY-DATUM+4(2) '.' SY-DATUM+0(4) INTO DATE1.
+      REPLACE ALL OCCURRENCES OF ',' IN WA_QUAT-PRICE3 WITH '.'.
+      CLEAR : PRICE.
+      LV_PRICE = WA_QUAT-PRICE3.
+      PRICE = LV_PRICE.
+      CONDENSE PRICE.
+
+      call function <a href ="../zvk11_condition/zvk11_condition.html">'ZVK11_CONDITION'</a>
+        EXPORTING
+          CTU          = 'X'
+          MODE         = 'N'
+          UPDATE       = 'L'
+          NODATA       = '/'
+          KSCHL_001    = 'ZESC'
+          SELKZ_01_002 = ''
+          SELKZ_04_003 = 'X'
+          VKORG_004    = 'ES10'
+          VTWEG_005    = LV_VTWEG "'HX'
+          KUNNR_006    = CUST1
+          MATNR_01_007 = MAT1
+          KBETR_01_008 = PRICE
+          KONWA_01_009 = 'EUR'
+          KPEIN_01_010 = '    1'
+          KMEIN_01_011 = 'PAC' " 'NOS'
+          DATAB_01_012 = DATE1
+          DATBI_01_013 = '31.12.9999'
+          QUAT         = WA_QUAT
+        TABLES
+          MESSTAB      = MESSTAB1.
+
+    ENDIF.
+
+    IF WA_QUAT-PRICE4 IS NOT INITIAL.
+      CLEAR LV_PRICE2.
+      CONCATENATE SY-DATUM+6(2) '.' SY-DATUM+4(2) '.' SY-DATUM+0(4) INTO DATE1.
+      REPLACE ALL OCCURRENCES OF ',' IN WA_QUAT-PRICE4 WITH '.'.
+      CLEAR : PRICE.
+      LV_PRICE2 = WA_QUAT-PRICE4.
+      PRICE = LV_PRICE2.
+      CONDENSE PRICE.
+
+      call function <a href ="../zvk11_condition/zvk11_condition.html">'ZVK11_CONDITION'</a>
+        EXPORTING
+          CTU          = 'X'
+          MODE         = 'N'
+          UPDATE       = 'L'
+          NODATA       = '/'
+          KSCHL_001    = 'ZESN'
+          SELKZ_01_002 = ''
+          SELKZ_04_003 = 'X'
+          VKORG_004    = 'ES10'
+          VTWEG_005    = LV_VTWEG "'HX'
+          KUNNR_006    = CUST1
+          MATNR_01_007 = MAT1
+          KBETR_01_008 = PRICE
+          KONWA_01_009 = 'EUR'
+          KPEIN_01_010 = '    1'
+          KMEIN_01_011 = 'PAC'  " 'NOS'
+          DATAB_01_012 = DATE1
+          DATBI_01_013 = '31.12.9999'
+          QUAT         = WA_QUAT
+        TABLES
+          MESSTAB      = MESSTAB1.
+
+    ENDIF.
+<font color ="#0000FF">***    CLEAR :WA_QUAT, WA_LOCSKU, WA_KNVV.</font>
+    CLEAR :WA_QUAT, WA_KNVV.
+    ENDLOOP.
+  ENDLOOP.
+
+<font color ="#0000FF">************Add by Nagraj dt: 12.11.2021 CR#8000004498 ********************</font>
+
+     WA_VAPMA-VKORG = 'ES10'.
+     WA_VAPMA-AUART = 'ZESQ'.
+     WA_VAPMA-TRVOG = '2'. "Quotations
+     WA_VAPMA-SPART = '19'.
+
+          SELECT * FROM VAPMA
+                    INTO CORRESPONDING FIELDS OF TABLE IT_VAPMA
+                       WHERE MATNR IN R_MATNR
+                         AND VKORG = WA_VAPMA-VKORG
+                         AND TRVOG = WA_VAPMA-TRVOG "Quotations
+                         AND AUDAT IN R_AUDAT
+                         AND VTWEG IN R_VTWEG
+                         AND SPART = WA_VAPMA-SPART
+                         AND AUART = WA_VAPMA-AUART
+                         AND KUNNR IN R_KUNNR
+                         AND VKBUR IN R_VKBUR
+                         AND VKGRP IN R_VKGRP
+                         AND DATAB &lt;= SY-DATUM
+                         AND DATBI &gt; SY-DATUM.
+
+<font color ="#0000FF">******The possibility of 2 FGEX codes having the same local code.</font>
+   LOOP AT IT_LOCSKU INTO WA_LOCSKU.
+     LOOP AT IT_QUAT INTO WA_QUAT WHERE MAT_CODE = WA_LOCSKU-LOCALMATNR
+                                        AND QUOT = 'D'.
+         WA_ITEM-MATERIAL = WA_LOCSKU-FGEX.
+      IF WA_ITEM-MATERIAL IS INITIAL.
+         WA_ITEM-MATERIAL = WA_QUAT-MAT_CODE.
+      ENDIF.
+     LOOP AT IT_VAPMA INTO WA_VAPMA
+     WHERE KUNNR = WA_QUAT-CUST_CODE
+     AND MATNR = WA_ITEM-MATERIAL.
+     WA_HEADER-QT_VALID_T = SY-DATUM.
+     WA_HEADERX-QT_VALID_T = 'X'.
+     WA_HEADERX-UPDATEFLAG = 'U'. "Added by Nagraj Dt: 17.11.2021 CR#8000004498
+<font color ="#0000FF">*************Start Commented By Nagraj Dt: 16.11.2021 CR#8000004498 **************</font>
+<font color ="#0000FF">*     CALL FUNCTION 'BAPI_CUSTOMERQUOTATION_CHANGE'</font>
+<font color ="#0000FF">*    EXPORTING</font>
+<font color ="#0000FF">*             SALES_DOCUMENT = WA_VAPMA-VBELN</font>
+<font color ="#0000FF">*             QUOTATION_HEADER_IN = WA_HEADER</font>
+<font color ="#0000FF">*             QUOTATION_HEADER_INX = WA_HEADERX</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*        TABLES</font>
+<font color ="#0000FF">*              RETURN = IT_RETURN.</font>
+<font color ="#0000FF">***************End Commented By Nagraj Dt: 16.11.2021 CR#8000004498 ***************</font>
+
+<font color ="#0000FF">*************Start Modify  By Nagraj Dt: 16.11.2021 CR#8000004498 ****************</font>
+
+      CALL FUNCTION 'BAPI_CUSTOMERQUOTATION_CHANGE'
+     EXPORTING
+             SALESDOCUMENT = WA_VAPMA-VBELN
+             QUOTATION_HEADER_IN = WA_HEADER
+             QUOTATION_HEADER_INX = WA_HEADERX
+      TABLES
+     RETURN = IT_RETURN.
+<font color ="#0000FF">*************End Modify  By Nagraj Dt: 16.11.2021 CR#8000004498 ****************</font>
+       APPEND LINES OF IT_RETURN TO IT_RETURN1.
+<font color ="#0000FF">*             CLEAR: IT_RETURN[], WA_HEADER, WA_HEADERX.  "Commented By Nagraj Dt: 16.11.2021 CR#8000004498</font>
+            CLEAR: IT_RETURN[], WA_HEADER, WA_HEADERX.  "Modify  By Nagraj Dt: 16.11.2021 CR#8000004498
+           FREE IT_RETURN[].
+       CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'.
+         ENDLOOP.
+      ENDLOOP.
+          CLEAR: WA_QUAT.
+  ENDLOOP.
+<font color ="#0000FF">****************End by Nagraj dt: 12.11.2021 CR#8000004498 **************</font>
+
+  IT_RETURN[] = IT_RETURN1[].
+
+  DELETE IT_RETURN[] WHERE TYPE = 'S' AND ID = 'V4'.
+  DELETE IT_RETURN[] WHERE TYPE = 'W'.
+
+  LOOP AT IT_RETURN INTO WA_RETURN. " WHERE TYPE = 'E' OR TYPE = 'A'.
+
+    I_S_LOG-EXTNUMBER = WA_RETURN-NUMBER. "WA_HEADER-PURCH_NO_C.
+
+    I_S_LOG-ALPROG = SY-CPROG.
+    I_S_LOG-ALDATE = SY-DATUM.
+    I_S_LOG-ALTIME = SY-UZEIT.
+    I_S_LOG-OBJECT = OBJECT.
+
+
+    ZIA_LOG_TABLE-SOURCE_SYSTEM = 'SAP'.
+    ZIA_LOG_TABLE-SOURCE_SYSTEM = 'AQUA'.
+    ZIA_LOG_TABLE-STATUS = WA_RETURN-TYPE.
+    ZIA_LOG_TABLE-ERROR = WA_RETURN-MESSAGE.
+
+    IF WA_RETURN-ID = 'V1' AND WA_RETURN-TYPE = 'S' .
+      ZIA_LOG_TABLE-DOCUMENT = WA_RETURN-MESSAGE_V2.
+    ENDIF.
+<font color ="#0000FF">*            DOCUMENT</font>
+<font color ="#0000FF">*            ERROR</font>
+    ZIA_LOG_TABLE-INTERFACE = 'AQUA'.
+
+    ZIA_LOG_TABLE-SITE = V_PLANT.
+    I_DATE = SY-DATUM.
+    I_TIME = SY-UZEIT.
+
+    CALL FUNCTION 'IB_CONVERT_INTO_TIMESTAMP'
+      EXPORTING
+        I_DATLO     = I_DATE
+        I_TIMLO     = I_TIME
+        I_TZONE     = 'INDIA'
+      IMPORTING
+        E_TIMESTAMP = TIMESTAMP.
+
+    CALL FUNCTION 'IB_CONVERT_FROM_TIMESTAMP'
+      EXPORTING
+        I_TIMESTAMP = TIMESTAMP
+        I_TZONE     = 'UTC+2'
+      IMPORTING
+        E_DATLO     = I_DATE
+        E_TIMLO     = I_TIME.
+    CONCATENATE I_DATE I_TIME INTO ZIA_LOG_TABLE-TIME_STAMP.
+    ZIA_LOG_TABLE-USER_NAME = SY-UNAME.
+    ZIA_LOG_TABLE-FILE_NAME = I_FILENAME.
+
+    INSERT ZIA_LOG_TABLE.
+    COMMIT WORK AND WAIT.
+<font color ="#0000FF">****************  comment by nirav on 06.10.2021 **************************</font>
+<font color ="#0000FF">**************** for dump  object - ZSPAIN  ISSUE ****************************</font>
+
+<font color ="#0000FF">***    CALL FUNCTION 'BAL_LOG_CREATE'</font>
+<font color ="#0000FF">***      EXPORTING</font>
+<font color ="#0000FF">***        I_S_LOG      = I_S_LOG</font>
+<font color ="#0000FF">***      IMPORTING</font>
+<font color ="#0000FF">***        E_LOG_HANDLE = E_LOG_HANDLE.</font>
+<font color ="#0000FF">***</font>
+<font color ="#0000FF">***    I_S_MSG-MSGV1 = WA_RETURN-MESSAGE_V1.</font>
+<font color ="#0000FF">***    I_S_MSG-MSGV2 = WA_RETURN-MESSAGE_V2.</font>
+<font color ="#0000FF">***    I_S_MSG-MSGV3 = WA_RETURN-MESSAGE_V3.</font>
+<font color ="#0000FF">***    I_S_MSG-MSGV4 = WA_RETURN-MESSAGE_V4.</font>
+<font color ="#0000FF">***</font>
+<font color ="#0000FF">***    CALL FUNCTION 'BAL_LOG_MSG_ADD'</font>
+<font color ="#0000FF">***      EXPORTING</font>
+<font color ="#0000FF">***        I_LOG_HANDLE = I_S_LOG</font>
+<font color ="#0000FF">***        I_S_MSG      = I_S_MSG.</font>
+<font color ="#0000FF">***</font>
+<font color ="#0000FF">***    CALL FUNCTION 'BAL_DB_SAVE'</font>
+<font color ="#0000FF">***      EXPORTING</font>
+<font color ="#0000FF">***        I_T_LOG_HANDLE   = I_S_LOG</font>
+<font color ="#0000FF">***      IMPORTING</font>
+<font color ="#0000FF">***        E_NEW_LOGNUMBERS = E_NEW_LOGNUMBERS.</font>
+<font color ="#0000FF">********************************* END BY NIRAV 06.10.2021 ************</font>
+  ENDLOOP.
+<font color ="#0000FF">*  ENDIF.</font>
+
+ENDFUNCTION.
+
+
+<font color ="#0000FF">*Messages</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: &lt;FS_EDIDS&gt;-MSGID</font>
+<font color ="#0000FF">*&lt;FS</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: ALE_MSGID</font>
+<font color ="#0000FF">*ALE</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: AM</font>
+<font color ="#0000FF">*287   Address cannot be maintained; entry in table TSADRV missing</font>
+<font color ="#0000FF">*290   Entry missing in TSADRV; new address maintenance cannot be called</font>
+<font color ="#0000FF">*291   Entry missing in TSADRV; new address maintenance cannot be called</font>
+<font color ="#0000FF">*298   Address group & not defined; delete flag for address not possible</font>
+<font color ="#0000FF">*I_M</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: EC</font>
+<font color ="#0000FF">*089   Internal error: Unable to read screen data</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: Hard coded</font>
+<font color ="#0000FF">*   Error Occured while transferring data</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: PM_ID</font>
+<font color ="#0000FF">*PM_</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: SCPR</font>
+<font color ="#0000FF">*026   Table & is too wide. It cannot be processed</font>
+<font color ="#0000FF">*028   The table/view & has no generated maintenance dialog</font>
+<font color ="#0000FF">*035   Dictionary interface error: Contact SAP</font>
+<font color ="#0000FF">*120   Table/view & not found</font>
+<font color ="#0000FF">*273   Function module call error</font>
+<font color ="#0000FF">*320   BC Set processing error</font>
+<font color ="#0000FF">*395   Internal field description read error</font>
+<font color ="#0000FF">*399   No data record activation information</font>
+<font color ="#0000FF">*408   Table key not supported by activation links</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: SV</font>
+<font color ="#0000FF">*001   The selected function is not supported</font>
+<font color ="#0000FF">*002   Number of retrieved entries: &</font>
+<font color ="#0000FF">*004   No entries found that match selection criteria</font>
+<font color ="#0000FF">*005   One entry chosen</font>
+<font color ="#0000FF">*006   Number of chosen entries: &</font>
+<font color ="#0000FF">*007   No previous entry exists</font>
+<font color ="#0000FF">*008   No next entry exists</font>
+<font color ="#0000FF">*009   An entry already exists with the same key</font>
+<font color ="#0000FF">*010   An entry with this key is marked for deletion</font>
+<font color ="#0000FF">*011   Number of deleted entries: &</font>
+<font color ="#0000FF">*012   Number of changed entries: &</font>
+<font color ="#0000FF">*013   Entry deleted</font>
+<font color ="#0000FF">*014   Number of entries copied: &</font>
+<font color ="#0000FF">*015   Target key must be different from source key</font>
+<font color ="#0000FF">*016   Number of reset entries: &</font>
+<font color ="#0000FF">*017   Entry reset</font>
+<font color ="#0000FF">*018   Data was saved</font>
+<font color ="#0000FF">*019   Choose the key from the allowed namespace</font>
+<font color ="#0000FF">*024   Specify target entries</font>
+<font color ="#0000FF">*025   Specify target entries</font>
+<font color ="#0000FF">*026   Select entries before performing the function</font>
+<font color ="#0000FF">*028   Table & not in DDIC</font>
+<font color ="#0000FF">*032   Position the cursor on a valid entry</font>
+<font color ="#0000FF">*033   Specify the key within the work area</font>
+<font color ="#0000FF">*037   The maintenance dialog for & is incomplete or not defined</font>
+<font color ="#0000FF">*039   Table & has no relevant fields</font>
+<font color ="#0000FF">*040   & entries reset, & original and & new entries are still marked</font>
+<font color ="#0000FF">*041   & entries reset, & original entries are still marked</font>
+<font color ="#0000FF">*042   & entries reset, & new entries are still marked</font>
+<font color ="#0000FF">*043   Data already saved</font>
+<font color ="#0000FF">*044   Read access only</font>
+<font color ="#0000FF">*045   Enter a start date that is before the end date</font>
+<font color ="#0000FF">*046   Enter an end date that is after the start date</font>
+<font color ="#0000FF">*047   Overlapping records are deleted or delimited</font>
+<font color ="#0000FF">*049   Data locked by user & (display only)</font>
+<font color ="#0000FF">*050   System error: Unable to lock table/view &</font>
+<font color ="#0000FF">*051   No data maintenance authorization; display only</font>
+<font color ="#0000FF">*053   No display authorization for requested data</font>
+<font color ="#0000FF">*054   Maintenance of data in current client & not permitted</font>
+<font color ="#0000FF">*055   Address for object & not found</font>
+<font color ="#0000FF">*056   Mark at least one entry before selecting this function</font>
+<font color ="#0000FF">*057   The selected entry is new and has no original</font>
+<font color ="#0000FF">*058   The selected entries are new and have no original</font>
+<font color ="#0000FF">*059   The selected entry is still in its original state</font>
+<font color ="#0000FF">*060   The selected entries are still in their original state</font>
+<font color ="#0000FF">*061   & entries are still originals, & new entries have no original</font>
+<font color ="#0000FF">*065   No entries exist, double-click for long text</font>
+<font color ="#0000FF">*066   Select block end</font>
+<font color ="#0000FF">*084   No values can be displayed</font>
+<font color ="#0000FF">*092   Change task & is being processed</font>
+<font color ="#0000FF">*095   System error changing change task &</font>
+<font color ="#0000FF">*096   Task & was changed</font>
+<font color ="#0000FF">*098   Entry flagged for inclusion in task &</font>
+<font color ="#0000FF">*099   Entry was flagged for deletion from task &</font>
+<font color ="#0000FF">*105   & entries were flagged for inclusion in task &</font>
+<font color ="#0000FF">*106   & entries were flagged for deletion from task &</font>
+<font color ="#0000FF">*107   Entry was already in task &</font>
+<font color ="#0000FF">*108   & entries were already in task &</font>
+<font color ="#0000FF">*109   & entries included, & entries were contained: &</font>
+<font color ="#0000FF">*110   Entry was not in task &</font>
+<font color ="#0000FF">*111   & entries deleted, & entries were not included: &</font>
+<font color ="#0000FF">*112   & entries were not in task &</font>
+<font color ="#0000FF">*113   Entry could not be retrieved</font>
+<font color ="#0000FF">*114   & entries could not be retrieved</font>
+<font color ="#0000FF">*115   Entry could not be deleted</font>
+<font color ="#0000FF">*116   & entries could not be deleted</font>
+<font color ="#0000FF">*117   Do not make any changes (SAP entry)</font>
+<font color ="#0000FF">*120   Other entries are retrieved and modified if necessary</font>
+<font color ="#0000FF">*121   Deleted entry will be recovered and possibly changed</font>
+<font color ="#0000FF">*122   Entry was delimited</font>
+<font color ="#0000FF">*123   Number of delimited entries: &</font>
+<font color ="#0000FF">*124   Process delimited entries</font>
+<font color ="#0000FF">*125   Process delimited entry</font>
+<font color ="#0000FF">*127   Delimit area of validity</font>
+<font color ="#0000FF">*128   Delivery class &, transport not possible</font>
+<font color ="#0000FF">*129   Related objects in various tasks</font>
+<font color ="#0000FF">*130   Client & is local, transport not permitted</font>
+<font color ="#0000FF">*132   Object locked for task &1, user &2 only display permitted</font>
+<font color ="#0000FF">*134   Inconsistency in object definition, only display permitted</font>
+<font color ="#0000FF">*136   Change with caution, entry belongs to customer</font>
+<font color ="#0000FF">*138   Check maintenance object &1 or update function group &2</font>
+<font color ="#0000FF">*139   Address data not applied</font>
+<font color ="#0000FF">*140   &1 entries deleted; &2 entries added</font>
+<font color ="#0000FF">*141   Individual entries not added to the change request</font>
+<font color ="#0000FF">*142   Transport is not possible for the specified data</font>
+<font color ="#0000FF">*153   No language was chosen</font>
+<font color ="#0000FF">*160   The installed system code page does not allow any other languages</font>
+<font color ="#0000FF">*161   Put the cursor on a form name</font>
+<font color ="#0000FF">*162   The object &1 &2 &3 cannot be put in a request</font>
+<font color ="#0000FF">*164   Table/view &1 is not in the Dictionary</font>
+<font color ="#0000FF">*173   Function group &1 inconsistent</font>
+<font color ="#0000FF">*174   Enter values in work area for non-key fields</font>
+<font color ="#0000FF">*175   The selected BC Set function is not supported</font>
+<font color ="#0000FF">*177   Data record contains fix value from BC Set and cannot be deleted</font>
+<font color ="#0000FF">*183   Error in remote access to central Customizing Distribution system</font>
+<font color ="#0000FF">*184   Data record contains fixed value from BC Set and cannot be changed</font>
+<font color ="#0000FF">*202   You are not authorized to change fields with fixed BC Set values</font>
+<font color ="#0000FF">*306   Table/view & is not active</font>
+<font color ="#0000FF">*413   & selected entries cannot be deleted</font>
+<font color ="#0000FF">*538   Dropdown lists are not supported in view clusters</font>
+<font color ="#0000FF">*757   You have no maintenance authorization for this table key</font>
+<font color ="#0000FF">*763   You have no maintenance authorization for the displayed data records</font>
+<font color ="#0000FF">*764   Changed data record selection</font>
+<font color ="#0000FF">*766   Restricted display of datasets</font>
+<font color ="#0000FF">*808   Not all columns in the table can be displayed in the list</font>
+<font color ="#0000FF">*810   View &1 is more than 1000 characters long</font>
+<font color ="#0000FF">*818   &1 of &2 Business Configuration Set entries imported</font>
+<font color ="#0000FF">*819   Business Configuration Set imported</font>
+<font color ="#0000FF">*830   Last selected entry has been reached</font>
+<font color ="#0000FF">*831   First selected entry has been reached</font>
+<font color ="#0000FF">*863   Number of copied entries (including translations): &</font>
+<font color ="#0000FF">*MSG</font>
+<font color ="#0000FF">*P_M</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: TB</font>
+<font color ="#0000FF">*109   No maintenance authorization for cross-client tables (see Help)</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: TK</font>
+<font color ="#0000FF">*430   Client &1 has status 'not modifiable'</font>
+<font color ="#0000FF">*729   Changes to repository objects are not permitted in this client</font>
+<font color ="#0000FF">*730   Changes to repository or cross-client customizing are not permitted</font>
+<font color ="#0000FF">*731   Cross-client customizing cannot be modified</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: VIM_AUTH_MSGID</font>
+<font color ="#0000FF">*VIM</font>
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

@@ -1,0 +1,898 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZRFC_CREA_AVISO_QM</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for function: ZRFC_CREA_AVISO_QM</b></font>
+<hr>
+<pre width="100">
+FUNCTION zrfc_crea_aviso_qm.
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+<font color ="#0000FF">*"*"Local Interface:</font>
+<font color ="#0000FF">*"  IMPORTING</font>
+<font color ="#0000FF">*"     VALUE(I_NUM_FACTURA) TYPE  VBELN_VF</font>
+<font color ="#0000FF">*"     VALUE(I_FILE_NAME) TYPE  CHAR50</font>
+<font color ="#0000FF">*"     VALUE(I_FECHA_NOTIFICACION) TYPE  TIMESTAMP</font>
+<font color ="#0000FF">*"     VALUE(I_REASONS) TYPE  ZTT_REASONS</font>
+<font color ="#0000FF">*"     VALUE(I_XDOCS) TYPE  ZTT_XDOCS</font>
+<font color ="#0000FF">*"     VALUE(I_GATEWAY_REF) TYPE  CHAR20</font>
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+
+<font color ="#0000FF">*       <a href ="global-zrfc_crea_aviso_qm.html">Global data declarations</a></font>
+
+  TYPES: BEGIN OF ty_vbrp,
+           vbeln TYPE vbeln,
+           posnr TYPE posnr,
+           vgbel TYPE vgbel,
+           vgpos TYPE vgpos,
+           aubel TYPE vbeln_va,
+           aupos TYPE posnr_va,
+           matnr TYPE matnr,
+           charg TYPE charg_d,
+         END OF ty_vbrp,
+
+         BEGIN OF ty_entregas,
+           vbeln TYPE vbeln,
+           vgbel TYPE vgbel,
+           vgpos TYPE vgpos,
+           matnr TYPE matnr,
+           charg TYPE charg_d,
+           uecha TYPE uecha,
+         END OF ty_entregas,
+
+         BEGIN OF ty_pedidos,
+           vbeln TYPE vbeln,
+           posnr TYPE posnr,
+           aubel TYPE vbeln_va,
+           aupos TYPE posnr_va,
+           matnr TYPE matnr,
+           charg TYPE charg_d,
+           uepos TYPE uepos,
+         END OF ty_pedidos,
+
+         BEGIN OF ty_lips,
+           vbeln TYPE vbeln,
+           posnr TYPE posnr,
+           uecha TYPE uecha,
+         END OF ty_lips,
+
+         BEGIN OF ty_vbap,
+           vbeln TYPE vbeln_va,
+           posnr TYPE posnr_va,
+           uepos TYPE uepos,
+         END OF ty_vbap,
+
+         BEGIN OF ty_vbrk,
+           vbeln TYPE vbeln,
+           knumv TYPE knumv,
+         END OF ty_vbrk,
+
+         BEGIN OF ty_konv,
+           knumv TYPE knumv,
+           kposn TYPE kposn,
+           kbetr TYPE konv-kbetr,
+           waers TYPE waers,
+           kschl TYPE kschl,
+         END OF ty_konv.
+
+  DATA: t_vbrp                 TYPE STANDARD TABLE OF ty_vbrp,
+        t_notifpartnr          TYPE STANDARD TABLE OF bapi2078_notpartnri,
+        t_pedidos              TYPE STANDARD TABLE OF ty_pedidos,
+        t_entregas             TYPE STANDARD TABLE OF ty_entregas,
+        t_lines                LIKE tline OCCURS 0 WITH HEADER LINE,
+        t_longtexts            TYPE STANDARD TABLE OF bapi2078_notfulltxti,
+        t_log_table            TYPE STANDARD TABLE OF zia_log_table,
+        t_return               TYPE STANDARD TABLE OF bapiret2,
+        t_lips                 TYPE STANDARD TABLE OF ty_lips,
+        t_vbap                 TYPE STANDARD TABLE OF ty_vbap,
+        t_vbrk                 TYPE STANDARD TABLE OF ty_vbrk,
+        t_konv                 TYPE STANDARD TABLE OF ty_konv,
+        t_qmel                 TYPE STANDARD TABLE OF qmel,
+
+        wal_notifheader        TYPE bapi2078_nothdri,
+        wal_notifpartnr        TYPE bapi2078_notpartnri,
+        wal_vbrp               TYPE ty_vbrp,
+        wal_pedidos            TYPE ty_pedidos,
+        wal_entregas           TYPE ty_entregas,
+        wal_notifheader_export TYPE bapi2078_nothdre,
+        wal_log_table          TYPE zia_log_table,
+        wal_reasons            TYPE zstr_reasons,
+        wal_xdocs              TYPE zstr_xdocs,
+        wal_return             TYPE bapiret2,
+        wal_notif              TYPE bapi2078_nothdre,
+        wal_longtexts          TYPE bapi2078_notfulltxti,
+        wal_lips               TYPE ty_lips,
+        wal_vbap               TYPE ty_vbap,
+        wal_vbrk               TYPE ty_vbrk,
+        wal_konv               TYPE ty_konv,
+        wal_qmel               TYPE qmel,
+
+        v_cont                 TYPE i,
+        v_entrega              TYPE vgbel,
+        v_pedido               TYPE vbeln_va,
+        v_status               TYPE c,
+        v_cont_key             TYPE i,
+        v_importe1             TYPE c LENGTH 11,
+        v_importe2             TYPE c LENGTH 11,
+        v_moneda1              TYPE waers,
+        v_moneda2              TYPE waers,
+        v_kunnr                TYPE kunnr,
+        v_lifnr                TYPE lifnr,
+        v_name2                TYPE name2_gp.
+
+  DATA: v_dat_time TYPE zia_log_table-time_stamp.
+
+  CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'
+    EXPORTING
+      input  = i_num_factura
+    IMPORTING
+      output = i_num_factura.
+  .
+  SELECT vbeln posnr vgbel vgpos aubel aupos matnr charg
+    INTO TABLE t_vbrp
+    FROM vbrp
+    WHERE vbeln EQ i_num_factura.
+
+  IF sy-subrc IS INITIAL.
+
+    SELECT vbeln knumv
+      INTO TABLE t_vbrk
+      FROM vbrk
+      WHERE vbeln EQ i_num_factura.
+
+    IF sy-subrc IS INITIAL.
+
+      SELECT knumv kposn kbetr waers kschl
+        INTO TABLE t_konv
+        FROM konv
+        FOR ALL ENTRIES IN t_vbrk
+        WHERE   knumv EQ t_vbrk-knumv AND
+              ( kschl EQ 'VPRS'       OR
+                kschl EQ 'ZESN' ).
+
+    ENDIF.
+
+    SELECT vbeln posnr uecha
+      INTO TABLE t_lips
+      FROM lips
+      FOR ALL ENTRIES IN t_vbrp
+      WHERE vbeln EQ t_vbrp-vgbel AND
+            posnr EQ t_vbrp-vgpos.
+
+    LOOP AT t_vbrp INTO wal_vbrp.
+
+      IF wal_vbrp-vgbel NE wal_vbrp-aubel.
+
+        wal_entregas-vbeln = wal_vbrp-vbeln.
+        wal_entregas-vgbel = wal_vbrp-vgbel.
+        wal_entregas-vgpos = wal_vbrp-vgpos.
+
+        CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'
+          EXPORTING
+            input  = wal_vbrp-matnr
+          IMPORTING
+            output = wal_entregas-matnr.
+
+        wal_entregas-charg = wal_vbrp-charg.
+
+        READ TABLE t_lips INTO wal_lips WITH KEY vbeln = wal_vbrp-vgbel posnr = wal_vbrp-vgpos.
+        IF sy-subrc IS INITIAL.
+
+          wal_entregas-uecha = wal_lips-uecha.
+
+        ENDIF.
+
+        APPEND wal_entregas TO t_entregas.
+
+        CLEAR wal_entregas.
+
+      ELSEIF wal_vbrp-aubel EQ wal_vbrp-vgbel.
+
+        wal_pedidos-vbeln = wal_vbrp-vbeln.
+        wal_pedidos-aubel = wal_vbrp-aubel.
+        wal_pedidos-aupos = wal_vbrp-aupos.
+
+        CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'
+          EXPORTING
+            input  = wal_vbrp-matnr
+          IMPORTING
+            output = wal_pedidos-matnr.
+
+        wal_pedidos-charg = wal_vbrp-charg.
+
+        READ TABLE t_vbap INTO wal_vbap WITH KEY vbeln = wal_vbrp-aubel posnr = wal_vbrp-aupos.
+        IF sy-subrc IS INITIAL.
+
+          wal_pedidos-uepos = wal_vbap-uepos.
+
+        ENDIF.
+
+        APPEND wal_pedidos TO t_pedidos.
+
+        CLEAR wal_pedidos.
+
+      ENDIF.
+
+    ENDLOOP.
+
+    CLEAR v_cont.
+
+    DESCRIBE TABLE t_entregas LINES v_cont.
+
+    IF v_cont EQ 1.
+
+      READ TABLE t_entregas INTO wal_entregas INDEX 1.
+      IF sy-subrc IS INITIAL.
+
+        wal_notifheader-deliv_numb = wal_entregas-vgbel.
+        wal_notifheader-deliv_item = wal_entregas-vgpos.
+
+        CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'
+          EXPORTING
+            input  = wal_entregas-matnr
+          IMPORTING
+            output = wal_notifheader-material.
+
+        wal_notifheader-batch      = wal_entregas-charg.
+
+        v_entrega = wal_entregas-vgbel.
+
+      ENDIF.
+
+    ELSEIF v_cont GT 1.
+
+      DELETE t_lips WHERE posnr IS NOT INITIAL AND uecha IS INITIAL.
+
+      IF t_lips[] IS NOT INITIAL.
+
+        LOOP AT t_lips INTO wal_lips.
+
+          wal_notifheader-deliv_numb = wal_lips-vbeln.
+
+          v_entrega = wal_lips-vbeln.
+
+<font color ="#0000FF">*          CONCATENATE wal_lips-vbeln wal_lips-posnr INTO t_lines-tdline SEPARATED BY '/'.</font>
+<font color ="#0000FF">*          CONCATENATE wal_lips-vbeln wal_lips-posnr INTO v_lines SEPARATED BY '/'.</font>
+
+<font color ="#0000FF">*          APPEND t_lines.</font>
+
+        ENDLOOP.
+
+      ELSE.
+
+        LOOP AT t_entregas INTO wal_entregas.
+
+          wal_notifheader-deliv_numb = wal_entregas-vbeln.
+
+          v_entrega = wal_lips-vbeln.
+
+<font color ="#0000FF">*          CONCATENATE wal_entregas-vbeln wal_entregas-vgpos INTO t_lines-tdline SEPARATED BY '/'.</font>
+<font color ="#0000FF">*          CONCATENATE wal_entregas-vbeln wal_entregas-vgpos INTO v_lines SEPARATED BY '/'.</font>
+
+<font color ="#0000FF">*          APPEND t_lines.</font>
+
+        ENDLOOP.
+
+      ENDIF.
+
+    ELSE.
+
+      CLEAR v_cont.
+
+      DESCRIBE TABLE t_pedidos LINES v_cont.
+
+      IF v_cont EQ 1.
+
+        READ TABLE t_pedidos INTO wal_pedidos INDEX 1.
+        IF sy-subrc IS INITIAL.
+
+          wal_notifheader-sales_ord  = wal_pedidos-aubel.
+          wal_notifheader-s_ord_item = wal_pedidos-aupos.
+
+          CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'
+            EXPORTING
+              input  = wal_pedidos-matnr
+            IMPORTING
+              output = wal_notifheader-material.
+
+          wal_notifheader-batch      = wal_pedidos-charg.
+
+          v_pedido = wal_pedidos-aubel.
+
+        ENDIF.
+
+      ELSEIF v_cont GT 1.
+
+        DELETE t_vbap WHERE posnr IS NOT INITIAL AND uepos IS INITIAL.
+
+        IF t_vbap[] IS INITIAL.
+
+          READ TABLE t_pedidos INTO wal_pedidos INDEX 1.
+          IF sy-subrc IS INITIAL.
+
+            wal_notifheader-sales_ord = wal_pedidos-aubel.
+
+            v_pedido = wal_pedidos-aubel.
+
+<font color ="#0000FF">*            CONCATENATE wal_pedidos-aubel wal_pedidos-aupos INTO t_lines-tdline SEPARATED BY '/'.</font>
+<font color ="#0000FF">*            CONCATENATE v_lines wal_pedidos-aubel wal_pedidos-aupos INTO v_lines SEPARATED BY '/'.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*            APPEND t_lines.</font>
+
+          ELSE.
+
+            READ TABLE t_vbap INTO wal_vbap INDEX 1.
+            IF sy-subrc IS INITIAL.
+
+              wal_notifheader-sales_ord = wal_vbap-vbeln.
+
+              v_pedido = wal_vbap-vbeln.
+
+<font color ="#0000FF">*              CONCATENATE wal_vbap-vbeln wal_vbap-posnr INTO t_lines-tdline SEPARATED BY '/'.</font>
+<font color ="#0000FF">*              CONCATENATE v_lines wal_vbap-vbeln wal_vbap-posnr INTO v_lines SEPARATED BY '/'.</font>
+
+<font color ="#0000FF">*              APPEND t_lines.</font>
+
+            ENDIF.
+
+          ENDIF.
+
+        ENDIF.
+
+      ENDIF.
+
+    ENDIF.
+
+  ENDIF.
+
+  IF v_entrega IS NOT INITIAL.
+
+    SELECT SINGLE kunnr parvw
+      INTO (wal_notifpartnr-partner, wal_notifpartnr-partn_role)
+      FROM vbpa
+      WHERE vbeln EQ v_entrega AND
+            parvw EQ 'AG'.
+
+    APPEND wal_notifpartnr TO t_notifpartnr.
+
+  ELSEIF v_pedido IS NOT INITIAL.
+
+    SELECT SINGLE kunnr parvw
+      INTO (wal_notifpartnr-partner, wal_notifpartnr-partn_role)
+      FROM vbpa
+      WHERE vbeln EQ v_pedido AND
+            parvw EQ 'AG'.
+
+    IF wal_notifpartnr IS NOT INITIAL.
+
+      APPEND wal_notifpartnr TO t_notifpartnr.
+
+    ENDIF.
+
+  ENDIF.
+  v_kunnr = wal_notifpartnr-partner.
+  wal_notifpartnr-partner    = sy-uname.
+
+  SELECT SINGLE lifnr INTO v_lifnr
+    FROM knvp
+    WHERE kunnr EQ v_kunnr AND
+          parvw EQ 'ZA'.
+  IF sy-subrc EQ 0.
+    SELECT SINGLE name2 INTO v_name2
+   FROM lfa1
+   WHERE lifnr EQ v_lifnr.
+    IF sy-subrc = 0 AND v_name2 IS NOT INITIAL.
+      wal_notifpartnr-partner    = v_name2.
+    ENDIF.
+  ENDIF.
+
+  wal_notifheader-short_text = text-001.
+  wal_notifpartnr-partn_role = 'KU'.
+
+  APPEND wal_notifpartnr TO t_notifpartnr.
+
+  CLEAR v_cont.
+
+  DESCRIBE TABLE t_entregas LINES v_cont.
+
+  IF v_cont GT 1.
+
+    IF t_lips[] IS NOT INITIAL.
+      LOOP AT t_lips INTO wal_lips.
+
+        READ TABLE t_entregas INTO wal_entregas WITH KEY vgbel = wal_lips-vbeln vgpos = wal_lips-posnr.
+        IF sy-subrc IS INITIAL.
+
+          READ TABLE t_vbrk INTO wal_vbrk WITH KEY vbeln = wal_entregas-vbeln.
+          IF sy-subrc IS INITIAL.
+
+            READ TABLE t_vbrp INTO wal_vbrp WITH KEY vbeln = wal_vbrk vgpos = wal_lips-posnr.
+            IF sy-subrc IS INITIAL.
+
+              LOOP AT t_konv INTO wal_konv WHERE knumv = wal_vbrk-knumv AND kposn = wal_vbrp-posnr.
+
+                IF wal_konv-kschl EQ 'VPRS'.
+
+                  v_importe1 = wal_konv-kbetr.
+                  v_moneda1  = wal_konv-waers.
+
+                ELSEIF wal_konv-kschl EQ 'ZESN'.
+
+                  v_importe2 = wal_konv-kbetr.
+                  v_moneda2  = wal_konv-waers.
+
+                ENDIF.
+
+              ENDLOOP.
+
+            ENDIF.
+
+          ENDIF.
+
+          IF wal_entregas-matnr IS NOT INITIAL AND
+             wal_entregas-charg IS NOT INITIAL.
+
+            CONCATENATE wal_entregas-vgbel wal_entregas-vgpos wal_entregas-matnr wal_entregas-charg v_importe1 INTO t_lines-tdline SEPARATED BY '/'.
+            CONCATENATE t_lines-tdline v_moneda1                                                               INTO t_lines-tdline SEPARATED BY space.
+
+            IF v_importe2 IS NOT INITIAL AND
+               v_moneda2  IS NOT INITIAL.
+
+              CONCATENATE t_lines-tdline v_importe2 INTO t_lines-tdline SEPARATED BY '/'.
+              CONCATENATE t_lines-tdline v_moneda2  INTO t_lines-tdline SEPARATED BY space.
+
+            ENDIF.
+
+          ELSEIF wal_entregas-matnr IS NOT INITIAL.
+
+            CONCATENATE wal_entregas-vgbel wal_entregas-vgpos wal_entregas-matnr v_importe1 INTO t_lines-tdline SEPARATED BY '/'.
+            CONCATENATE t_lines-tdline v_moneda1                                            INTO t_lines-tdline SEPARATED BY space.
+
+            IF wal_entregas-matnr IS NOT INITIAL AND
+               wal_entregas-charg IS NOT INITIAL.
+
+              CONCATENATE t_lines-tdline v_importe2 INTO t_lines-tdline SEPARATED BY '/'.
+              CONCATENATE t_lines-tdline v_moneda2  INTO t_lines-tdline SEPARATED BY space.
+
+            ENDIF.
+
+          ELSEIF wal_entregas-charg IS NOT INITIAL.
+
+            CONCATENATE wal_entregas-vgbel wal_entregas-vgpos wal_entregas-charg v_importe1 INTO t_lines-tdline SEPARATED BY '/'.
+            CONCATENATE t_lines-tdline v_moneda1                                            INTO t_lines-tdline SEPARATED BY space.
+
+            IF wal_entregas-matnr IS NOT INITIAL AND
+               wal_entregas-charg IS NOT INITIAL.
+
+              CONCATENATE t_lines-tdline v_importe2 INTO t_lines-tdline SEPARATED BY '/'.
+              CONCATENATE t_lines-tdline v_moneda2  INTO t_lines-tdline SEPARATED BY space.
+
+            ENDIF.
+
+          ENDIF.
+
+          APPEND t_lines.
+
+        ENDIF.
+
+      ENDLOOP.
+
+    ELSE.
+
+      LOOP AT t_entregas INTO wal_entregas.
+
+        READ TABLE t_vbrk INTO wal_vbrk WITH KEY vbeln = wal_entregas-vbeln.
+        IF sy-subrc IS INITIAL.
+
+          READ TABLE t_vbrp INTO wal_vbrp WITH KEY vbeln = wal_vbrk-vbeln vgpos = wal_entregas-vgpos.
+          IF sy-subrc IS INITIAL.
+
+            LOOP AT t_konv INTO wal_konv WHERE knumv = wal_vbrk-knumv AND kposn = wal_vbrp-posnr.
+
+              IF wal_konv-kschl EQ 'VPRS'.
+
+                v_importe1 = wal_konv-kbetr.
+                v_moneda1  = wal_konv-waers.
+
+              ELSEIF wal_konv-kschl EQ 'ZESN'.
+
+                v_importe2 = wal_konv-kbetr.
+                v_moneda2  = wal_konv-waers.
+
+              ENDIF.
+
+            ENDLOOP.
+
+          ENDIF.
+
+        ENDIF.
+
+        IF wal_entregas-matnr IS NOT INITIAL AND
+           wal_entregas-charg IS NOT INITIAL.
+
+          CONCATENATE wal_entregas-vgbel wal_entregas-vgpos wal_entregas-matnr wal_entregas-charg v_importe1 INTO t_lines-tdline SEPARATED BY '/'.
+          CONCATENATE t_lines-tdline v_moneda1                                                               INTO t_lines-tdline SEPARATED BY space.
+
+          IF wal_entregas-matnr IS NOT INITIAL AND
+             wal_entregas-charg IS NOT INITIAL.
+
+            CONCATENATE t_lines-tdline v_importe2 INTO t_lines-tdline SEPARATED BY '/'.
+            CONCATENATE t_lines-tdline v_moneda2  INTO t_lines-tdline SEPARATED BY space.
+
+          ENDIF.
+
+        ELSEIF wal_entregas-matnr IS NOT INITIAL.
+
+          CONCATENATE wal_entregas-vgbel wal_entregas-vgpos wal_entregas-matnr v_importe1 INTO t_lines-tdline SEPARATED BY '/'.
+          CONCATENATE t_lines-tdline v_moneda1                                            INTO t_lines-tdline SEPARATED BY space.
+
+          IF wal_entregas-matnr IS NOT INITIAL AND
+             wal_entregas-charg IS NOT INITIAL.
+
+            CONCATENATE t_lines-tdline v_importe2 INTO t_lines-tdline SEPARATED BY '/'.
+            CONCATENATE t_lines-tdline v_moneda2  INTO t_lines-tdline SEPARATED BY space.
+
+          ENDIF.
+
+        ELSEIF wal_entregas-charg IS NOT INITIAL.
+
+          CONCATENATE wal_entregas-vgbel wal_entregas-vgpos wal_entregas-charg v_importe1 INTO t_lines-tdline SEPARATED BY '/'.
+          CONCATENATE t_lines-tdline v_moneda1                                            INTO t_lines-tdline SEPARATED BY space.
+
+          IF wal_entregas-matnr IS NOT INITIAL AND
+             wal_entregas-charg IS NOT INITIAL.
+
+            CONCATENATE t_lines-tdline v_importe2 INTO t_lines-tdline SEPARATED BY '/'.
+            CONCATENATE t_lines-tdline v_moneda2  INTO t_lines-tdline SEPARATED BY space.
+
+          ENDIF.
+
+        ENDIF.
+
+        APPEND t_lines.
+
+      ENDLOOP.
+
+    ENDIF.
+
+  ENDIF.
+
+  CLEAR v_cont.
+
+  DESCRIBE TABLE t_pedidos LINES v_cont.
+
+  IF v_cont GT 1.
+
+    IF t_vbap[] IS NOT INITIAL.
+
+      LOOP AT t_vbap INTO wal_vbap.
+
+        READ TABLE t_pedidos INTO wal_pedidos WITH KEY aubel = wal_vbap-vbeln aupos = wal_vbap-posnr.
+        IF sy-subrc IS INITIAL.
+
+          READ TABLE t_vbrk INTO wal_vbrk WITH KEY vbeln = wal_pedidos-vbeln.
+          IF sy-subrc IS INITIAL.
+
+            READ TABLE t_vbrp INTO wal_vbrp WITH KEY vbeln = wal_vbrk-vbeln vgpos = wal_vbap-posnr.
+            IF sy-subrc IS INITIAL.
+
+              LOOP AT t_konv INTO wal_konv WHERE knumv = wal_vbrk-knumv AND kposn = wal_vbrp-posnr.
+
+                IF wal_konv-kschl EQ 'VPRS'.
+
+                  v_importe1 = wal_konv-kbetr.
+                  v_moneda1  = wal_konv-waers.
+
+                ELSEIF wal_konv-kschl EQ 'ZESN'.
+
+                  v_importe2 = wal_konv-kbetr.
+                  v_moneda2  = wal_konv-waers.
+
+                ENDIF.
+
+              ENDLOOP.
+
+            ENDIF.
+
+          ENDIF.
+
+          IF wal_pedidos-matnr IS NOT INITIAL AND
+             wal_pedidos-charg IS NOT INITIAL.
+
+            CONCATENATE wal_pedidos-aubel wal_pedidos-aupos wal_pedidos-matnr wal_pedidos-charg v_importe1 INTO t_lines-tdline SEPARATED BY '/'.
+            CONCATENATE t_lines-tdline v_moneda1                                                           INTO t_lines-tdline SEPARATED BY space.
+
+            IF wal_pedidos-matnr IS NOT INITIAL AND
+               wal_pedidos-charg IS NOT INITIAL.
+
+              CONCATENATE t_lines-tdline v_importe2 INTO t_lines-tdline SEPARATED BY '/'.
+              CONCATENATE t_lines-tdline v_moneda2  INTO t_lines-tdline SEPARATED BY space.
+
+            ENDIF.
+
+          ELSEIF wal_pedidos-matnr IS NOT INITIAL.
+
+            CONCATENATE wal_pedidos-aubel wal_pedidos-aupos wal_pedidos-matnr v_importe1 INTO t_lines-tdline SEPARATED BY '/'.
+            CONCATENATE t_lines-tdline v_moneda1                                         INTO t_lines-tdline SEPARATED BY space.
+
+            IF wal_pedidos-matnr IS NOT INITIAL AND
+               wal_pedidos-charg IS NOT INITIAL.
+
+              CONCATENATE t_lines-tdline v_importe2 INTO t_lines-tdline SEPARATED BY '/'.
+              CONCATENATE t_lines-tdline v_moneda2  INTO t_lines-tdline SEPARATED BY space.
+
+            ENDIF.
+
+          ELSEIF wal_pedidos-charg IS NOT INITIAL.
+
+            CONCATENATE wal_pedidos-aubel wal_pedidos-aupos wal_pedidos-charg v_importe1 INTO t_lines-tdline SEPARATED BY '/'.
+            CONCATENATE t_lines-tdline v_moneda1                                                INTO t_lines-tdline SEPARATED BY space.
+
+            IF wal_pedidos-matnr IS NOT INITIAL AND
+               wal_pedidos-charg IS NOT INITIAL.
+
+              CONCATENATE t_lines-tdline v_importe2 INTO t_lines-tdline SEPARATED BY '/'.
+              CONCATENATE t_lines-tdline v_moneda2  INTO t_lines-tdline SEPARATED BY space.
+
+            ENDIF.
+
+          ENDIF.
+
+          APPEND t_lines.
+
+        ENDIF.
+
+      ENDLOOP.
+
+    ELSE.
+
+      LOOP AT t_pedidos INTO wal_pedidos.
+
+        READ TABLE t_vbrk INTO wal_vbrk WITH KEY vbeln = wal_pedidos-vbeln.
+        IF sy-subrc IS INITIAL.
+
+          READ TABLE t_vbrp INTO wal_vbrp WITH KEY vbeln = wal_vbrk-vbeln vgpos = wal_pedidos-aupos.
+          IF sy-subrc IS INITIAL.
+
+            LOOP AT t_konv INTO wal_konv WHERE knumv = wal_vbrk-knumv AND kposn = wal_vbrp-posnr.
+
+              IF wal_konv EQ 'VPRS'.
+
+                v_importe1 = wal_konv-kbetr.
+                v_moneda1  = wal_konv-waers.
+
+              ELSEIF wal_konv EQ 'ZESN'.
+
+                v_importe2 = wal_konv-kbetr.
+                v_moneda2  = wal_konv-waers.
+              ENDIF.
+
+            ENDLOOP.
+
+          ENDIF.
+
+        ENDIF.
+
+        IF wal_pedidos-matnr IS NOT INITIAL AND
+           wal_pedidos-charg IS NOT INITIAL.
+
+          CONCATENATE wal_pedidos-aubel wal_pedidos-aupos wal_pedidos-matnr wal_pedidos-charg v_importe1 INTO t_lines-tdline SEPARATED BY '/'.
+          CONCATENATE t_lines-tdline v_moneda1                                                                  INTO t_lines-tdline SEPARATED BY space.
+
+          IF wal_pedidos-matnr IS NOT INITIAL AND
+             wal_pedidos-charg IS NOT INITIAL.
+
+            CONCATENATE t_lines-tdline v_importe2 INTO t_lines-tdline SEPARATED BY '/'.
+            CONCATENATE t_lines-tdline v_moneda2  INTO t_lines-tdline SEPARATED BY space.
+
+          ENDIF.
+
+        ELSEIF wal_pedidos-matnr IS NOT INITIAL.
+
+          CONCATENATE wal_pedidos-aubel wal_pedidos-aupos wal_pedidos-matnr v_importe1 INTO t_lines-tdline SEPARATED BY '/'.
+          CONCATENATE t_lines-tdline v_moneda1                                         INTO t_lines-tdline SEPARATED BY space.
+
+          IF wal_pedidos-matnr IS NOT INITIAL AND
+             wal_pedidos-charg IS NOT INITIAL.
+
+            CONCATENATE t_lines-tdline v_importe2 INTO t_lines-tdline SEPARATED BY '/'.
+            CONCATENATE t_lines-tdline v_moneda2  INTO t_lines-tdline SEPARATED BY space.
+
+          ENDIF.
+
+        ELSEIF wal_pedidos-charg IS NOT INITIAL.
+
+          CONCATENATE wal_pedidos-aubel wal_pedidos-aupos wal_pedidos-charg v_importe1 INTO t_lines-tdline SEPARATED BY '/'.
+          CONCATENATE t_lines-tdline v_moneda1                                         INTO t_lines-tdline SEPARATED BY space.
+
+          IF wal_pedidos-matnr IS NOT INITIAL AND
+             wal_pedidos-charg IS NOT INITIAL.
+
+            CONCATENATE t_lines-tdline v_importe2 INTO t_lines-tdline SEPARATED BY '/'.
+            CONCATENATE t_lines-tdline v_moneda2  INTO t_lines-tdline SEPARATED BY space.
+
+          ENDIF.
+
+        ENDIF.
+
+        APPEND t_lines.
+
+      ENDLOOP.
+
+    ENDIF.
+
+  ENDIF.
+
+  LOOP AT i_reasons INTO wal_reasons.
+
+    CONCATENATE wal_reasons-code wal_reasons-description INTO t_lines-tdline SEPARATED BY '-'.
+
+    APPEND t_lines.
+
+  ENDLOOP.
+
+  LOOP AT i_xdocs INTO wal_xdocs.
+
+    CONCATENATE wal_xdocs-name wal_xdocs-value INTO t_lines-tdline SEPARATED BY '-'.
+
+    APPEND t_lines.
+
+  ENDLOOP.
+
+  CLEAR t_lines.
+  t_lines-tdline = i_gateway_ref.
+  APPEND t_lines.
+
+
+  LOOP AT t_lines.
+
+    v_cont_key = v_cont_key + 1.
+
+    wal_longtexts-objtype    = 'QMEL'.
+    wal_longtexts-objkey     = v_cont_key.
+    wal_longtexts-format_col = '*'.
+    wal_longtexts-text_line  = t_lines-tdline.
+
+    APPEND wal_longtexts TO t_longtexts.
+
+  ENDLOOP.
+
+  CALL FUNCTION 'BAPI_QUALNOT_CREATE'
+    EXPORTING
+      notif_type         = 'ZZ'
+      notifheader        = wal_notifheader
+    IMPORTING
+      notifheader_export = wal_notifheader_export
+    TABLES
+      notifpartnr        = t_notifpartnr
+      longtexts          = t_longtexts
+      return             = t_return.
+
+  CLEAR: v_dat_time.
+  CONCATENATE sy-datum sy-uzeit INTO v_dat_time.
+
+  IF t_return[] IS NOT INITIAL.
+    LOOP AT t_return INTO wal_return WHERE type = 'E'.
+
+      wal_log_table-time_stamp    = v_dat_time.
+      wal_log_table-status        = wal_return-type.
+      wal_log_table-source_system = 'EDICOM'.
+      wal_log_table-interface     = 'NOTIFICATION'.
+      wal_log_table-user_name     = sy-uname.
+      wal_log_table-file_name     = i_file_name.
+      wal_log_table-document      = wal_notifheader_export-notif_no.
+      wal_log_table-error = wal_return-message.
+
+      APPEND wal_log_table TO t_log_table.
+
+    ENDLOOP.
+    MODIFY zia_log_table FROM TABLE t_log_table.
+<font color ="#0000FF">*  ELSE.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    wal_log_table-time_stamp    = v_dat_time.</font>
+<font color ="#0000FF">*    wal_log_table-status        = 'S'.</font>
+<font color ="#0000FF">*    wal_log_table-source_system = 'EDICOM'.</font>
+<font color ="#0000FF">*    wal_log_table-interface     = 'NOTIFICATION'.</font>
+<font color ="#0000FF">*    wal_log_table-user_name     = sy-uname.</font>
+<font color ="#0000FF">*    wal_log_table-file_name     = i_file_name.</font>
+<font color ="#0000FF">*    wal_log_table-document      = wal_notifheader_export-notif_no.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    APPEND wal_log_table TO t_log_table.</font>
+
+  ENDIF.
+
+  REFRESH t_log_table.
+
+  CALL FUNCTION 'BAPI_QUALNOT_SAVE'
+    EXPORTING
+      number      = wal_notifheader_export-notif_no
+    IMPORTING
+      notifheader = wal_notif
+    TABLES
+      return      = t_return.
+
+  READ TABLE t_return INTO wal_return WITH KEY type = 'E'.
+  IF sy-subrc IS INITIAL.
+
+    v_status = 'E'.
+
+    CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.
+
+  ELSE.
+
+    v_status = 'S'.
+
+    CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
+      EXPORTING
+        wait = 'X'.
+
+    SELECT *
+      INTO TABLE t_qmel
+      FROM qmel
+      WHERE qmnum EQ wal_notif-notif_no.
+
+    IF sy-subrc IS INITIAL.
+
+      LOOP AT t_qmel INTO wal_qmel.
+
+        wal_qmel-refnum = i_num_factura.
+
+        UPDATE qmel FROM wal_qmel.
+
+      ENDLOOP.
+
+      COMMIT WORK.
+
+    ENDIF.
+
+  ENDIF.
+
+  IF t_return[] IS INITIAL AND wal_notif-notif_no IS NOT INITIAL.
+
+    CLEAR wal_log_table.
+
+    wal_log_table-time_stamp    = v_dat_time.
+    wal_log_table-status        = 'S'.
+    wal_log_table-source_system = 'EDICOM'.
+    wal_log_table-interface     = 'NOTIFICATION'.
+    wal_log_table-user_name     = sy-uname.
+    wal_log_table-file_name     = i_file_name.
+    wal_log_table-document      = wal_notif-notif_no.
+
+    APPEND wal_log_table TO t_log_table.
+
+  ELSE.
+
+    LOOP AT t_return INTO wal_return WHERE type = 'E'.
+
+      CLEAR wal_log_table.
+
+      wal_log_table-time_stamp    = v_dat_time.
+      wal_log_table-status        = wal_return-type.
+      wal_log_table-source_system = 'EDICOM'.
+      wal_log_table-interface     = 'NOTIFICATION'.
+      wal_log_table-user_name     = sy-uname.
+      wal_log_table-file_name     = i_file_name.
+      wal_log_table-document      = wal_notif-notif_no.
+      wal_log_table-error = wal_return-message.
+
+      APPEND wal_log_table TO t_log_table.
+
+    ENDLOOP.
+
+  ENDIF.
+
+  MODIFY zia_log_table FROM TABLE t_log_table.
+
+  COMMIT WORK.
+
+  REFRESH t_log_table.
+
+ENDFUNCTION.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

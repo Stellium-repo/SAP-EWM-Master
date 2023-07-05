@@ -1,0 +1,213 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZSF_OBD_TU_PACKING_GETDATA</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZSF_OBD_TU_PACKING_GETDATA</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZSF_OBD_TU_PACKING_GETDATA</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&  Include           ZSF_OBD_TU_PACKING_GETDATA</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+
+<font color ="#0000FF">*--Fetching from LIKP</font>
+AT SELECTION-SCREEN .
+  SELECT  vbeln,    "Delivery Number
+          kunnr,    "shiptoparty
+          kunag,    "soldtoparty
+          vstel,    "shipingpoint
+          inco1,    "incoterms1
+          inco2,    "incoterms2
+          traid,    "MoTID
+          ntgew,    "Netweight
+          bldat,    "DocHigher-Level Handling Unit.Date
+          traty,    "MoTType
+          perfk,    "invoice dates
+          anzpk,    "Total number of packages in delivery
+          lfdat,    "Dlv.Date
+          lifex,    "External Identification of Delivery Note
+          wadat_ist  "Actual Goods Movement Date
+  FROM likp INTO TABLE @DATA(lt_likp)
+  WHERE vbeln IN @s_vbeln .
+<font color ="#0000FF">*--Validation of Entered Delivery</font>
+  IF sy-subrc IS NOT INITIAL.
+    MESSAGE'Enter Valid Delivery Number' TYPE'E' .
+    EXIT.
+  ELSE.
+
+    LOOP AT lt_likp TRANSPORTING NO FIELDS WHERE wadat_ist IS INITIAL .
+      MESSAGE 'Goods Issue not Posted' TYPE 'E'.
+    ENDLOOP.
+<font color ="#0000FF">*--Fecthing data  from vbrp table</font>
+    SELECT vbeln, "Delivery Number
+           prsdt, "DateforPricing
+           vgbel  "ExchangeRate
+    FROM vbrp INTO TABLE @DATA(lt_vbrp)
+    WHERE vgbel IN @s_vbeln.
+  ENDIF.
+<font color ="#0000FF">*--Fetching data From VEPO and VEKP</font>
+  SELECT a~venum,   "Internal Handling Unit Number
+         a~vbeln,   "Delivery Number
+         a~vemeh,   "Base Unit of Measure of the Quantity to be Packed
+         a~altme,   "Alternative unit of measure for stock unit of measure
+         a~matnr,   "Material Number
+         a~vemng,   "Base Quantity Packed in the Handling Unit Item
+         a~vfdat,   "Shelf Life Expiration or Best-Before Date
+         a~charg,   "Batch Number
+         b~exidv,   "External Handling Unit Identification
+         b~brgew,   "Total Weight of Handling Unit
+         b~ntgew,   "Loading Weight of Handling Unit
+         b~uevel    "Higher-Level Handling Unit
+ FROM vepo AS a INNER JOIN vekp AS b
+ ON a~venum = b~venum INTO TABLE @DATA(lt_vepo)
+ WHERE a~vbeln IN @s_vbeln .
+  IF sy-subrc EQ 0 .
+    DATA(lt_vepo_head) = lt_vepo.
+    SORT lt_vepo_head BY uevel.
+    DELETE ADJACENT DUPLICATES FROM lt_vepo_head COMPARING uevel.
+    SELECT venum,   "Internal Handling Unit Number
+       exidv,   "External Handling Unit Identification
+       brgew,   "Total Weight of Handling Unit
+       ntgew,   "Loading Weight of Handling Unit
+       uevel    "Higher-Level Handling Unit
+    FROM  vekp
+    INTO TABLE @DATA(lt_vepo_uevel)
+     FOR ALL ENTRIES IN @lt_vepo_head
+   WHERE  venum EQ @lt_vepo_head-uevel.
+    IF sy-subrc NE 0.
+      CLEAR lt_vepo_uevel.
+    ENDIF.
+
+    SORT lt_vepo BY vbeln exidv venum matnr charg.
+<font color ="#0000FF">*--Fetching data From Lips</font>
+    SELECT vbeln,  "Delivery number
+           matnr,  "Material Number
+           lfimg,  "Actual quantity delivered (in sales units)
+           vgbel,  "Document Number of the Reference Document
+           vrkme   "Sales Unit
+     FROM lips INTO TABLE @DATA(lt_lips)
+     WHERE vbeln IN @s_vbeln .
+  ENDIF .
+  IF lt_lips IS NOT INITIAL.
+<font color ="#0000FF">*--Fetching data from makt validating Matnr from lt_likp .</font>
+    SELECT matnr ,  "Material Number
+           maktx    "materialDescription
+    FROM   makt
+    INTO TABLE @DATA(lt_makt)
+    FOR ALL ENTRIES IN @lt_lips
+    WHERE matnr EQ @lt_lips-matnr AND spras EQ 'E' .
+    IF sy-subrc IS INITIAL .
+      SORT lt_makt BY matnr .
+      DELETE ADJACENT DUPLICATES FROM lt_makt COMPARING matnr .
+    ENDIF.
+  ENDIF.
+<font color ="#0000FF">*--Fetching data from kna1</font>
+  IF lt_likp IS NOT INITIAL.
+    SELECT kunnr,    "Customer Number
+           name1,    "Name 1
+           name2,    "Name 2
+           ort01,    "City
+           land1,    "Country Key
+           pstlz,    "Postal Code
+           regio,    "Region
+           stras,    "Street and House Number
+           telf1,    "First telephone number
+           telfx,    "Fax Number
+           stceg,    "VAT Registration Number
+           name4     "Name 4
+   FROM kna1 INTO TABLE @DATA(lt_kna1)
+   FOR ALL ENTRIES IN @lt_likp
+   WHERE kunnr = @lt_likp-kunnr.
+
+<font color ="#0000FF">*--To get the Shipper details</font>
+    SELECT kunnr ,
+           name1,
+           name2
+    FROM kna1 INTO TABLE @DATA(lt_kunnr)
+    WHERE kunnr EQ 'GR01' .
+
+    IF sy-subrc IS INITIAL .
+      SORT lt_kna1 BY kunnr .
+      DELETE ADJACENT DUPLICATES FROM lt_kna1 COMPARING kunnr .
+    ENDIF .
+
+<font color ="#0000FF">*--To get the First name of the user</font>
+    SELECT SINGLE name_first
+    FROM user_addr INTO @DATA(lv_firstname)
+    WHERE bname EQ @sy-uname .
+<font color ="#0000FF">*    DATA:</font>
+<font color ="#0000FF">*      lv_uname TYPE xubname,</font>
+<font color ="#0000FF">*      ls_usr03 TYPE usr03.</font>
+<font color ="#0000FF">*    lv_uname = sy-uname .</font>
+<font color ="#0000FF">*    CALL FUNCTION 'SUSR_USER_ADDRESS_READ'</font>
+<font color ="#0000FF">*      EXPORTING</font>
+<font color ="#0000FF">*        user_name              = sy-uname</font>
+<font color ="#0000FF">**       READ_DB_DIRECTLY       = ' '</font>
+<font color ="#0000FF">**       CACHE_RESULTS          = 'X'</font>
+<font color ="#0000FF">*      IMPORTING</font>
+<font color ="#0000FF">**       USER_ADDRESS           = ld_addr3_val</font>
+<font color ="#0000FF">*        user_usr03             = ls_usr03</font>
+<font color ="#0000FF">**       user_usr21             =</font>
+<font color ="#0000FF">**       EV_USER_WITHOUT_ADDRESS       =</font>
+<font color ="#0000FF">*      EXCEPTIONS</font>
+<font color ="#0000FF">*        user_address_not_found = 1</font>
+<font color ="#0000FF">*        OTHERS                 = 2.</font>
+<font color ="#0000FF">*    IF sy-subrc &lt;&gt; 0.</font>
+<font color ="#0000FF">** Implement suitable error handling here</font>
+<font color ="#0000FF">*    ENDIF.</font>
+
+
+<font color ="#0000FF">*-- to get the incoterm description</font>
+    SELECT inco1 ,
+           bezei
+    FROM tinct INTO TABLE @DATA(lt_tinct)
+    FOR ALL ENTRIES IN @lt_likp
+    WHERE inco1 EQ @lt_likp-inco1 AND spras EQ 'E'  .
+
+<font color ="#0000FF">*--Fetching data to get the shiiping point Description details</font>
+    SELECT
+           vstel,  "Shipping Point/Receiving Point
+           vtext   "Description
+    FROM tvstt INTO TABLE @DATA(lt_tvstt)
+    FOR ALL ENTRIES IN @lt_likp
+    WHERE vstel EQ @lt_likp-vstel AND spras EQ 'E' .
+
+    IF sy-subrc IS INITIAL .
+      SORT lt_tvstt BY vstel .
+      DELETE ADJACENT DUPLICATES FROM lt_tvstt COMPARING vstel .
+    ENDIF.
+<font color ="#0000FF">*--Fetching data to get the Packing Material Description details</font>
+    SELECT
+          traty,  "Packaging Material Type
+          vtext   "Description
+    FROM tvtyt INTO TABLE @DATA(lt_tvtyt)
+    FOR ALL ENTRIES IN @lt_likp
+    WHERE traty EQ @lt_likp-traty
+    AND spras EQ 'E' .
+
+    IF sy-subrc IS INITIAL .
+      SORT lt_tvtyt BY traty .
+      DELETE ADJACENT DUPLICATES FROM lt_tvtyt COMPARING traty .
+    ENDIF.
+  ENDIF.
+<font color ="#0000FF">*--Fetching data to get the Country Name</font>
+  IF lt_kna1 IS NOT INITIAL.
+    SELECT land1,  "Country Key
+           landx   "Country Name
+    FROM t005t INTO TABLE @DATA(lt_t005t)
+    FOR ALL ENTRIES IN @lt_kna1
+    WHERE land1 EQ @lt_kna1-land1 AND spras EQ 'E' .
+    IF sy-subrc IS INITIAL .
+      SORT lt_t005t BY land1 .
+      DELETE ADJACENT DUPLICATES FROM lt_t005t COMPARING land1 .
+    ENDIF.
+  ENDIF.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZINSD0018_CUSTOMER_MASTER</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for function: ZINSD0018_CUSTOMER_MASTER</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Customer Master RFC</b></font>
+<hr>
+<pre width="100">
+FUNCTION zinsd0018_customer_master.
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+<font color ="#0000FF">*"*"Local Interface:</font>
+<font color ="#0000FF">*"  IMPORTING</font>
+<font color ="#0000FF">*"     VALUE(I_FLAG) TYPE  CHAR1</font>
+<font color ="#0000FF">*"  EXPORTING</font>
+<font color ="#0000FF">*"     VALUE(E_KUNNR) TYPE  KUNNR</font>
+<font color ="#0000FF">*"     VALUE(E_STATUS) TYPE  CHAR1</font>
+<font color ="#0000FF">*"  TABLES</font>
+<font color ="#0000FF">*"      I_ZINSD010TT_MDM_CUSTOMER_KNA1 TYPE</font>
+<font color ="#0000FF">*"        ZINSD010TT_MDM_CUSTOMER_KNA1 OPTIONAL</font>
+<font color ="#0000FF">*"      I_ZINSD011TT_MDM_CUSTOMER_KNB1 TYPE</font>
+<font color ="#0000FF">*"        ZINSD011TT_MDM_CUSTOMER_KNB1 OPTIONAL</font>
+<font color ="#0000FF">*"      I_ZINSD012TT_MDM_CUSTOMER_KNVP TYPE</font>
+<font color ="#0000FF">*"        ZINSD012TT_MDM_CUSTOMER_KNVP OPTIONAL</font>
+<font color ="#0000FF">*"      I_ZINSD013TT_MDM_CUSTOMER_KNVV TYPE</font>
+<font color ="#0000FF">*"        ZINSD013TT_MDM_CUSTOMER_KNVV OPTIONAL</font>
+<font color ="#0000FF">*"      I_ZINSD014TT_MDM_CUSTOMER_KNVI TYPE</font>
+<font color ="#0000FF">*"        ZINSD014TT_MDM_CUSTOMER_KNVI OPTIONAL</font>
+<font color ="#0000FF">*"      I_ZINSD015TT_MDM_CUSTOMER_KNBK TYPE</font>
+<font color ="#0000FF">*"        ZINSD015TT_MDM_CUSTOMER_KNBK OPTIONAL</font>
+<font color ="#0000FF">*"      I_ZINSD016TT_MDM_CUSTOMER_KNVK TYPE</font>
+<font color ="#0000FF">*"        ZINSD016TT_MDM_CUSTOMER_KNVK OPTIONAL</font>
+<font color ="#0000FF">*"      I_ZINSD017TT_MDM_CUSTOMER_KNVA TYPE</font>
+<font color ="#0000FF">*"        ZINSD017TT_MDM_CUSTOMER_KNVA OPTIONAL</font>
+<font color ="#0000FF">*"      I_ZINSD019TT_MDM_CUSTOMER_BANK TYPE</font>
+<font color ="#0000FF">*"        ZINSD019TT_MDM_CUSTOMER_BANK OPTIONAL</font>
+<font color ="#0000FF">*"      I_ZINSD020TT_MDM_J1IMOCUST TYPE  ZINSD020TT_MDM_J1IMOCUST</font>
+<font color ="#0000FF">*"       OPTIONAL</font>
+<font color ="#0000FF">*"      I_ZINSD020TT_MDM_CUSTOMER_KNAS TYPE</font>
+<font color ="#0000FF">*"        ZINSD020TT_MDM_CUSTOMER_KNAS OPTIONAL</font>
+<font color ="#0000FF">*"      I_ZINSD021TT_MDM_CUSTOMER_ADDR TYPE</font>
+<font color ="#0000FF">*"        ZINSD021TT_MDM_CUSTOMER_ADDR OPTIONAL</font>
+<font color ="#0000FF">*"      E_REMARKS STRUCTURE  BDCMSGCOLL OPTIONAL</font>
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+
+<font color ="#0000FF">*       <a href ="global-zinsd0018_customer_master.html">Global data declarations</a></font>
+
+<font color ="#0000FF">********* For Create Customer through BAPI</font>
+  IF  i_flag = 'C' OR i_flag = 'E'.
+    PERFORM create_customer TABLES i_zinsd010tt_mdm_customer_kna1
+                                   i_zinsd011tt_mdm_customer_knb1
+                                   i_zinsd012tt_mdm_customer_knvp
+                                   i_zinsd013tt_mdm_customer_knvv
+                                   i_zinsd014tt_mdm_customer_knvi
+                                   i_zinsd015tt_mdm_customer_knbk
+                                   i_zinsd016tt_mdm_customer_knvk
+                                   i_zinsd017tt_mdm_customer_knva
+                                   i_zinsd019tt_mdm_customer_bank
+                                   i_zinsd020tt_mdm_j1imocust
+                                   i_zinsd020tt_mdm_customer_knas
+                                   i_zinsd021tt_mdm_customer_addr
+                                   e_remarks
+                                   USING i_flag
+                                         e_kunnr
+                                         e_status.
+  ENDIF.
+
+<font color ="#0000FF">****** For XD02</font>
+<font color ="#0000FF">*  IF i_flag = 'U'.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    PERFORM change_customer TABLES i_zinsd010tt_mdm_customer_kna1</font>
+<font color ="#0000FF">*                                     i_zinsd011tt_mdm_customer_knb1</font>
+<font color ="#0000FF">*                                     i_zinsd012tt_mdm_customer_knvp</font>
+<font color ="#0000FF">*                                     i_zinsd013tt_mdm_customer_knvv</font>
+<font color ="#0000FF">*                                     i_zinsd014tt_mdm_customer_knvi</font>
+<font color ="#0000FF">**                                     zinsd015str_mdm_customer_knbk</font>
+<font color ="#0000FF">*                                     i_zinsd016tt_mdm_customer_knvk</font>
+<font color ="#0000FF">*                                     i_zinsd017tt_mdm_customer_knva</font>
+<font color ="#0000FF">*                                     i_zinsd019tt_mdm_customer_bank</font>
+<font color ="#0000FF">*                                     i_zinsd020tt_mdm_j1imocust</font>
+<font color ="#0000FF">*                                     e_remarks</font>
+<font color ="#0000FF">*                                     USING i_flag</font>
+<font color ="#0000FF">*                                           e_kunnr</font>
+<font color ="#0000FF">*                                           e_status.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  ENDIF.</font>
+
+<font color ="#0000FF">****************** For XD05 (Block Customer)</font>
+  IF i_flag = 'B'.
+
+<font color ="#0000FF">*    IF i_zinsd013tt_mdm_customer_knvv IS NOT INITIAL.</font>
+    PERFORM block_customer TABLES i_zinsd010tt_mdm_customer_kna1
+                                         i_zinsd011tt_mdm_customer_knb1
+                                         i_zinsd012tt_mdm_customer_knvp
+                                         i_zinsd013tt_mdm_customer_knvv
+                                         i_zinsd014tt_mdm_customer_knvi
+                                         i_zinsd016tt_mdm_customer_knvk
+                                         i_zinsd017tt_mdm_customer_knva
+                                         i_zinsd019tt_mdm_customer_bank
+<font color ="#0000FF">*                                         i_zinsd020tt_mdm_j1imocust</font>
+                                         e_remarks
+                                         USING i_flag
+                                               e_kunnr
+                                               e_status.
+
+<font color ="#0000FF">*    ELSE.</font>
+<font color ="#0000FF">*      PERFORM block_customer_all TABLES i_zinsd010tt_mdm_customer_kna1</font>
+<font color ="#0000FF">*                                       i_zinsd011tt_mdm_customer_knb1</font>
+<font color ="#0000FF">*                                       i_zinsd012tt_mdm_customer_knvp</font>
+<font color ="#0000FF">*                                       i_zinsd013tt_mdm_customer_knvv</font>
+<font color ="#0000FF">*                                       i_zinsd014tt_mdm_customer_knvi</font>
+<font color ="#0000FF">*                                       i_zinsd016tt_mdm_customer_knvk</font>
+<font color ="#0000FF">*                                       i_zinsd017tt_mdm_customer_knva</font>
+<font color ="#0000FF">*                                       i_zinsd019tt_mdm_customer_bank</font>
+<font color ="#0000FF">**                                         i_zinsd020tt_mdm_j1imocust</font>
+<font color ="#0000FF">*                                       e_remarks</font>
+<font color ="#0000FF">*                                       USING i_flag</font>
+<font color ="#0000FF">*                                             e_kunnr</font>
+<font color ="#0000FF">*                                             e_status.</font>
+
+<font color ="#0000FF">*    ENDIF.</font>
+
+
+  ENDIF.
+
+<font color ="#0000FF">****************** For XD05 (UnBlock Customer)</font>
+  IF i_flag = 'N'.
+
+    PERFORM unblock_customer TABLES i_zinsd010tt_mdm_customer_kna1
+                                         i_zinsd011tt_mdm_customer_knb1
+                                         i_zinsd012tt_mdm_customer_knvp
+                                         i_zinsd013tt_mdm_customer_knvv
+                                         i_zinsd014tt_mdm_customer_knvi
+                                         i_zinsd016tt_mdm_customer_knvk
+                                         i_zinsd017tt_mdm_customer_knva
+                                         i_zinsd019tt_mdm_customer_bank
+<font color ="#0000FF">*                                         i_zinsd020tt_mdm_j1imocust</font>
+                                         e_remarks
+                                         USING i_flag
+                                               e_kunnr
+                                               e_status.
+
+  ENDIF.
+
+
+  IF i_flag = 'U'.
+
+    PERFORM change_customer TABLES i_zinsd010tt_mdm_customer_kna1
+                                   i_zinsd011tt_mdm_customer_knb1
+                                   i_zinsd012tt_mdm_customer_knvp
+                                   i_zinsd013tt_mdm_customer_knvv
+                                   i_zinsd014tt_mdm_customer_knvi
+                                   i_zinsd016tt_mdm_customer_knvk
+                                   i_zinsd017tt_mdm_customer_knva
+                                   i_zinsd019tt_mdm_customer_bank
+                                   i_zinsd020tt_mdm_j1imocust
+                                   e_remarks
+                                   i_zinsd015tt_mdm_customer_knbk  " KNBK Structure
+                                   i_zinsd021tt_mdm_customer_addr
+                                         USING i_flag
+                                               e_kunnr
+                                               e_status.
+
+  ENDIF.
+  CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'
+    EXPORTING
+      input  = e_kunnr
+    IMPORTING
+      output = e_kunnr.
+
+
+ENDFUNCTION.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

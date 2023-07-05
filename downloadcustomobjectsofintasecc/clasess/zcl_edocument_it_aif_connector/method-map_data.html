@@ -1,0 +1,92 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>MAP_DATA</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: MAP_DATA</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*   Method attributes.                                                   *</font>
+<font color ="#0000FF">**************************************************************************</font>
+Instantiation: Public
+<font color ="#0000FF">**************************************************************************</font>
+
+METHOD map_data.
+<font color ="#0000FF">*-----------------------------------------------------------------------</font>
+<font color ="#0000FF">*  This is an helper method to map data structures</font>
+<font color ="#0000FF">*  From: AIF format</font>
+<font color ="#0000FF">*  To:   eDocument format</font>
+<font color ="#0000FF">*-2026905---------------------------------------------------------------</font>
+<font color ="#0000FF">*    DATA: lr_process_data TYPE REF TO data.</font>
+<font color ="#0000FF">*    DATA: lv_xml TYPE xstring,</font>
+<font color ="#0000FF">*          lo_descr_ref TYPE ref to cl_abap_typedescr.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    FIELD-SYMBOLS: &lt;lv_data&gt;         TYPE any,</font>
+<font color ="#0000FF">*                   &lt;lv_process_data&gt; TYPE any,</font>
+<font color ="#0000FF">*                   &lt;lv_process_data2&gt; TYPE any.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">**   Map AIF structure into eDocument corresponding process structure</font>
+<font color ="#0000FF">*    CASE iv_process_step.</font>
+<font color ="#0000FF">**---  Process Response</font>
+<font color ="#0000FF">**--------------------------------------------------------</font>
+<font color ="#0000FF">*      WHEN 'PROCRESP'.</font>
+<font color ="#0000FF">*        ASSIGN ir_data-&gt;* TO &lt;lv_data&gt;.</font>
+<font color ="#0000FF">*        IF &lt;lv_data&gt; IS ASSIGNED.</font>
+<font color ="#0000FF">*          ASSIGN COMPONENT 'RESPONSE' OF STRUCTURE &lt;lv_data&gt; TO</font>
+<font color ="#0000FF">*          &lt;lv_process_data&gt;.</font>
+<font color ="#0000FF">*          IF &lt;lv_process_data&gt; IS ASSIGNED.</font>
+<font color ="#0000FF">*            GET REFERENCE OF &lt;lv_process_data&gt; INTO lr_process_data.</font>
+<font color ="#0000FF">*          ENDIF.</font>
+<font color ="#0000FF">*        ENDIF.</font>
+<font color ="#0000FF">**---  Send for approval</font>
+<font color ="#0000FF">**-------------------------------------------------------</font>
+<font color ="#0000FF">*      WHEN 'SENDEDOC'.</font>
+<font color ="#0000FF">*        CLEAR lv_xml.</font>
+<font color ="#0000FF">*        ASSIGN ir_data-&gt;* TO &lt;lv_data&gt;.</font>
+<font color ="#0000FF">*        IF &lt;lv_data&gt; IS ASSIGNED.</font>
+<font color ="#0000FF">*          TRY .</font>
+<font color ="#0000FF">*              lo_descr_ref = cl_abap_typedescr=&gt;describe_by_data(</font>
+<font color ="#0000FF">*              &lt;lv_data&gt; ).</font>
+<font color ="#0000FF">*              if lo_descr_ref is bound.</font>
+<font color ="#0000FF">*                if lo_descr_ref-&gt;absolute_name cs</font>
+<font color ="#0000FF">*                'EDO_IT_FATTURA_ELETTRONICA' and</font>
+<font color ="#0000FF">*                  not &lt;lv_data&gt; is initial.</font>
+<font color ="#0000FF">*                  cl_proxy_xml_transform=&gt;abap_to_xml_xstring(</font>
+<font color ="#0000FF">*EXPORTING</font>
+<font color ="#0000FF">*                  abap_data = &lt;lv_data&gt;</font>
+<font color ="#0000FF">*ddic_type = 'EDO_IT_FATTURA_ELETTRONICA'</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*RECEIVING</font>
+<font color ="#0000FF">*                                                               xml =</font>
+<font color ="#0000FF">*                                                               lv_xml )</font>
+<font color ="#0000FF">*                                                               .</font>
+<font color ="#0000FF">*                endif.</font>
+<font color ="#0000FF">*              endif.</font>
+<font color ="#0000FF">*            CATCH cx_proxy_fault.</font>
+<font color ="#0000FF">**!          More descriptive exception required</font>
+<font color ="#0000FF">*            cl_edocument=&gt;raise_edoc_exception( ).</font>
+<font color ="#0000FF">*          ENDTRY.</font>
+<font color ="#0000FF">*        ENDIF.</font>
+<font color ="#0000FF">*        ASSIGN lv_xml TO &lt;lv_process_data2&gt;.</font>
+<font color ="#0000FF">*        IF &lt;lv_process_data2&gt; IS ASSIGNED.</font>
+<font color ="#0000FF">*          CREATE DATA lr_process_data type xstring.</font>
+<font color ="#0000FF">*          ASSIGN lr_process_data-&gt;* to &lt;lv_process_data&gt;.</font>
+<font color ="#0000FF">*          &lt;lv_process_data&gt; = &lt;lv_process_data2&gt;.</font>
+<font color ="#0000FF">*        ENDIF.</font>
+<font color ="#0000FF">**---  Other cases: No mapping</font>
+<font color ="#0000FF">**-------------------------------------------------</font>
+<font color ="#0000FF">*      WHEN OTHERS.</font>
+<font color ="#0000FF">*        lr_process_data = ir_data.</font>
+<font color ="#0000FF">*    ENDCASE.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    er_data = lr_process_data .</font>
+
+  ENDMETHOD.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

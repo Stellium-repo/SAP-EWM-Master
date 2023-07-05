@@ -1,0 +1,33 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>GET_MATERIALS_FOR_TYPE</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: GET_MATERIALS_FOR_TYPE</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Get materials for material type</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*   Method attributes.                                                   *</font>
+<font color ="#0000FF">**************************************************************************</font>
+Instantiation: Public
+<font color ="#0000FF">**************************************************************************</font>
+
+method GET_MATERIALS_FOR_TYPE.
+
+<font color ="#0000FF">*  *Get data from mara for a material type MTART</font>
+    SELECT * FROM MARA
+      INTO TABLE ET_MARA
+      up to 50 rows
+      WHERE MTART = IM_MTART.
+
+
+endmethod.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

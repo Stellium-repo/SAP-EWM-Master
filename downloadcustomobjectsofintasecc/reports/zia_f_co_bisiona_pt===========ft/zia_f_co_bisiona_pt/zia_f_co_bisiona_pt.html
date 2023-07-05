@@ -1,0 +1,636 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZIA_F_CO_BISIONA_PT</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for function: ZIA_F_CO_BISIONA_PT</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Contracts Interface For PT10 Bisiona</b></font>
+<hr>
+<pre width="100">
+FUNCTION zia_f_co_bisiona_pt.
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+<font color ="#0000FF">*"*"Local Interface:</font>
+<font color ="#0000FF">*"  IMPORTING</font>
+<font color ="#0000FF">*"     VALUE(I_FILENAME) TYPE  CHAR50</font>
+<font color ="#0000FF">*"  TABLES</font>
+<font color ="#0000FF">*"      IT_BISIONA TYPE  ZIA_T_CONT_BISIONA</font>
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+<font color ="#0000FF">*&-----------------------------------------------------------------*</font>
+<font color ="#0000FF">* Author              : KARTIKEY DANTANI</font>
+<font color ="#0000FF">* Created On          : 14.12.2022</font>
+<font color ="#0000FF">* Purpose             : SD :- Create Contract Interface For PT10 Bisiona.</font>
+<font color ="#0000FF">* Transaction Code    : RFC</font>
+<font color ="#0000FF">* Package             : ZACC_GLOBAL_PNS</font>
+<font color ="#0000FF">*&-----------------------------------------------------------------*</font>
+
+<font color ="#0000FF">*       <a href ="global-zia_f_co_bisiona_pt.html">Global data declarations</a></font>
+  TABLES : zia_log_table.
+  TYPES: BEGIN OF ty_vbak,
+           vbeln TYPE vbak-vbeln,
+           vbtyp TYPE vbak-vbtyp,
+           kunnr TYPE vbak-kunnr,
+           ktext TYPE vbak-ktext,
+           bstnk TYPE vbak-bstnk,          "Added by Shreedevi on Dt. 09.11.2021
+         END OF ty_vbak.
+
+  TYPES: BEGIN OF lst_locsku,
+           fgex       TYPE matnr,
+           localmatnr TYPE char20,
+           whplant    TYPE werks_d,
+           localmaktx TYPE char65,
+         END OF lst_locsku.
+
+  TYPES: BEGIN OF tt_knvv,
+           kunnr TYPE knvv-kunnr,
+           vkorg TYPE knvv-vkorg,
+           vtweg TYPE knvv-vtweg,
+           spart TYPE knvv-spart,
+           vwerk TYPE knvv-vwerk,
+         END OF tt_knvv.
+
+  TYPES: BEGIN OF ty_bisiona1,
+           p_customer TYPE zia_s_cont_bisiona-p_customer,
+           purch_no_c TYPE zia_s_cont_bisiona-purch_no_c,
+           cont_id    TYPE zia_s_cont_bisiona-cont_id,
+           matnr      TYPE zia_s_cont_bisiona-matnr,
+           p_price    TYPE zia_s_cont_bisiona-p_price,
+           cont_qty   TYPE zia_s_cont_bisiona-cont_qty,
+           valid_frm  TYPE zia_s_cont_bisiona-valid_frm,
+           valit_to   TYPE zia_s_cont_bisiona-valit_to,
+           inf_con    TYPE zia_s_cont_bisiona-inf_con,
+           p_notes    TYPE zia_s_cont_bisiona-p_notes,
+         END OF ty_bisiona1.
+
+  TYPES: BEGIN OF ty_vbap,
+           vbeln TYPE vbak-vbeln,
+           posnr TYPE vbap-posnr,
+           matnr TYPE vbap-matnr,
+           kdmat TYPE vbap-kdmat,
+           zmeng TYPE vbap-zmeng,
+         END OF ty_vbap.
+
+  DATA: it_vakpa TYPE TABLE OF vakpa,
+        wa_vakpa TYPE vakpa.
+
+  DATA: it_vbak TYPE TABLE OF ty_vbak,
+        wa_vbak TYPE ty_vbak.
+
+  DATA: it_knvv TYPE TABLE OF tt_knvv,
+        wa_knvv TYPE tt_knvv.
+
+  DATA: it_locsku TYPE STANDARD TABLE OF lst_locsku,
+        wa_locsku TYPE lst_locsku.
+
+  DATA: it_vbap TYPE TABLE OF ty_vbap,
+        wa_vbap TYPE ty_vbap.
+
+
+  DATA: t_items      LIKE bapisditm  OCCURS 0 WITH HEADER LINE,
+        t_itemsx     LIKE bapisditmx OCCURS 0 WITH HEADER LINE,
+        t_partners   LIKE bapiparnr  OCCURS 0 WITH HEADER LINE,
+        t_conds      LIKE bapicond   OCCURS 0 WITH HEADER LINE,
+        t_condsx     LIKE bapicondx  OCCURS 0 WITH HEADER LINE,
+        t_contract   LIKE bapictr    OCCURS 0 WITH HEADER LINE,
+        t_contract1  LIKE bapictrx   OCCURS 0 WITH HEADER LINE,
+        t_texts      LIKE bapisdtext OCCURS 0 WITH HEADER LINE,
+        logic_switch LIKE bapisdls OCCURS 0 WITH HEADER LINE.
+
+  DATA: it_order_header_in  LIKE bapisdhd1 OCCURS 0 WITH HEADER LINE,
+        it_order_header_inx LIKE bapisdhd1x OCCURS 0 WITH HEADER LINE.
+
+  DATA: header  LIKE bapisdhd1,
+        v_order LIKE bapivbeln-vbeln.
+
+  DATA: it_return TYPE TABLE OF bapiret2,
+        wa_return TYPE bapiret2.
+
+  DATA: it_bisiona1 TYPE TABLE OF ty_bisiona1 WITH HEADER LINE,
+        wa_bisiona  TYPE zia_s_cont_bisiona,
+        wa_bisiona1 TYPE ty_bisiona1.
+
+  DATA: p_itm_number  TYPE bapisditm-itm_number,
+        p_itm_number1 TYPE bapisditm-itm_number.
+
+  DATA: timestamp TYPE tzonref-tstamps,
+        i_time    TYPE sy-timlo,
+        i_date    TYPE sy-datlo,
+        v_plant   TYPE t001w-name1,
+        i_s_log   TYPE bal_s_log,
+        p_kunnr   TYPE kna1-kunnr,
+        v_new_f   TYPE i,
+        v_end_f   TYPE i.
+
+  RANGES: r_kunde FOR vakpa-kunde,
+          r_parvw FOR vakpa-parvw,
+          r_audat FOR vakpa-audat,
+          r_vkbur FOR vakpa-vkbur,
+          r_vkgrp FOR vakpa-vkgrp,
+          r_vtweg FOR vakpa-vtweg.
+
+
+<font color ="#0000FF">*------------------------------ Fatch Contract No--------------------------------------*</font>
+
+  wa_vakpa-vkorg = 'PT10'.
+  wa_vakpa-trvog = '4'.    "contracts
+  wa_vakpa-spart = '19'.
+  wa_vakpa-auart = 'ZPTN'.
+
+  SELECT vbeln FROM vakpa
+               INTO  CORRESPONDING FIELDS OF TABLE it_vakpa
+               WHERE kunde IN r_kunde
+                 AND parvw IN r_parvw
+                 AND vkorg = wa_vakpa-vkorg
+                 AND trvog = wa_vakpa-trvog   "Contracts
+                 AND audat IN r_audat
+                 AND vkbur IN r_vkbur
+                 AND vkgrp IN r_vkgrp
+                 AND vtweg IN r_vtweg
+                 AND spart = wa_vakpa-spart
+                 AND auart = wa_vakpa-auart.
+
+  if it_vakpa[] is not INITIAL.
+  SELECT vbeln
+         vbtyp
+         kunnr
+         ktext
+         bstnk FROM vbak                            "Added by Shreedevi on Dt. 09.11.2021
+               INTO TABLE it_vbak
+               FOR ALL ENTRIES IN it_vakpa
+               WHERE vbeln = it_vakpa-vbeln.
+  endif.
+
+<font color ="#0000FF">*  LOOP AT it_bisiona INTO wa_bisiona.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">**    LOOP AT IT_VBAK INTO WA_VBAK WHERE KTEXT = WA_BISIONA-CONT_ID.     "Commented by Shreedevi on Dt. 09.11.2021</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    LOOP AT it_vbak INTO wa_vbak WHERE bstnk = wa_bisiona-purch_no_c.    "Added by Shreedevi on Dt. 09.11.2021</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      it_order_header_in-ct_valid_f = wa_bisiona-valid_frm.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">**      CONCATENATE wa_bisiona-valid_frm+6(4)</font>
+<font color ="#0000FF">**                  wa_bisiona-valid_frm+3(2)</font>
+<font color ="#0000FF">**                  wa_bisiona-valid_frm+0(2) INTO it_order_header_in-ct_valid_f .</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      it_order_header_in-ct_valid_t = wa_bisiona-valit_to.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">**      CONCATENATE wa_bisiona-valit_to+6(4)</font>
+<font color ="#0000FF">**                  wa_bisiona-valit_to+3(2)</font>
+<font color ="#0000FF">**                  wa_bisiona-valit_to+0(2) INTO it_order_header_in-ct_valid_t .</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">**      IT_ORDER_HEADER_IN-PURCH_NO_C = WA_BISIONA-PURCH_NO_C.           "Commented by Shreedevi on Dt. 09.11.2021</font>
+<font color ="#0000FF">*      it_order_header_in-pp_search = wa_bisiona-cont_id.                "Added by Shreedevi on Dt. 09.11.2021</font>
+<font color ="#0000FF">*      APPEND: it_order_header_in.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      it_order_header_inx-updateflag = 'U'.</font>
+<font color ="#0000FF">*      it_order_header_inx-ct_valid_f = 'X'.</font>
+<font color ="#0000FF">*      it_order_header_inx-ct_valid_t = 'X'.</font>
+<font color ="#0000FF">**      IT_ORDER_HEADER_INX-PURCH_NO_C = 'X'.                          "Commented by Shreedevi on Dt. 09.11.2021</font>
+<font color ="#0000FF">*      it_order_header_inx-pp_search = 'X'.                            "Added by Shreedevi on Dt. 09.11.2021</font>
+<font color ="#0000FF">*      APPEND: it_order_header_inx.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">**------------------------------ Change Contract BAPI Call--------------------------------------*</font>
+<font color ="#0000FF">*      CLEAR: it_return[].</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      CALL FUNCTION 'SD_SALESDOCUMENT_CHANGE'</font>
+<font color ="#0000FF">*        EXPORTING</font>
+<font color ="#0000FF">*          salesdocument    = wa_vbak-vbeln</font>
+<font color ="#0000FF">*          order_header_in  = it_order_header_in</font>
+<font color ="#0000FF">*          order_header_inx = it_order_header_inx</font>
+<font color ="#0000FF">*        TABLES</font>
+<font color ="#0000FF">*          return           = it_return.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      IF sy-subrc = 0.</font>
+<font color ="#0000FF">*        CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'.</font>
+<font color ="#0000FF">*        WRITE: 'Contract Document', wa_vbak-vbeln, 'has been Change'.</font>
+<font color ="#0000FF">*      ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      LOOP AT it_return INTO wa_return WHERE type = 'E'.</font>
+<font color ="#0000FF">**start of mod by masthan dt:05032021 CR#8000003114</font>
+<font color ="#0000FF">**        ZIA_LOG_TABLE-DEST_SYSTEM   = 'BISIONA'.</font>
+<font color ="#0000FF">**        ZIA_LOG_TABLE-SOURCE_SYSTEM = 'SAP'.</font>
+<font color ="#0000FF">*        zia_log_table-dest_system   = 'SAP'.</font>
+<font color ="#0000FF">*        zia_log_table-source_system = 'BISIONA'.</font>
+<font color ="#0000FF">**end of mod by masthan dt:05032021 CR#8000003114</font>
+<font color ="#0000FF">*        zia_log_table-file_name     = i_filename.</font>
+<font color ="#0000FF">*        zia_log_table-user_name     = sy-uname.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*        i_date = sy-datum.</font>
+<font color ="#0000FF">*        i_time = sy-uzeit.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*        CALL FUNCTION 'IB_CONVERT_INTO_TIMESTAMP'</font>
+<font color ="#0000FF">*          EXPORTING</font>
+<font color ="#0000FF">*            i_datlo     = i_date</font>
+<font color ="#0000FF">*            i_timlo     = i_time</font>
+<font color ="#0000FF">*            i_tzone     = 'INDIA'</font>
+<font color ="#0000FF">*          IMPORTING</font>
+<font color ="#0000FF">*            e_timestamp = timestamp.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*        CALL FUNCTION 'IB_CONVERT_FROM_TIMESTAMP'</font>
+<font color ="#0000FF">*          EXPORTING</font>
+<font color ="#0000FF">*            i_timestamp = timestamp</font>
+<font color ="#0000FF">*            i_tzone     = 'UTC+2'</font>
+<font color ="#0000FF">*          IMPORTING</font>
+<font color ="#0000FF">*            e_datlo     = i_date</font>
+<font color ="#0000FF">*            e_timlo     = i_time.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*        CONCATENATE i_date i_time INTO zia_log_table-time_stamp.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*        zia_log_table-interface = 'BISIONA'.</font>
+<font color ="#0000FF">*        zia_log_table-status    = wa_return-type.</font>
+<font color ="#0000FF">*        zia_log_table-error     = wa_return-message.</font>
+<font color ="#0000FF">*        zia_log_table-document  = wa_vbak-vbeln.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*        INSERT zia_log_table.</font>
+<font color ="#0000FF">*        COMMIT WORK AND WAIT.</font>
+<font color ="#0000FF">*        CLEAR: wa_return.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      ENDLOOP.</font>
+<font color ="#0000FF">**start of mod by masthan dt:05032021 CR#8000003114</font>
+<font color ="#0000FF">**      CLEAR: IT_ORDER_HEADER_IN[], IT_ORDER_HEADER_INX[], WA_VBAK, WA_BISIONA.</font>
+<font color ="#0000FF">*      CLEAR: it_order_header_in[], it_order_header_inx[], wa_vbak.</font>
+<font color ="#0000FF">**end of mod by masthan dt:05032021 CR#8000003114</font>
+<font color ="#0000FF">*    ENDLOOP.</font>
+<font color ="#0000FF">*  ENDLOOP.</font>
+
+  IF it_vakpa[] IS NOT INITIAL.
+    SELECT vbeln posnr matnr kdmat zmeng FROM vbap
+      INTO TABLE it_vbap
+      FOR ALL ENTRIES IN it_vakpa
+      WHERE vbeln = it_vakpa-vbeln.
+  ENDIF.
+
+  SORT it_bisiona BY p_customer purch_no_c matnr.
+
+  LOOP AT it_bisiona.
+    CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'
+      EXPORTING
+        input  = it_bisiona-p_customer
+      IMPORTING
+        output = it_bisiona-p_customer.
+    MODIFY it_bisiona.
+    MOVE-CORRESPONDING it_bisiona TO it_bisiona1.
+    APPEND: it_bisiona1.
+    CLEAR: it_bisiona1, it_bisiona.
+  ENDLOOP.
+
+  DELETE ADJACENT DUPLICATES FROM it_bisiona[] COMPARING p_customer purch_no_c.
+  SORT it_bisiona1[] BY p_customer purch_no_c.
+  SORT it_vbak[] BY kunnr bstnk.
+  SORT it_vbap[] BY vbeln kdmat.
+
+  LOOP AT it_bisiona INTO wa_bisiona.
+    LOOP AT it_vbak INTO wa_vbak WHERE kunnr = wa_bisiona-p_customer+6(10) AND  bstnk = wa_bisiona-purch_no_c(20).
+
+      it_order_header_in-ct_valid_f = wa_bisiona-valid_frm.
+      it_order_header_in-ct_valid_t = wa_bisiona-valit_to.
+      it_order_header_in-pp_search = wa_bisiona-cont_id.
+      APPEND: it_order_header_in.
+
+      it_order_header_inx-updateflag = 'U'.
+      it_order_header_inx-ct_valid_f = 'X'.
+      it_order_header_inx-ct_valid_t = 'X'.
+      it_order_header_inx-pp_search = 'X'.
+      APPEND: it_order_header_inx.
+
+      LOOP AT it_bisiona1 INTO wa_bisiona1 WHERE p_customer = wa_bisiona-p_customer AND purch_no_c = wa_vbak-bstnk.
+        READ TABLE it_vbap INTO wa_vbap WITH KEY vbeln = wa_vbak-vbeln kdmat = wa_bisiona1-matnr BINARY SEARCH.
+        IF sy-subrc IS INITIAL.
+          t_items-itm_number = wa_vbap-posnr.
+          t_items-target_qty = wa_bisiona1-cont_qty.
+          APPEND: t_items.
+          CLEAR: t_items.
+
+          t_itemsx-updateflag = 'U'.
+          t_itemsx-itm_number = wa_vbap-posnr.
+          t_itemsx-target_qty = 'X'.
+          APPEND: t_itemsx.
+          CLEAR: t_itemsx.
+        ENDIF.
+      ENDLOOP.
+      CLEAR: it_return[].
+
+      CALL FUNCTION 'SD_SALESDOCUMENT_CHANGE'
+        EXPORTING
+          salesdocument    = wa_vbak-vbeln
+          order_header_in  = it_order_header_in
+          order_header_inx = it_order_header_inx
+        TABLES
+          item_in          = t_items[]
+          item_inx         = t_itemsx[]
+          return           = it_return.
+
+      IF sy-subrc = 0.
+        CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'.
+      ENDIF.
+      LOOP AT it_return INTO wa_return WHERE type = 'E' OR type =  'S'.
+        zia_log_table-dest_system   = 'SAP'.
+        zia_log_table-source_system = 'BISIONA'.
+        zia_log_table-file_name     = i_filename.
+        zia_log_table-user_name     = sy-uname.
+
+        i_date = sy-datum.
+        i_time = sy-uzeit.
+
+        CALL FUNCTION 'IB_CONVERT_INTO_TIMESTAMP'
+          EXPORTING
+            i_datlo     = i_date
+            i_timlo     = i_time
+            i_tzone     = 'INDIA'
+          IMPORTING
+            e_timestamp = timestamp.
+
+        CALL FUNCTION 'IB_CONVERT_FROM_TIMESTAMP'
+          EXPORTING
+            i_timestamp = timestamp
+            i_tzone     = 'UTC+2'
+          IMPORTING
+            e_datlo     = i_date
+            e_timlo     = i_time.
+
+        CONCATENATE i_date i_time INTO zia_log_table-time_stamp.
+
+        zia_log_table-interface = 'BISIONA'.
+        zia_log_table-status    = wa_return-type.
+        zia_log_table-error     = wa_return-message.
+        zia_log_table-document  = wa_vbak-vbeln.
+
+        INSERT zia_log_table.
+        COMMIT WORK AND WAIT.
+        CLEAR: wa_return.
+      ENDLOOP.
+
+      CLEAR: it_order_header_in[], it_order_header_inx[], wa_vbak, t_items[], t_itemsx[].
+    ENDLOOP.
+  ENDLOOP.
+
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">*------------------------------ Delete Update Contract--------------------------------------*</font>
+<font color ="#0000FF">*start of mod by masthan dt:25022021</font>
+<font color ="#0000FF">*  LOOP AT IT_BISIONA INTO WA_BISIONA.</font>
+<font color ="#0000FF">*    DELETE IT_VBAK WHERE KTEXT = WA_BISIONA-CONT_ID.</font>
+<font color ="#0000FF">*  ENDLOOP.</font>
+  LOOP AT it_vbak INTO wa_vbak.
+<font color ="#0000FF">*    DELETE IT_BISIONA WHERE CONT_ID = WA_VBAK-KTEXT.                   "Commented by Shreedevi on Dt. 09.11.2021</font>
+<font color ="#0000FF">*    DELETE it_bisiona WHERE purch_no_c = wa_vbak-bstnk.                 "Added by Shreedevi on Dt. 09.11.2021</font>
+<font color ="#0000FF">*    DELETE it_bisiona1 WHERE purch_no_c = wa_vbak-bstnk.</font>
+<font color ="#0000FF">*    DELETE it_bisiona1 WHERE purch_no_c = wa_vbak-bstnk AND P_CUSTOMER = wa_vbak-kunnr.</font>
+    DELETE it_bisiona1 WHERE purch_no_c = wa_vbak-bstnk AND P_CUSTOMER+6(10) = wa_vbak-kunnr.
+  ENDLOOP.
+<font color ="#0000FF">*end of mod by masthan dt:25022021</font>
+<font color ="#0000FF">*------------------------------ Create a new Contract--------------------------------------*</font>
+  IF it_bisiona1[] IS NOT INITIAL.
+
+    SELECT fgex
+           localmatnr
+           whplant
+           localmaktx FROM zan_upid_locsku
+                      INTO TABLE it_locsku
+                      FOR ALL ENTRIES IN it_bisiona1
+                      WHERE localmatnr = it_bisiona1-matnr
+                       AND whplant    = 'PT11'.
+
+    SORT it_bisiona1 BY p_customer purch_no_c matnr.
+    SORT it_locsku  BY localmatnr whplant.
+
+<font color ="#0000FF">*    LOOP AT it_bisiona.</font>
+<font color ="#0000FF">*      MOVE-CORRESPONDING it_bisiona TO it_bisiona1.</font>
+<font color ="#0000FF">*      APPEND: it_bisiona1.</font>
+<font color ="#0000FF">*      CLEAR: it_bisiona1, it_bisiona.</font>
+<font color ="#0000FF">*    ENDLOOP.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    DELETE ADJACENT DUPLICATES FROM it_bisiona[] COMPARING p_customer.</font>
+    SORT it_bisiona[] BY p_customer purch_no_c.
+
+    LOOP AT it_bisiona.
+
+<font color ="#0000FF">*      LOOP AT IT_BISIONA1 WHERE P_CUSTOMER = IT_BISIONA-P_CUSTOMER.</font>
+      LOOP AT it_bisiona1 WHERE p_customer = it_bisiona-p_customer AND purch_no_c = it_bisiona-purch_no_c.
+        AT NEW purch_no_c.
+          v_new_f = 1.
+        ENDAT.
+
+        AT END OF purch_no_c.
+          v_end_f = 1.
+        ENDAT.
+
+
+        IF v_new_f = 1.
+
+          header-doc_type   = 'ZPTN'.
+          header-sales_org  = 'PT10'.
+          header-distr_chan = 'HX'.
+          header-division   = '19'.
+
+          header-ct_valid_f = it_bisiona1-valid_frm.
+
+<font color ="#0000FF">*          CONCATENATE it_bisiona1-valid_frm+6(4)</font>
+<font color ="#0000FF">*                      it_bisiona1-valid_frm+3(2)</font>
+<font color ="#0000FF">*                      it_bisiona1-valid_frm+0(2) INTO header-ct_valid_f .</font>
+
+
+          header-ct_valid_t = it_bisiona1-valit_to.
+
+<font color ="#0000FF">*          CONCATENATE it_bisiona1-valit_to+6(4)</font>
+<font color ="#0000FF">*                      it_bisiona1-valit_to+3(2)</font>
+<font color ="#0000FF">*                      it_bisiona1-valit_to+0(2) INTO header-ct_valid_t .</font>
+
+
+          header-pp_search  = it_bisiona1-cont_id.
+          header-purch_no_c = it_bisiona1-purch_no_c.
+          CLEAR: v_new_f.
+
+          p_itm_number1 = '000010'.
+          p_kunnr       = it_bisiona1-p_customer+6(10).
+
+          SELECT kunnr
+                 vkorg
+                 vtweg
+                 spart
+                 vwerk FROM knvv
+                       INTO TABLE it_knvv
+                       WHERE kunnr = p_kunnr
+                         AND vkorg = 'PT10'
+                         AND vtweg = 'HX'
+                         AND spart = '19'.
+
+          SORT it_knvv BY kunnr.
+          SORT it_locsku BY localmatnr whplant.
+
+          CLEAR: wa_knvv.
+          READ TABLE it_knvv INTO wa_knvv WITH KEY kunnr = p_kunnr BINARY SEARCH.
+          IF wa_knvv-vwerk IS INITIAL.
+            wa_knvv-vwerk = 'PT11'.
+          ENDIF.
+
+          it_bisiona1-p_customer = p_kunnr.
+          t_partners-partn_role  = 'AG'.
+          t_partners-partn_numb  = it_bisiona1-p_customer.
+          APPEND: t_partners.
+          CLEAR: t_partners.
+
+        ENDIF.
+
+        p_itm_number  = p_itm_number + p_itm_number1.
+        CLEAR: wa_locsku.
+        READ TABLE it_locsku INTO wa_locsku WITH KEY localmatnr = it_bisiona1-matnr
+                                                     whplant    = wa_knvv-vwerk BINARY SEARCH.
+        IF sy-subrc = 0.
+          t_items-material   = wa_locsku-fgex.
+        ENDIF.
+
+        SELECT SINGLE msehi FROM t006b
+                            INTO (t_items-sales_unit)
+                            WHERE mseh3 = 'PAC'
+                              AND spras = 'E'.
+
+        t_items-itm_number = p_itm_number.
+        t_items-cust_mat35 = it_bisiona1-matnr.
+        t_items-plant      = wa_knvv-vwerk.
+        v_plant            = t_items-plant.
+        t_items-ship_point = wa_knvv-vwerk.
+        t_items-target_qty = it_bisiona1-cont_qty.
+        t_items-target_qu  = 'PAK'.
+        APPEND: t_items.
+        CLEAR: t_items.
+
+        t_itemsx-itm_number = p_itm_number.
+        t_itemsx-material   = 'X'.
+        t_items-cust_mat35  = 'X'.
+        t_itemsx-plant      = 'X'.
+        t_itemsx-ship_point = 'X'.
+        t_itemsx-target_qty = 'X'.
+        t_itemsx-target_qu  = 'X'.
+        t_itemsx-sales_unit = 'X'.
+        APPEND: t_itemsx.
+        CLEAR: t_itemsx.
+
+<font color ="#0000FF">****************************************************************SOA  Uncomment By Ravi 0n 16.01.2023</font>
+        t_conds-itm_number = p_itm_number.
+        t_conds-cond_type  = 'ZPTP'.
+        t_conds-cond_value = it_bisiona1-p_price / 10.
+        APPEND: t_conds.
+        CLEAR: t_conds.
+
+        t_condsx-itm_number = p_itm_number.
+        t_condsx-cond_type  = 'X'.
+        t_condsx-cond_value = 'X'.
+        t_condsx-updateflag = 'X'.
+        APPEND: t_condsx.
+        CLEAR: t_condsx.
+<font color ="#0000FF">****************************************************************SOE  Uncomment By Ravi 0n 16.01.2023</font>
+        t_texts-text_id    = '0002'.
+        t_texts-itm_number = p_itm_number.
+        t_texts-langu      = 'S'.
+        t_texts-format_col = '*'.
+        t_texts-text_line  = it_bisiona1-p_notes.
+        APPEND: t_texts.
+        CLEAR: t_texts.
+
+<font color ="#0000FF">*------------------------------ Call BAPI Create Contract --------------------------------------*</font>
+        IF v_end_f = 1.
+          logic_switch-pricing = 'G'.
+          CALL FUNCTION 'BAPI_CONTRACT_CREATEFROMDATA'
+            EXPORTING
+              contract_header_in      = header
+              convert                 = 'X'
+              logic_switch            = logic_switch
+            IMPORTING
+              salesdocument           = v_order
+            TABLES
+              return                  = it_return
+              contract_items_in       = t_items[]
+              contract_items_inx      = t_itemsx[]
+              contract_partners       = t_partners[]
+              contract_conditions_in  = t_conds[]
+              contract_conditions_inx = t_condsx[]
+              contract_data_in        = t_contract[]
+              contract_data_inx       = t_contract1[]
+              contract_text           = t_texts[].
+
+          IF it_return[] IS NOT INITIAL.
+
+            CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'.
+            WRITE: 'Sales Document', v_order, 'has been created'.
+          ENDIF.
+
+          DELETE it_return[] WHERE type = 'S' AND id = 'V4'.
+          DELETE it_return[] WHERE type = 'W'.
+
+          LOOP AT it_return INTO wa_return.
+
+            i_s_log-extnumber = wa_return-number.
+            i_s_log-alprog    = sy-cprog.
+            i_s_log-aldate    = sy-datum.
+            i_s_log-altime    = sy-uzeit.
+<font color ="#0000FF">*start of mod by masthan dt:05032021 CR#8000003114</font>
+<font color ="#0000FF">*            ZIA_LOG_TABLE-SOURCE_SYSTEM = 'SAP'.</font>
+            zia_log_table-dest_system = 'SAP'.
+<font color ="#0000FF">*end of mod by masthan dt:05032021 CR#8000003114</font>
+            zia_log_table-source_system = 'BISIONA'.
+            zia_log_table-status        = wa_return-type.
+            zia_log_table-error         = wa_return-message.
+
+            IF wa_return-id = 'V1' AND wa_return-type = 'S' .
+              zia_log_table-document = wa_return-message_v2.
+            ENDIF.
+
+            zia_log_table-interface = 'BISIONA'.
+            zia_log_table-site      = v_plant.
+
+            i_date = sy-datum.
+            i_time = sy-uzeit.
+
+            CALL FUNCTION 'IB_CONVERT_INTO_TIMESTAMP'
+              EXPORTING
+                i_datlo     = i_date
+                i_timlo     = i_time
+                i_tzone     = 'INDIA'
+              IMPORTING
+                e_timestamp = timestamp.
+
+            CALL FUNCTION 'IB_CONVERT_FROM_TIMESTAMP'
+              EXPORTING
+                i_timestamp = timestamp
+                i_tzone     = 'UTC+2'
+              IMPORTING
+                e_datlo     = i_date
+                e_timlo     = i_time.
+
+            CONCATENATE i_date i_time INTO zia_log_table-time_stamp.
+
+            zia_log_table-user_name = sy-uname.
+            zia_log_table-file_name = i_filename.
+
+            INSERT zia_log_table.
+            COMMIT WORK AND WAIT.
+            CLEAR: wa_return.
+
+          ENDLOOP.
+          CLEAR: header, p_itm_number, v_end_f, t_items[], t_itemsx[], t_partners[],
+                 t_conds[], t_condsx[], t_contract[], t_contract[], t_texts[].
+        ENDIF.
+      ENDLOOP.
+    ENDLOOP.
+
+  ENDIF.
+
+
+
+
+ENDFUNCTION.
+
+
+<font color ="#0000FF">*Messages</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: Hard coded</font>
+<font color ="#0000FF">*   Error Occured while transferring data</font>
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

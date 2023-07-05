@@ -1,0 +1,833 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>Dictionary object- ZEXCS</title>
+</head>
+<body bgcolor="#FFFFE0">
+<h2>ZEXCS</h2>
+
+<h3>Export documents screen flow customizing</h3>
+
+<table border="1">
+<tr>
+<th bgcolor="#000000"><font color ="#FFFF00">Row</font></th>
+<th bgcolor="#000000"><font color ="#FFFF00">Field name</font></th>
+<th bgcolor="#000000"><font color ="#FFFF00">Position</font></th>
+<th bgcolor="#000000"><font color ="#FFFF00">Key</font></th>
+<th bgcolor="#000000"><font color ="#FFFF00">Data element</font></th>
+<th bgcolor="#000000"><font color ="#FFFF00">Domain</font></th>
+<th bgcolor="#000000"><font color ="#FFFF00">Datatype</font></th>
+<th bgcolor="#000000"><font color ="#FFFF00">Length</font></th>
+<th bgcolor="#000000"><font color ="#FFFF00">Domain text</font></th>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">MANDT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">X</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">MANDT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">MANDT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CLNT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">3</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Client</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">2 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">DOCTYP</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">2</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">X</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_DOCTYP</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Document Type for Exports</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">3 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">HDGENI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">3</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HDGENI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HDBUSI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">General Information</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">GNREFHD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_GNREFH</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">General Info Header Reference</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">5 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">GNREFITM</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">5</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_GNREFI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">General Infomation Item Level Reference</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">6 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">HISTGE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">6</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HISTRQ</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HISTRQ</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">History required</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">7 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">HDBUSI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">7</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HDBUSI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HDBUSI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Header-business data</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">8 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">BSREFHD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">8</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_BSREFH</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Header-Business Data- Header Reference</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">9 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">BSREFIT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">9</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_BSREFI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Business data- Item Level Reference</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">10 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">HISTBS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">10</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HISTRQ</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HISTRQ</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">History required</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">11 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">HDBANK</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">11</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HDBANK</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HDBUSI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Header- Bank data</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">12 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">BKREFHD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">12</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_BKREFH</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Bank Reference Header Level</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">13 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">BKREFIT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">13</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_BKREFI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Bank -Reference Item Level</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">14 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">HISTBNK</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">14</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HISTRQ</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HISTRQ</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">History required</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">15 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">HDLC</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">15</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HDLC</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HDBUSI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Header- LC data</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">16 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">LCREFHD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">16</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_LCREFH</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">L.C data - Reference Header Level</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">17 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">LCREFIT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">17</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_LCREFI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">L.C data Reference Item level</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">18 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">HISTLC</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">18</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HISTRQ</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HISTRQ</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">History required</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">19 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">HDBILLING</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">19</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_BDBLDL</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HDBUSI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Header-Billing</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">20 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">HDBILLACC</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">20</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_ACC</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_ACC</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Header Account Data</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">21 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">BLREFHD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">21</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_BLREFH</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Billing -Reference Header Level</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">22 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">BLREFIT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">22</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_BLREFI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Billing -Reference Item Level</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">23 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">HISTBILL</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">23</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HISTRQ</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HISTRQ</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">History required</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">24 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">SHIPPING</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">24</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_SHIP</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HDBUSI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Header-Shipping</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">25 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">SHREFHD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">25</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_SHREFI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Shipping - Reference Item Level</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">26 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">SHREFIT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">26</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_SHREFI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Shipping - Reference Item Level</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">27 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">HISTSHIP</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">27</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HISTRQ</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HISTRQ</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">History required</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">28 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CONTAINER</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">28</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CONT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HDBUSI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Container Information</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">29 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CNREFHD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">29</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CNREFI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Container-Reference Item Level</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">30 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CNREFIT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">30</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CNREFI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Container-Reference Item Level</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">31 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">HISTCNT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">31</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HISTRQ</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HISTRQ</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">History required</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">32 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">INSURANCE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">32</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_INSUR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HDBUSI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Insurance</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">33 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">INREFHD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">33</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_INREFH</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Insurance - Header Reference</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">34 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">INREFIT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">34</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_INREFI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Insurance - Reference Item Level</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">35 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">HISTINS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">35</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HISTRQ</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HISTRQ</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">History required</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">36 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">COMMHD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">36</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_COMREF</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HDBUSI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Commission</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">37 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">HISTCOMM</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">37</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HISTRQ</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HISTRQ</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">History required</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">38 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">PARTNER</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">38</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_PARTNR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HDBUSI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Partner Information</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">39 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">PTREFHD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">39</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_PTREFH</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Partner- Header Reference</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">40 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">PTREFIT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">40</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_PTREFI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Partner- Item Reference</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">41 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">HISTPART</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">41</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HISTRQ</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HISTRQ</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">History required</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">42 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ITEM</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">42</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_ITEM</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HDBUSI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Item details</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">43 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ITREFHD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">43</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_ITREFH</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Item Details - Reference Header Level</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">44 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ITREFIT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">44</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_ITREFI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Item Details - Reference Item Level</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">45 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">HISTITM</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">45</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HISTRQ</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HISTRQ</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">History required</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">46 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ITEMPRICE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">46</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_ITMPRC</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HDBUSI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Item Pricing</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">47 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">IPREFHD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">47</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_IPREFH</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Item Pricing - Reference Header Level</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">48 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">IPREFIT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">48</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_IPREFI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Item Pricing - Reference Item Level</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">49 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">HISTIPRC</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">49</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HISTRQ</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HISTRQ</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">History required</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">50 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ITEMBENFIT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">50</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_ITMBEN</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HDBUSI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Item Benefits</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">51 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">IBREFHD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">51</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_IBREFH</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Item Benefits - Reference Header Level</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">52 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">IBREFIT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">52</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_IBREFI</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Item Benefits - Reference Item Level</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">53 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">HISTIBEN</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">53</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HISTRQ</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_HISTRQ</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">History required</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">54 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">NUMBRANGE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">54</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">NROBJ</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">NROBJ</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">10</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Name of number range object</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">55 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">NRRANGENR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">55</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">NRNR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR2</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">2</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Number range number</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">56 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">REFDOCCAT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">56</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_REFCAT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_RFDCAT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Ref. document Category</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">57 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">REFDOCTYP</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">57</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_REFDTY</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Ref. Document Type</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">58 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ITMREFCAT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">58</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_REFCAT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_RFDCAT</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Ref. document Category</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">59 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ITMREFTYPE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">59</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_REFDTY</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Ref. Document Type</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">60 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">PRNDOC1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">60</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_DOCTYP</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Document Type for Exports</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">61 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">PRNDOC2</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">61</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_DOCTYP</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Document Type for Exports</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">62 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">PRNDOC3</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">62</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_DOCTYP</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_CODE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Document Type for Exports</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">63 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CANPASSWRD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">63</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">INDXPWD</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR8</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">8</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Password for saved data</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">64 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">EXCHRTTYP</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">64</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_RTTYP</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_RTTYP</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">4</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Exchange Rate Type</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">65 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">EXTNO</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">65</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TDBOOL</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TDBOOL</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Checkbox (yes or no)</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">66 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">EXCHRTBAS</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">66</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_RTBASE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ZEX_RTBASE</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Exchange Rate Base</font></td>
+</tr>
+
+<tr>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">67 </font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">ITEMCOPY</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">67</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">&nbsp;</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TDBOOL</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">TDBOOL</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">CHAR</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">1</font></td>
+<td bgcolor="#FFFFE0"><font face ="Arial" color ="green" size ="1">Checkbox (yes or no)</font></td>
+</tr>
+</table>
+<br>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

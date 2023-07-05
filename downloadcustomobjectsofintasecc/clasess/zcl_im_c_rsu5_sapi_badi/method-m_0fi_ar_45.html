@@ -1,0 +1,52 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>M_0FI_AR_45</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: M_0FI_AR_45</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*   Method attributes.                                                   *</font>
+<font color ="#0000FF">**************************************************************************</font>
+Instantiation: Private
+<font color ="#0000FF">**************************************************************************</font>
+
+METHOD M_0FI_AR_45.
+
+<font color ="#0000FF">**Declare the variable which holds method (datasource enhancement)</font>
+<font color ="#0000FF">*  DATA : l_method TYPE seocmpname.</font>
+<font color ="#0000FF">**Add some letter to prefix, because method can't be started with number</font>
+<font color ="#0000FF">*  CONCATENATE 'M_' i_datasource INTO l_method.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">**checks the internal table, if it has no data then it exits the method.</font>
+<font color ="#0000FF">*  CHECK c_t_data[] IS NOT INITIAL.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">**Read the component(method) from SEOCOMPO table: this table will get an entry when</font>
+<font color ="#0000FF">** a customized method is created in the class. this customized method will</font>
+<font color ="#0000FF">**contain the source code logic to fill the enhanced field of the datasource</font>
+<font color ="#0000FF">*  SELECT SINGLE cmpname FROM seocompo INTO l_method WHERE clsname = 'ZCL_IM_C_RSU5_SAPI_BADI' AND cmpname = l_method.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">** Check the sy-subrc, if it is not equal to 0, then exits the method</font>
+<font color ="#0000FF">*  CHECK sy-subrc EQ 0.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">** if method is found in the SEOCOMPO table, that particular method will be called so automatically enhancement</font>
+<font color ="#0000FF">**  logic written in that method will get executed and Modified to C_T_DATA</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  CALL METHOD (l_method)</font>
+<font color ="#0000FF">*    EXPORTING</font>
+<font color ="#0000FF">*      i_updmode    = i_updmode</font>
+<font color ="#0000FF">*      i_t_select   = i_t_select</font>
+<font color ="#0000FF">*      i_t_fields   = i_t_fields</font>
+<font color ="#0000FF">*    CHANGING</font>
+<font color ="#0000FF">*      c_t_data     = c_t_data</font>
+<font color ="#0000FF">*      c_t_messages = c_t_messages.</font>
+
+ENDMETHOD.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>

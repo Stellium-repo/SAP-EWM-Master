@@ -1,0 +1,167 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>M_0FI_AA_11</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: M_0FI_AA_11</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Business Add-Ins Method for General Data Transfer</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">**************************************************************************</font>
+<font color ="#0000FF">*   Method attributes.                                                   *</font>
+<font color ="#0000FF">**************************************************************************</font>
+Instantiation: Private
+<font color ="#0000FF">**************************************************************************</font>
+
+METHOD m_0fi_aa_11.
+
+<font color ="#0000FF">*  declaring a field symbol with type of extract structure of 0FI_AR_4</font>
+  FIELD-SYMBOLS: &lt;l_s_data&gt; TYPE dtfiaa_11.
+
+  TYPES: BEGIN OF ty_anla,
+           bukrs TYPE anla-bukrs,
+           anln1 TYPE anla-anln1,
+           anln2 TYPE anla-anln2,
+           txt50 TYPE anla-txt50,
+           lifnr TYPE anla-lifnr,
+           menge TYPE anla-menge,
+           meins TYPE anla-meins,
+           aktiv TYPE anla-aktiv,
+         END OF ty_anla,
+
+         BEGIN OF ty_anlz,
+           bukrs TYPE anlz-bukrs,
+           anln1 TYPE anlz-anln1,
+           anln2 TYPE anlz-anln2,
+           bdatu TYPE anlz-bdatu,
+           werks TYPE anlz-werks,
+           gsber TYPE anlz-gsber,
+           stort TYPE anlz-stort,
+         END OF ty_anlz,
+
+         BEGIN OF ty_anlb,
+           bukrs TYPE anlb-bukrs,
+           anln1 TYPE anlb-anln1,
+           anln2 TYPE anlb-anln2,
+           afabe TYPE anlb-afabe,
+           bdatu TYPE anlb-bdatu,
+           afasl TYPE anlb-afasl,
+           afabg TYPE anlb-afabg,
+           ndjar TYPE anlb-ndjar,
+         END OF ty_anlb.
+
+<font color ="#0000FF">* Declare an internal table and work area with above type</font>
+  DATA: lt_anla  TYPE STANDARD TABLE OF ty_anla,
+        l_t_data TYPE STANDARD TABLE OF dtfiaa_11,
+        wa_anla  TYPE ty_anla,
+        lt_anlz  TYPE STANDARD TABLE OF ty_anlz,
+        wa_anlz  TYPE ty_anlz,
+        lt_anlb  TYPE STANDARD TABLE OF ty_anlb,
+        wa_anlb  TYPE ty_anlb.
+
+
+<font color ="#0000FF">*    * move the entire content into another internal table</font>
+  l_t_data[] = c_t_data[].
+
+  IF NOT l_t_data IS INITIAL.
+
+    SELECT bukrs
+           anln1
+           anln2
+           txt50
+           lifnr
+           menge
+           meins
+           aktiv
+    FROM anla INTO TABLE lt_anla FOR ALL ENTRIES IN l_t_data
+      WHERE bukrs = l_t_data-bukrs
+        AND anln1 = l_t_data-anln1
+        AND anln2 = l_t_data-anln2.
+
+    SELECT bukrs
+           anln1
+           anln2
+           bdatu
+           werks
+           gsber
+           stort
+    FROM anlz INTO TABLE lt_anlz FOR ALL ENTRIES IN l_t_data
+      WHERE bukrs = l_t_data-bukrs
+        AND anln1 = l_t_data-anln1
+        AND anln2 = l_t_data-anln2.
+
+    SORT lt_anlz BY bukrs anln1 anln2 bdatu.
+
+    SELECT bukrs
+           anln1
+           anln2
+           afabe
+           bdatu
+           afasl
+           afabg
+           ndjar
+    FROM anlb INTO TABLE lt_anlb FOR ALL ENTRIES IN l_t_data
+      WHERE bukrs = l_t_data-bukrs
+        AND anln1 = l_t_data-anln1
+        AND anln2 = l_t_data-anln2.
+
+    SORT lt_anlb BY bukrs anln1 anln2 afabe bdatu.
+
+    SORT lt_anla BY bukrs anln1 anln2.
+
+    LOOP AT l_t_data ASSIGNING &lt;l_s_data&gt;.
+      READ TABLE lt_anla INTO wa_anla WITH KEY bukrs = &lt;l_s_data&gt;-bukrs
+                                               anln1 = &lt;l_s_data&gt;-anln1
+                                               anln2 = &lt;l_s_data&gt;-anln2
+                                               BINARY SEARCH.
+
+      IF sy-subrc = 0.
+        &lt;l_s_data&gt;-zztxt50 = wa_anla-txt50.
+        &lt;l_s_data&gt;-zzlifnr = wa_anla-lifnr.
+        &lt;l_s_data&gt;-zzmenge = wa_anla-menge.
+        &lt;l_s_data&gt;-zzmeins = wa_anla-meins.
+        &lt;l_s_data&gt;-zzaktiv = wa_anla-aktiv.
+      ENDIF.
+
+      READ TABLE lt_anlz INTO wa_anlz WITH KEY bukrs = &lt;l_s_data&gt;-bukrs
+                                               anln1 = &lt;l_s_data&gt;-anln1
+                                               anln2 = &lt;l_s_data&gt;-anln2
+<font color ="#0000FF">**                                               bdatu = &lt;l_s_data&gt;-bdatu</font>
+                                               BINARY SEARCH.
+
+      IF sy-subrc = 0.
+        &lt;l_s_data&gt;-zzwerks = wa_anlz-werks.
+        &lt;l_s_data&gt;-zzgsber = wa_anlz-gsber.
+        &lt;l_s_data&gt;-zzstort = wa_anlz-stort.
+      ENDIF.
+
+      READ TABLE lt_anlb INTO wa_anlb WITH KEY bukrs = &lt;l_s_data&gt;-bukrs
+                                               anln1 = &lt;l_s_data&gt;-anln1
+                                               anln2 = &lt;l_s_data&gt;-anln2
+<font color ="#0000FF">**                                               afabe = &lt;l_s_data&gt;-afabe</font>
+<font color ="#0000FF">**                                               bdatu = &lt;l_s_data&gt;-bdatu</font>
+                                               BINARY SEARCH.
+
+      IF sy-subrc = 0.
+        &lt;l_s_data&gt;-zzafasl = wa_anlb-afasl.
+        &lt;l_s_data&gt;-zzafabg = wa_anlb-afabg.
+        &lt;l_s_data&gt;-zzndjar = wa_anlb-ndjar.
+      ENDIF.
+
+    ENDLOOP.
+  ENDIF.
+
+
+  c_t_data[] = l_t_data[].
+  REFRESH: l_t_data.
+
+
+ENDMETHOD.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 750
+</font>
+</body>
+</html>
