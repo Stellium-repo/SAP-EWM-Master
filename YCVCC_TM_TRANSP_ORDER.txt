@@ -1,0 +1,117 @@
+/****************************************************/
+// View Name        : YSVCC_TM_TRANSP_ORDER
+// View Type        : Dimension
+// Description      : TM Transportation Order
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   :
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVCC_TM_TRP_OR'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@VDM.viewType: #COMPOSITE
+//@Analytics.query: true
+@Analytics.dataCategory: #CUBE
+@EndUserText.label: 'TM Transportation Order'
+define view YCVCC_TM_TRANSP_ORDER
+  as select  from YCVD_TM_TRANP_ORDER as Transp_ord
+  association [0..1] to YCVD_TM_CALENDAR_PERIOD as _CalendarDate on $projection.Created_Date_Hr = _CalendarDate.CalendarDate
+
+{
+  key Transp_ord.DbKey,
+      Transp_ord.Tor_ID,
+      Transp_ord.TorCat,
+      Transp_ord.TorType,
+      Transp_ord.CreationType,
+      Transp_ord.Created_Date,
+      Transp_ord.Created_Date_Hr,
+      Transp_ord.MovementCat,
+      Transp_ord.ConsolType,
+      Transp_ord.Labeltxt,
+      Transp_ord.BlkPlan,
+      Transp_ord.BlkExec,
+      Transp_ord.Tspid,
+      Transp_ord.description,
+      Transp_ord.Shipperid,
+      Transp_ord.Consigneeid,
+      Transp_ord.ShippingType,
+      Transp_ord.MovementType,
+      Transp_ord.ExecOrgId,
+      Transp_ord.ExecGrpId,
+      Transp_ord.PurchOrgId,
+      Transp_ord.PurchGrpId,
+      Transp_ord.Lifecycle,
+      Transp_ord.Execution,
+      Transp_ord.Execution_text,
+      Transp_ord.Delivery,
+      Transp_ord.MTR,
+      Transp_ord.LRNo,
+//      Transp_ord.Dlv_No,
+//      Transp_ord.Dlv_Date,
+//      Transp_ord.Invoice_No,
+//      _Inv_Dt.fkdat                                                               as Invoice_Date,
+//      Transp_ord.Invoice_Value,
+      Transp_ord.CustName,
+      Transp_ord.CnsgnmtWt,
+
+//      @DefaultAggregation: #SUM
+      Transp_ord.TotalDistanceKm,
+//      @DefaultAggregation: #SUM
+      Transp_ord.TotalDurationNet,
+//      Transp_ord.Agreed_CDP_FTL,
+//      Transp_ord.Agreed_CDP_PTL,
+      Transp_ord.DepDate,
+      Transp_ord.DepTzone,
+      Transp_ord.DepLoc,
+      Transp_ord.DepLocName,
+      Transp_ord.ArrDate,
+      Transp_ord.ArrTzone,
+      Transp_ord.ArrLoc,
+      Transp_ord.DelPeriodInDays,
+//      Transp_ord.CDP_Days,
+      
+      CDP.CDP,      
+      
+      Transp_ord.SrcLoc,
+      Transp_ord.DeprLocName,
+      Transp_ord.DestLoc,
+      Transp_ord.ArvlLocName,
+
+      dats_add_days(Transp_ord.DepDate, CDP.CDP +1, 'NULL')                      as Exp_Date,
+
+//      @DefaultAggregation: #SUM
+//      case when DelPeriodInDays> 0 and DelPeriodInDays <= CDP_Days then 100 else 0 end                   as On_time,
+      
+      @DefaultAggregation: #SUM
+      case when DelPeriodInDays> 0 and DelPeriodInDays <= CDP.CDP then 100 else 0 end                   as On_time1,
+
+      case  when DelPeriodInDays <0 then 0 else DelPeriodInDays end               as Actual_CDP,
+
+
+      _CalendarDate.CalendarYear                                           as Root_Year,
+      _CalendarDate.CalendarQuarter                                        as Root_Quarter,
+      _CalendarDate.CalendarMonthName                                      as Root_Month,
+      // 0                                                                 as Root_Week,
+      _CalendarDate.CalendarWeek                                           as Root_Week_Year,
+      _CalendarDate.WeekDay                                                as Root_Day_Of_Week,
+      _CalendarDate.CalendarDay                                            as Root_Day,
+      // 0                                                                 as Root_Hour,
+      _CalendarDate.AgeingDays                                             as Root_Ageing_Days,
+      _CalendarDate.DataPeriod                                             as Root_Data_Period
+//      
+//      case when Transp_ord.Delv is initial then _Inv.Delivery else Transp_ord.Delv end                                                  as Delv,
+//      case when Transp_ord.DelvDt = 0 then _Inv.Delivery_Date else cast(  cast( Transp_ord.DelvDt as abap.char(18) ) as abap.dats)  end as DelvDt,
+            
+//
+// ltrim(_Inv.Delivery, '0')                                                        as Dlv,
+//      _Inv.Delivery_Date                                                          as DlvDt,
+//      _Inv.Invoice_No                                                             as InvNo,
+//      _Inv.Invoice_Date                                                           as InvDt,
+//      _Inv.Invoice_Value                                                          as InvVal
+
+}
+
+where DelPeriodInDays <> 0

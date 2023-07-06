@@ -1,0 +1,66 @@
+/****************************************************/
+// View Name        : YCVD_TM_CALENDAR_PERIOD
+// View Type        : Dimension
+// Description      : Used for Ageing Period and Live data (by year/quarter/month/week/day/hour)
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   :
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVD_TM_CLDR_PRD'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #CHECK
+@EndUserText.label: 'Used for Ageing/Trend/Live periods'
+define view YCVD_TM_CALENDAR_PERIOD
+  as select from YCVD_TM_CALENDAR as TimeView
+{
+  key TimeView.CalendarDate,
+      TimeView.CalendarCurrentDateEST,
+      TimeView.CalendarCurrentDateAST,
+      TimeView.CalendarCurrentDateIST,
+      TimeView.CalendarYear,
+      TimeView.CalendarQuarter,
+      TimeView.CalendarMonth,
+
+      case when CalendarMonth1 = 1 then '(01)Jan'
+           when CalendarMonth1 = 2 then '(02)Feb'
+           when CalendarMonth1 = 3 then '(03)Mar'
+           when CalendarMonth1 = 4 then '(04)Apr'
+           when CalendarMonth1 = 5 then '(05)May'
+           when CalendarMonth1 = 6 then '(06)Jun'
+           when CalendarMonth1 = 7 then '(07)Jul'
+           when CalendarMonth1 = 8 then '(08)Aug'
+           when CalendarMonth1 = 9 then '(09)Sep'
+           when CalendarMonth1 = 10 then '(10)Oct'
+           when CalendarMonth1 = 11 then '(11)Nov'
+           when CalendarMonth1 = 12 then '(12)Dec' else '' end as CalendarMonthName,
+
+      TimeView.CalendarWeek,
+      TimeView.CalendarDay,
+      TimeView.YearMonth,
+      TimeView.YearQuarter,
+      TimeView.YearWeek,
+      TimeView.WeekDay,
+      TimeView.FirstDayOfWeekDate,
+      TimeView.FirstDayOfMonthDate,
+      TimeView.CalendarDayOfYear,
+      TimeView.YearDay,
+      TimeView.Currentdate,
+      TimeView.YesterdayDate,
+      TimeView.DayBeforeYesterdayDate,
+      TimeView.AgeingDays,
+      TimeView._CalendarMonth,
+      TimeView._CalendarQuarter,
+      TimeView._CalendarYear,
+      TimeView._WeekDay,
+      TimeView._YearMonth,
+
+      case when /* CalendarDate = Currentdate then 'Today'
+      when CalendarDate = YesterdayDate then 'Yesterday'
+      when CalendarDate = DayBeforeYesterdayDate then 'DayBeforeYesterday'
+      when*/ CalendarDate < Currentdate then 'Expired'
+      else 'Expiring' end                                     as DataPeriod
+
+}

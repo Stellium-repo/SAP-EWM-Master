@@ -1,0 +1,139 @@
+/****************************************************/
+// View Name        : YSVD_TM_TRANSP_ORDER
+// View Type        : Dimension
+// Description      : TM Transportation Order
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   :
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVD_TM_TRP_OR'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@VDM.viewType: #BASIC
+@EndUserText.label: 'TM Transportation Order'
+define view YCVD_TM_TRANSP_ORDER
+  as select from YCVD_TM_TRANSPORTATION_ORDER as Transp_ord
+  association [0..1] to vbrk             as _Inv_Dt    on  $projection.Invoice_No = _Inv_Dt.vbeln
+
+  association [0..1] to zcdp_loc_rc      as _CDP       on  $projection.Tspid = _CDP.carrier
+                                                       and $projection.SP    = _CDP.shipping_pt
+  association [0..1] to YCVQ_TM_INVOICE  as _Inv       on  $projection.Tor_ID = _Inv.freight_order
+  association [0..1] to /scmtms/cv_locad as _Location  on  $projection.SrcLoc = _Location.location_id
+  association [0..1] to /scmtms/cv_locad as _Location2 on  $projection.DestLoc = _Location2.location_id
+  association [0..1] to YCVD_TM_TR_ORD   as CDP        on  $projection.Tor_ID = CDP.Tor_ID
+
+
+{
+  key Transp_ord.DbKey,
+      ltrim(TorId, '0')                                                                        as Tor_ID,
+      Transp_ord.TorCat,
+      Transp_ord.TorType,
+      Transp_ord.CreationType,
+      Transp_ord.Created_Date,
+      tstmp_to_dats(Transp_ord.Created_Date, abap_user_timezone($session.user,
+      $session.client, 'NULL') , $session.client, 'NULL')                                      as Created_Date_Hr,
+      Transp_ord.MovementCat,
+      Transp_ord.ConsolType,
+      Transp_ord.Labeltxt,
+      Transp_ord.BlkPlan,
+      Transp_ord.BlkExec,
+      Transp_ord.Tspid,
+      _Business_Partner.name_org1                                                              as description,
+      Transp_ord.Shipperid,
+
+      Transp_ord.ShippingType,
+      Transp_ord.MovementType,
+      Transp_ord.ExecOrgId,
+      Transp_ord.ExecGrpId,
+      Transp_ord.PurchOrgId,
+      Transp_ord.PurchGrpId,
+      Transp_ord.Lifecycle,
+      Transp_ord.Execution,
+      case when Transp_ord.Execution = '03' then 'In Transit'
+          when Transp_ord.Execution = '04' then 'Delivered'
+          when Transp_ord.Execution = '02' then 'Trip Not Started'
+          when Transp_ord.Execution = '06' then 'Trip Cancelled'
+          when Transp_ord.Execution = '09' then 'Loading in Process' else 'Others' end         as Execution_text,
+      Transp_ord.Delivery,
+      Transp_ord.MTR,
+      Transp_ord.LRNo,
+      ltrim(Transp_ord.DlvNo,'0')                                                              as Dlv_No,
+      cast(  cast( Transp_ord.DlvDate as abap.char(18) ) as abap.dats)                         as Dlv_Date,
+
+      _Invoice.vbeln                                                                           as Invoice_No,
+      Transp_ord.Invoice_Value,
+      ltrim(Transp_ord.Consigneeid,'0')                                                        as Consigneeid,
+      _Cust.description                                                                        as CustName,
+      Transp_ord.CnsgnmtWt,
+      @DefaultAggregation: #SUM
+      Transp_ord.TotalDistanceKm,
+      @DefaultAggregation: #SUM
+      Transp_ord.TotalDurationNet,
+      Transp_ord.Agreed_CDP_FTL,
+      Transp_ord.Agreed_CDP_PTL,
+      cast(  cast( Transp_ord.DepDate as abap.char(18) ) as abap.dats)                         as DepDate,
+      cast(  cast( Transp_ord.ArrDate as abap.char(18) ) as abap.dats)                         as ArrDate,
+      Transp_ord.DepTzone,
+      Transp_ord.DepLoc,
+      case when _Location.city_name = ' ' then _Location.name2 else _Location.city_name end    as DepLocName,
+      case when _Location.city_name = ' ' then _Location.name2 else _Location.city_name end    as DeprLocName,
+      case when _Location2.city_name = ' ' then _Location2.name2 else _Location2.city_name end as ArvlLocName,
+      Transp_ord.ArrTzone,
+      Transp_ord.ArrLoc,
+      Transp_ord.SP,
+
+      Transp_ord.SrcLoc,
+      Transp_ord.DestLoc,
+      
+//      Transp_ord.Delv,
+//      Transp_ord.DelvDt,
+
+      case when ArrDate = 0 then 0
+           when DepDate > ArrDate then 0
+           else division(tstmp_seconds_between(DepDate, ArrDate, 'NULL'), 60*60*24, 1) 
+      //           else ArrDate - DepDate
+           end                                                                                 as DelPeriodInDays,
+
+      case when MTR like '%PTL%' then
+      Agreed_CDP_PTL+1 else Agreed_CDP_FTL+1 end                                               as CDP_Days,
+
+
+      _Inv_Dt,
+      
+      _CDP.carrier                                                                             as Carrier,
+      _CDP.shipping_pt                                                                         as ShippingPt,
+      _CDP.source_location                                                                     as SourceLocation,
+      _CDP.destination_location                                                                as DestinationLocation,
+      _CDP.source_zone                                                                         as SourceZone,
+      _CDP.destination_zone                                                                    as DestinationZone,
+      _CDP.dest_pincode                                                                        as DestPincode,
+      _CDP.source_pincode                                                                      as SourcePincode,
+      cast(_CDP.km_from as decimal28_6_kk)                                                     as KmFrom,
+      cast(_CDP.km_to as decimal28_6_kk)                                                       as KmTo,
+      _CDP.ftl_cdp                                                                             as FtlCdp,
+      _CDP.ptl_cdp                                                                             as PtlCdp,
+      _CDP.remarks                                                                             as Remarks,
+
+      //      cdp.cdpkm + cdp.cdploc + cdp.cdpzone as CDP_Days,
+      //case when cdp.cdpkm <> 0 then cdp.cdpkm
+      //     when cdp.cdploc <> 0 then cdp.cdploc
+      //     when cdp.cdpzone <> 0 then cdp.cdpzone
+      //     else 0 end as CDP_Days,
+
+
+
+
+
+      _Inv,
+      _Zone,
+      CDP
+
+
+
+}
+
+where
+  Transp_ord.Execution = '04'

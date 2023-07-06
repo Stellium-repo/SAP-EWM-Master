@@ -1,0 +1,62 @@
+@AbapCatalog.sqlViewName: 'ZICALENDARDATE'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@ObjectModel.usageType.dataClass: #MASTER
+@ObjectModel.usageType.serviceQuality:  #A
+@ObjectModel.usageType.sizeCategory:  #S
+@ClientHandling.algorithm: #SESSION_VARIABLE
+@EndUserText.label: 'Calendar Date'
+define view ZI_CalendarDate as select from scal_tt_date
+// inner join I_SAPClient as _SAPClient on sapclient is not null
+association [1..1] to I_CalendarMonth as _CalendarMonth
+  on _CalendarMonth.CalendarMonth = scal_tt_date.calendarmonth
+association [1..1] to I_CalendarQuarter as _CalendarQuarter
+  on _CalendarQuarter.CalendarQuarter = scal_tt_date.calendarquarter
+association [1..1] to I_CalendarYear as _CalendarYear
+on _CalendarYear.CalendarYear = scal_tt_date.calendaryear
+association [1..1] to I_WeekDay as _WeekDay
+  on _WeekDay.WeekDay = scal_tt_date.weekday
+association [1..1] to I_YearMonth as _YearMonth
+  on _YearMonth.YearMonth = scal_tt_date.yearmonth
+
+{   
+    key scal_tt_date.calendardate as CalendarDate,
+    @EndUserText.label: 'Current Date in EST'
+    cast(substring(cast(tstmp_add_seconds(tstmp_current_utctimestamp(),cast(-18000 as abap.dec(10,0)),'NULL')
+                                as abap.char(17)),1,8) as abap.dats ) as CalendarCurrentDateEST,
+    
+    @EndUserText.label: 'Current Date in AST'
+    cast(substring(cast(tstmp_add_seconds(tstmp_current_utctimestamp(),cast(10800 as abap.dec(10,0)),'NULL')
+                                as abap.char(17)),1,8) as abap.dats ) as CalendarCurrentDateAST,
+    
+    @EndUserText.label: 'Current Date in IST'
+    cast(substring(cast(tstmp_add_seconds(tstmp_current_utctimestamp(),cast(19800 as abap.dec(10,0)),'NULL')
+                                as abap.char(17)),1,8) as abap.dats ) as CalendarCurrentDateIST,
+                                
+    @ObjectModel.foreignKey.association: '_CalendarYear'
+    scal_tt_date.calendaryear as CalendarYear,
+    @ObjectModel.foreignKey.association: '_CalendarQuarter'
+    scal_tt_date.calendarquarter as CalendarQuarter,
+    @ObjectModel.foreignKey.association: '_CalendarMonth'
+    scal_tt_date.calendarmonth as CalendarMonth,
+    scal_tt_date.calendarweek as CalendarWeek,
+    scal_tt_date.calendarday as CalendarDay,
+     @ObjectModel.foreignKey.association: '_YearMonth'
+    scal_tt_date.yearmonth as YearMonth,
+    scal_tt_date.yearquarter as YearQuarter,
+    scal_tt_date.yearweek as YearWeek,
+    @ObjectModel.foreignKey.association: '_WeekDay'
+    scal_tt_date.weekday as WeekDay,
+
+    scal_tt_date.firstdayofweekdate as FirstDayOfWeekDate,
+    scal_tt_date.firstdayofmonthdate as FirstDayOfMonthDate,
+    scal_tt_date.calendardayofyear as CalendarDayOfYear,
+    scal_tt_date.yearday as YearDay,
+    _WeekDay,
+    _CalendarMonth,
+    _CalendarQuarter,
+    _CalendarYear,
+    _YearMonth
+    
+} 

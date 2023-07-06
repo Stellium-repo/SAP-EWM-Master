@@ -1,0 +1,57 @@
+/****************************************************/
+// View Name        : YCVD_TM_CHARGE_ROOT_NODE
+// View Type        : Dimension
+// Description      : TM Root Node
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   :
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVD_TM_CHRG_RT'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@VDM.viewType: #BASIC
+@EndUserText.label: 'TM Root Node'
+define view YCVD_TM_CHARGE_ROOT_NODE
+  as select from /scmtms/d_tchrgr as charge_root
+
+  //  association [0..1] to /scmtms/d_tchrge as Transp_Charge on $projection.DbKey = Transp_Charge.root_key
+  //  and Transp_Charge.tcet084 like '%BF%'
+
+  association [0..1] to YCVD_TM_BASE_FREIGHT as _Transp_Charge on $projection.DbKey = _Transp_Charge.root_key
+
+{
+  key charge_root.db_key              as DbKey,
+
+      charge_root.host_bo_key         as HostBoKey,
+      charge_root.host_node_key       as HostNodeKey,
+      charge_root.host_key            as HostKey,
+
+      charge_root.doc_currency        as DocCurrency,
+      charge_root.total_amount *10000 as Amount,
+
+      //      charge_root.total_amount as TotalAmount,
+
+      //      _Transp_Charge.tcet084,
+      //      ltrim(Transp_Charge.btd_id006, '0')     as Document_ID,
+      ////            Transp_Charge.tccs_amount *10000 as Amount1,
+      //      Transp_Charge.currcode016   as Currency,
+      //      Transp_Charge.amount *10000 as Amount2,
+      //      Transp_Charge.analyticrelev,
+      //
+      //      Transp_Charge
+
+      _Transp_Charge.root_key,
+      _Transp_Charge.tcet084,
+      _Transp_Charge.Document_ID,
+      _Transp_Charge.Currency,
+      _Transp_Charge.Amount2 *10000 as Amount2,
+      _Transp_Charge.analyticrelev,
+
+      _Transp_Charge
+
+}
+where
+  _Transp_Charge.Document_ID like '%6%0%'

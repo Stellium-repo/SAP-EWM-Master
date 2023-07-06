@@ -1,0 +1,44 @@
+/****************************************************/
+// View Name        : YSVD_TM_CDP
+// View Type        : Dimension
+// Description      : View for CDP Table
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   :
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVD_TM_CDP'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@VDM.viewType: #BASIC
+@EndUserText.label: 'TM Transportation Order'
+define view YCVD_TM_CDP
+  as select from zcdp_loc_rc as cdp
+
+{
+  key cdp.carrier,                    
+      cdp.shipping_pt,                
+      cdp.contract_type,              
+      cdp.source_location,            
+      cdp.destination_location,    
+      cdp.source_zone,              
+      cdp.destination_zone,           
+      cdp.source_pincode,             
+      cdp.dest_pincode,              
+//      cdp.km_to                      as KmTo,
+//      cdp.km_from                    as KmFrom,
+      cast(cdp.km_from as abap.int8) as km_from,
+      cast(cdp.km_to as abap.int8)   as km_to,
+//      cast(cdp.ftl_cdp as abap.int8)   as ftl_cdp,
+//      cast(cdp.ptl_cdp as abap.int8)   as ptl_cdp,
+      cdp.ftl_cdp,                  
+      cdp.ptl_cdp,                    
+      cdp.loading_days,               
+      cdp.unloading_days,           
+      cdp.remarks           
+
+
+
+}

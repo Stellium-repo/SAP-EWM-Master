@@ -1,0 +1,131 @@
+/****************************************************/
+// View Name        : YCVCC_TM_TOTAL_TRANSP
+// View Type        : Dimension
+// Description      : TM Freight Settlement
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   :
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVCC_TM_T_TC'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@VDM.viewType: #COMPOSITE
+@Analytics.dataCategory: #CUBE
+@EndUserText.label: 'TM Total Transport Cost'
+define view YCVCC_TM_TOTAL_TRANSP
+  as select distinct from YCVD_TM_TOTAL_TRANSP as FreSet
+  association [0..1] to YCVD_TM_CALENDAR_PERIOD as _CalendarDate on $projection.Created_Date_Hr = _CalendarDate.CalendarDate
+
+{
+  key FreSet.DbKey,
+      FreSet.SfirId,
+      FreSet.SfirType,
+      FreSet.SfirCategory,
+      FreSet.TspId,
+      FreSet.Carrier,
+      FreSet.PurchOrgId,
+      FreSet.PurchGrpId,
+      FreSet.BlockReason,
+      FreSet.SfirEewRoot,
+      FreSet.Lifecycle,
+      FreSet.Inv_Dt,
+      FreSet.Charge_Type,
+      FreSet.ChargeTypeDesc,
+      FreSet.Document_ID,
+      @Semantics.currencyCode: true
+      FreSet.Doc_Currency,
+      @DefaultAggregation: #SUM
+      @Semantics.amount.currencyCode: 'Doc_Currency'
+      FreSet.Amount,
+      @DefaultAggregation: #SUM
+      @Semantics.amount.currencyCode: 'Doc_Currency'
+      FreSet.Amount2,
+      
+      @Semantics.amount.currencyCode: 'Doc_Currency'
+      FreSet.Amount as T_Cost,
+      @Semantics.amount.currencyCode: 'Doc_Currency'
+      FreSet.Amount2 as B_Cost,
+      
+      FreSet.Execution,
+      FreSet.Execution_Text,
+      FreSet.Execution_Status_text,
+      FreSet.MTR,
+      FreSet.LRNo,
+//      FreSet.Dlv_No,
+//      FreSet.Dlv_Date,
+//      FreSet.Invoice_No,
+//      FreSet.Invoice_Value,
+      FreSet.Consigneeid,
+      FreSet.CustName,
+      FreSet.CnsgnmtWt,
+      FreSet.TotalDistanceKm,
+      FreSet.TotalDurationNet,
+//      FreSet.Agreed_CDP_FTL,
+//      FreSet.Agreed_CDP_PTL,
+      FreSet.DepDate,
+      FreSet.ArrDate,
+      FreSet.DepTzone,
+      FreSet.DepLoc,
+      FreSet.DepLocName,
+      FreSet.ArrTzone,
+      FreSet.ArrLoc,
+//      FreSet.DelPeriodInDays,
+      FreSet.CDP_Days,
+      FreSet.InvoiceDate,
+      FreSet.Business_Doc_Type,
+      FreSet.Label_Text,
+      FreSet.Base_Cost,
+      
+      FreSet.DeprLoc,
+//      FreSet.DeprLocName,
+      FreSet.ArvlLoc,
+//      FreSet.ArvlLocName,
+//      FreSet.Delv,
+//      FreSet.DelvDt,
+      
+      case when _Location.city_name = ' ' then _Location.name2 else _Location.city_name end as DeprLocName,
+      case when _Location2.city_name = ' ' then _Location2.name2 else _Location2.city_name end as ArvlLocName,
+      
+      
+      
+//      FreSet.Dlv,
+//      FreSet.DlvDt,
+//      FreSet.InvNo,
+//      FreSet.InvDt,
+//      FreSet.InvVal,
+      FreSet.ShipPt,
+      FreSet.ShpPtName,
+      FreSet.Created_Date_Hr,
+      
+      
+//      ltrim(FreSet.DlvNumber, '0') as DlvNumber,
+//      FreSet.DlvDate,
+//      FreSet.InvNumber,
+//      FreSet.InvDate,
+//      @DefaultAggregation: #SUM
+//      FreSet.InvValue,
+      
+//      FreSet.Plan_trans_time_dat,
+      
+      dats_add_days(FreSet.DepDate, CDP_Days+1, 'NULL')  as Exp_Date,
+      
+
+      _CalendarDate.CalendarYear      as Root_Year,
+      _CalendarDate.CalendarQuarter   as Root_Quarter,
+      _CalendarDate.CalendarMonthName as Root_Month,
+      // 0                                                                 as Root_Week,
+      _CalendarDate.CalendarWeek      as Root_Week_Year,
+      _CalendarDate.WeekDay           as Root_Day_Of_Week,
+      _CalendarDate.CalendarDay       as Root_Day,
+      // 0                                                                 as Root_Hour,
+      _CalendarDate.AgeingDays        as Root_Ageing_Days,
+      _CalendarDate.DataPeriod        as Root_Data_Period,
+      
+       @DefaultAggregation: #SUM
+       FreSet.Count2
+}
+
+where _CalendarDate.CalendarYear is not initial and _CalendarDate.CalendarMonthName is not initial

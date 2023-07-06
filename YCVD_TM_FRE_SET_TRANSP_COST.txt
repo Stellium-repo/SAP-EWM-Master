@@ -1,0 +1,154 @@
+/****************************************************/
+// View Name        : YCVD_TM_FRE_SET_TRANSP_COST
+// View Type        : Dimension
+// Description      : TM Freight Settlement Transport Cost
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   :
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVD_TM_F_S_TC'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@VDM.viewType: #BASIC
+@EndUserText.label: 'TM Freight Settlement Transport Cost'
+define view YCVD_TM_FRE_SET_TRANSP_COST
+  as select distinct from YCVD_TM_ROOT_NODE as Root
+ association [0..1] to /scmtms/cv_locad  as _Location on  $projection.DeprLoc = _Location.location_id
+ association [0..1] to /scmtms/cv_locad  as _Location2 on  $projection.ArvlLoc = _Location2.location_id
+  association [0..1] to YCVD_TM_CHARGE_ROOT_NODE as Transp_Charge on $projection.DB_Key = Transp_Charge.HostKey
+  association [0..1] to /scmtms/c_tcett          as _Charge_Type  on $projection.ChargeType = _Charge_Type.tcet084
+  association [0..1] to YCVQ_TM_INVOICE          as _Inv          on $projection.Document_Id = _Inv.freight_order
+  association [0..1] to YCVD_TM_DLV              as _TorDlv       on $projection.Document_Id = _TorDlv.Tor_Id  
+
+{
+  key Root.DB_Key,
+  Transp_Charge.HostKey,
+      Root.Document_Id,
+//      Root.Business_Doc_category,
+      Root.Business_Doc_Type,
+//      Root.Creation_Type,
+//      Root.Movement_Category,
+//      Root.Airway_Bill_Type,
+      Root.Label_Text,
+      Root.Created_Date,
+      tstmp_to_dats(Root.Created_Date, abap_user_timezone($session.user,
+      $session.client, 'NULL') , $session.client, 'NULL') as Created_Date_Hr,
+//      Root.Planning_Block,
+//      Root.Execution_Block,
+      Root.Carrier_Id,
+      Root.Carrier,
+//      Root.Plan_Exec_Org,
+//      Root.Plan_Exec_Grp,
+//      Root.Purchasing_Org,
+//      Root.Purchasing_Grp,
+      Root.Shipper_Id,
+      Root.Consignee_Id,
+//      Root.Plan_Status_Root,
+//      Root.Load_Plan_Status,
+//      Root.Driver_Assgn_Status,
+      Root.Total_Distance_In_KM as TotalDistanceKm,
+      Root.Total_Net_Duration as TotalDurationNet,
+      Root.Execution_Status as Execution_Status,
+      Root.Execution_Status_text,
+      
+      Root.DeprLoc,
+      Root.ArvlLoc,
+      case when _Location.city_name = ' ' then _Location.name2 else _Location.city_name end as DeprLocName,
+      case when _Location2.city_name = ' ' then _Location2.name2 else _Location2.city_name end as ArvlLocName,
+      
+//      Root.Delv,
+//      Root.DelvDt,
+      
+      //      case when Root.Execution_Status = '03' then 'In Transit'
+      //           when Root.Execution_Status = '04' then 'Delivered'
+      //           when Root.Execution_Status = '02' then 'Trip Not Started'
+      //           when Root.Execution_Status = '06' then 'Trip Cancelled'
+      //           when Root.Execution_Status
+      //            = '09' then 'Loading in Process' else 'Others' end as Execution_text,
+//      Root.Delviery_Status,
+//      Root.Life_Cycle_Status,
+      //      Root.DepLoc,
+      //      _Location.name1 as DepLocName,
+
+      Transp_Charge.tcet084                               as ChargeType,
+      Transp_Charge.analyticrelev,
+      @Semantics.currencyCode: true
+      Transp_Charge.Currency                              as Doc_Currency,
+//      @DefaultAggregation: #SUM
+      @Semantics.amount.currencyCode: 'Doc_Currency'
+      
+//      case when 
+//      Transp_Charge.Amount <= 150000 then Transp_Charge.Amount else 0 end as Transp_Cost,
+      Transp_Charge.Amount                                as Transp_Cost,
+//      @DefaultAggregation: #SUM
+      @Semantics.amount.currencyCode: 'Doc_Currency'
+      
+//      case when 
+//      Transp_Charge.Amount2 <= 150000 then Transp_Charge.Amount2 else 0 end as Base_Cost,
+      Transp_Charge.Amount2                               as Base_Cost,
+
+      _Charge_Type,
+      
+      cast(  cast( Root.ArrDate as abap.char(18) ) as abap.dats) as ArrDate,
+      Root.DepTzone,
+      Root.DepLoc,
+      cast(  cast( Root.DepDate as abap.char(18) ) as abap.dats) as DepDate,
+      case when _Location.city_name = ' ' then _Location.name2 else _Location.city_name end    as DepLocName,
+      Root.ArrTzone,
+      Root.ArrLoc,
+      Root.MTR,
+      Root.LRNo,
+      Root.Consignee_Id as Consigneeid,
+      _Cust.description as CustName,
+      Root.CnsgnmtWt,
+ 
+
+//      _Fields.Execution,
+//      _Fields.Execution_text,
+//      _Fields.MTR,
+//      _Fields.LRNo,
+//      _Fields.Dlv_No,
+//      _Fields.Dlv_Date,
+//      _Fields.Invoice_No,
+//      _Fields.Invoice_Value,
+//      _Fields.Consigneeid,
+//      _Fields.CustName,
+//      _Fields.CnsgnmtWt,
+//      _Fields.TotalDistanceKm,
+//      _Fields.TotalDurationNet,
+      _Fields.Agreed_CDP_FTL,
+      _Fields.Agreed_CDP_PTL,
+//      _Fields.DepDate,
+//      _Fields.ArrDate,
+//      _Fields.DepTzone,
+//      _Fields.DepLoc,
+//      _Fields.DepLocName,
+//      _Fields.ArrTzone,
+//      _Fields.ArrLoc,
+//      _Fields.DelPeriodInDays, 
+
+      _Fields.CDP_Days,
+      _Fields._Inv_Dt.fkdat                               as InvoiceDate,
+      
+
+//      _TorDlv.DlvNumber,
+//      _TorDlv.DlvDate,
+//      _TorDlv.InvNumber,
+//      _TorDlv.InvDate,
+//      _TorDlv.InvValue,
+//      _TorDlv.InvCurrency,
+      
+      _Inv,
+      
+      @DefaultAggregation: #SUM
+      Root.Count2
+      
+}
+where
+  Transp_Charge.analyticrelev <> 'X' and Transp_Charge.Amount < 150000 and Transp_Charge.Amount2 < 150000
+
+//where (Transp_Charge_Inbound.total_amount > 0 or Transp_Charge_Outbound.total_amount > 0)
+//and (Transp_Charge_Inbound.total_amount is not null or Transp_Charge_Outbound.total_amount is not null)

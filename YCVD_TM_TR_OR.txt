@@ -1,0 +1,94 @@
+/****************************************************/
+// View Name        : YSVD_TM_TR_OR
+// View Type        : Dimension
+// Description      : TM Transportation Order
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   :
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVD_TM_TR_OR'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@VDM.viewType: #BASIC
+@EndUserText.label: 'TM Transportation Order'
+define view YCVD_TM_TR_OR
+  as select distinct from YCVD_TM_T_O as Transp_ord
+
+  association [0..1] to YCVD_TM_CDP    as _CDP_km  on  $projection.Tspid   = _CDP_km.carrier
+                                                   and $projection.SP      = _CDP_km.shipping_pt
+                                                   and $projection.From_km = _CDP_km.km_to
+                                                   and $projection.To_km   = _CDP_km.km_from
+
+  association [0..1] to YCVD_TM_CDP    as _Loc     on  $projection.Tspid   = _Loc.carrier
+                                                   and $projection.SrcLoc  = _Loc.source_location
+                                                   and $projection.DestLoc = _Loc.destination_location
+
+  association [0..1] to YCVD_TM_CDP    as _Zone_0  on  $projection.Tspid = _Zone_0.carrier
+  association [0..1] to ztm_zone_assgn as _Zone_1  on  $projection.Tspid  = _Zone_1.carrier
+                                                   and $projection.SrcRgn = _Zone_1.region
+  association [0..1] to ztm_zone_assgn as _Zone_2  on  $projection.Tspid   = _Zone_2.carrier
+                                                   and $projection.DestRgn = _Zone_2.region
+
+  association [0..1] to YCVD_TM_CDP    as _Pin_0   on  $projection.Tspid = _Pin_0.carrier
+  association [0..1] to ztm_zone_assgn as _Pin_1   on  $projection.Tspid  = _Pin_1.carrier
+                                                   and $projection.SrcPin = _Pin_1.postalcode
+  association [0..1] to ztm_zone_assgn as _Pin_2   on  $projection.Tspid   = _Pin_2.carrier
+                                                   and $projection.DestPin = _Pin_2.postalcode
+
+  association [0..1] to YCVD_TM_CDP    as _Pincode on  $projection.Tspid   = _Pincode.carrier
+                                                   and $projection.SrcPin  = _Pincode.source_pincode
+                                                   and $projection.DestPin = _Pincode.dest_pincode
+{
+
+  key Transp_ord.DbKey,
+      ltrim(TorId, '0')                                                                           as Tor_ID,
+      Transp_ord.TotalDistanceKm,
+      Transp_ord.MTR,
+      Transp_ord.Tspid,
+      Transp_ord.SP,
+      Transp_ord.SrcLoc,
+      Transp_ord.DestLoc,
+      Transp_ord.SrcRgn,
+      Transp_ord.DestRgn,
+      Transp_ord.SrcPin,
+      Transp_ord.DestPin,
+
+      case when Transp_ord.MTR like '%PTL%' then _Loc.ptl_cdp else _Loc.ftl_cdp  end              as CDP_Location,
+
+      case when _Zone_1.cdp_zone = _Zone_0.source_zone and _Zone_2.cdp_zone = _Zone_0.destination_zone then
+      (case when Transp_ord.MTR like '%PTL%' then _Zone_0.ptl_cdp else _Zone_0.ftl_cdp end )  end as CDP_Zone,
+
+      case when _Pin_1.cdp_zone = _Pin_0.source_zone and _Pin_2.cdp_zone = _Pin_0.destination_zone then
+      (case when Transp_ord.MTR like '%PTL%' then _Pin_0.ptl_cdp else _Pin_0.ftl_cdp end )  end   as CDP_Pin_Zone,
+
+      case when Transp_ord.MTR like '%PTL%' then _Pincode.ptl_cdp else _Pincode.ftl_cdp end       as CDP_Pincode,
+
+      Transp_ord.From_km,
+      Transp_ord.To_km,
+      
+      _CDP_km.km_to,
+      _CDP_km.km_from,
+      _CDP_km,
+      
+      case when Transp_ord.MTR like '%PTL%' then
+      ( case when _Zone_1.cdp_zone = _Zone_0.source_zone and _Zone_2.cdp_zone = _Zone_0.destination_zone then _Zone_0.ptl_cdp
+             when _Pin_1.cdp_zone = _Pin_0.source_zone and _Pin_2.cdp_zone = _Pin_0.destination_zone then _Pin_0.ptl_cdp
+             when Transp_ord.SrcPin = _Pincode.source_pincode and Transp_ord.DestPin = _Pincode.dest_pincode then _Pincode.ptl_cdp
+             when Transp_ord.SrcLoc = _Loc.source_location and Transp_ord.DestLoc = _Loc.destination_location then _Loc.ptl_cdp 
+             when  Transp_ord.From_km = _CDP_km.km_to and  Transp_ord.To_km = _CDP_km.km_from then _CDP_km.ptl_cdp end )
+             else
+      ( case when _Zone_1.cdp_zone = _Zone_0.source_zone and _Zone_2.cdp_zone = _Zone_0.destination_zone then _Zone_0.ftl_cdp
+             when _Pin_1.cdp_zone = _Pin_0.source_zone and _Pin_2.cdp_zone = _Pin_0.destination_zone then _Pin_0.ftl_cdp
+             when Transp_ord.SrcPin = _Pincode.source_pincode and Transp_ord.DestPin = _Pincode.dest_pincode then _Pincode.ftl_cdp
+             when Transp_ord.SrcLoc = _Loc.source_location and Transp_ord.DestLoc = _Loc.destination_location then _Loc.ftl_cdp
+             when  Transp_ord.From_km = _CDP_km.km_to and  Transp_ord.To_km = _CDP_km.km_from then _CDP_km.ftl_cdp end )
+             end as  CDP    
+             
+
+
+
+
+}

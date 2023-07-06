@@ -1,0 +1,36 @@
+/****************************************************/
+// View Name        : YSVD_TM_DLV
+// View Type        : Dimension
+// Description      : TM Transportation Order
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   :
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVD_TM_DLV'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@VDM.viewType: #BASIC
+@EndUserText.label: 'TM Transportation Order'
+define view YCVD_TM_DLV
+  as select from    YCVD_TM_DELIVERY as tor_del
+  association [0..1] to vbrk as _Header on $projection.InvNumber = _Header.vbeln
+  
+  {
+  key db_key,
+      Tor_Id,
+      Delv as DlvNumber,
+      cast(  cast( tor_del.assgn_start as abap.char(18) ) as abap.dats)  as DlvDate,
+//      DelvId,
+      /* Associations */
+      bd_item.vbeln as InvNumber,
+      bd_item.erdat as InvDate,
+      @Semantics.amount.currencyCode: 'InvCurrency'
+      bd_item.netwr as InvValue,
+      @Semantics.currencyCode: true
+      bd_item.waerk as InvCurrency,
+      
+      _Header
+  }

@@ -1,0 +1,135 @@
+/****************************************************/
+// View Name        : YCVD_TM_TRANSPORTATION_REQUEST
+// View Type        : Dimension
+// Description      : TM Freight Order
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   : 
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVD_TM_TOR_DTL'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@VDM.viewType: #BASIC
+@EndUserText.label: 'TM Freight Order'
+define view YCVD_TM_FREIGHT_ORDER_DETAILS
+  as select from    YCVD_TM_FREIGHT_ORDER as tor_head
+//  left outer join YCVD_TM_EXEC_DATA     as tor_exe on tor_head.DB_Key = tor_exe.Parent_Key
+//  association [0..1] to YCVD_TM_TIME_PERIOD as _Timeperiod   on $projection.Plan_trans_time_hr = _Timeperiod.zdatetime_sap
+//  left outer join YCVD_TM_TIME_PERIOD as _Timeperiod on tor_head.Plan_trans_time_hr = _Timeperiod.zdatetime_sap
+ association [0..1] to YCVD_TM_CALENDAR_PERIOD as _CalendarDate on $projection.Plan_trans_time_dat = _CalendarDate.CalendarDate
+ 
+ association [0..1] to but000  as _Business_Partner on  $projection.Carrier_Id = _Business_Partner.partner
+ 
+ association [0..1] to /scmtms/cv_locad  as _Location on  $projection.DepLoc = _Location.location_id
+ association [0..1] to /scmtms/cv_locad  as _Location2 on  $projection.ArvlLoc = _Location2.location_id
+ association [0..1] to vbrk              as _Inv_Dt   on  $projection.Invoice_No = _Inv_Dt.vbeln
+ association [0..1] to YCVQ_TM_INVOICE   as _Inv      on  $projection.Document_Id = _Inv.freight_order
+ association [0..1] to YCVD_TM_DLV       as _TorDlv      on  $projection.Document_Id = _TorDlv.Tor_Id
+ 
+{
+  key tor_head.DB_Key,
+      ltrim(tor_head.Document_Id,'0')      as Document_Id,
+      tor_head.Business_Doc_category,
+      tor_head.Business_Doc_Type,
+//      tor_head.Planning_Block,
+//      tor_head.Execution_Block,
+      tor_head.Creation_Type,
+//      tor_head.Movement_Category,
+//      tor_head.Airway_Bill_Type,
+      tor_head.Label_Text,
+      _Business_Partner.name_org1 as carrier,
+      tor_head.Carrier_Id,
+      tor_head.Purchasing_Org,
+      tor_head.Purchasing_Grp,
+      tor_head.Execution_Org,
+      tor_head.Execution_Grp,
+      tor_head.Shipper_Id,
+      tor_head.Consignee_Id,
+      _Cust.description,
+      tor_head.Load_Plan_Status,
+      tor_head.Driver_Assgn_Status,
+      tor_head.Total_Net_Duration,
+      case when tor_head.Execution_Status = '03' then 'In Transit'
+           when tor_head.Execution_Status = '04' or tor_head.Execution_Status = '11' then 'Delivered'
+           when tor_head.Execution_Status = '02' then 'Trip Not Started'
+           when tor_head.Execution_Status = '06' then 'Trip Cancelled'
+           when tor_head.Execution_Status = '09' then 'Loading in Process' else 'Others' end as Execution_Status_text,
+      tor_head.Delviery_Status,
+      tor_head.Life_Cycle_Status,
+      tor_head.Plan_Status_Root,
+      tor_head.Created_On,
+      tor_head.to_item_db_key,
+      tor_head.TO_Item_Id,
+      tor_head.tor_item_product,
+      tor_head.tor_item_equipment,
+      tor_head.tor_item_Category,
+      tor_head.tor_item_resource,
+      tor_head.tor_item_source_loc,
+      tor_head.tor_item_dest_location,
+      tor_head.trans_request_ID,
+      tor_head.trans_req_cat,
+      tor_head.Stop_Id,
+      tor_head.Stop_Category,
+      tor_head.Log_Loc_UUID,
+//      tor_head.Log_Loc_Id,
+      tor_head.Plan_Trans_Time,
+      tor_head.Plan_trans_time_dat,
+      tor_head.Stop_Seq_Pos,
+      tor_head.Currentdate,
+      cast(  cast( tor_head.DepDate as abap.char(18) ) as abap.dats) as DepDate,
+      cast(  cast( tor_head.ArrDate as abap.char(18) ) as abap.dats) as ArrDate,
+      tor_head.DepLoc,
+      tor_head.ArvlLoc,
+      tor_head.MTR,
+      tor_head.Execution_Status,
+      tor_head.Delivery_No,
+      tor_head.Delviery_Date,
+      tor_head.Arrival_Date,
+      _Invoice.vbeln as Invoice_No,
+      tor_head.Invoice_Value,
+      tor_head.LR_No,
+      tor_head.Total_Distance_In_KM,
+      tor_head.CnsgnmtWt,
+      tor_head.CnsgnmtWtUnit,
+//      tor_head.Deppdate,
+//      tor_head.DepLoc1,
+//      tor_head.ArrLoc1,
+      tor_head.Delv,
+      tor_head.DelvDt,
+
+      
+      _Tor.des_loc_idtrq as DesLoc,
+      case when _Location.city_name = ' ' then _Location.name2 else _Location.city_name end as DepLocName,
+      case when _Location2.city_name = ' ' then _Location2.name2 else _Location2.city_name end as ArrLocName,
+      _Inv_Dt,
+      _CDP.Agreed_CDP_FTL,
+      _CDP.Agreed_CDP_PTL,
+      _CDP.ArrLoc,
+      
+      case when tor_head.MTR like '%PTL%' then
+      _CDP.Agreed_CDP_PTL+1 else _CDP.Agreed_CDP_FTL+1 end                                  as CDP_Days,
+      
+      
+      _CalendarDate.CalendarYear                                                             as Invoice_Year,
+      _CalendarDate.CalendarQuarter                                                          as Invoice_Quarter,
+      _CalendarDate.CalendarMonth                                                            as Invoice_Month_No,
+      _CalendarDate.CalendarMonthName                                                        as Invoice_Month,
+      _CalendarDate.CalendarWeek                                                             as Invoice_Week_Year,
+//      _CalendarDate.WeekDay                                                                  as Invoice_Day_Of_Week,
+      _CalendarDate.CalendarDay                                                              as Invoice_Day,
+      _CalendarDate.AgeingDays                                                               as Invoice_Ageing_Days,
+      _CalendarDate.DataPeriod                                                               as Invoice_Data_Period,
+      @DefaultAggregation: #SUM
+      cast(1 as abap.int4)                                                                   as No_of_Trips,
+
+
+      _Inv,
+      _Location2,
+      _TorDlv
+     
+}
+
+where Plan_trans_time_dat <= tor_head.Currentdate

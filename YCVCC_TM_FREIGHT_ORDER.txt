@@ -1,0 +1,140 @@
+/****************************************************/
+// View Name        : YCVCC_TM_FREIGHT_ORDER
+// View Type        : Dimension
+// Description      : TM Freight Order
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   :
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVCC_TM_FRE_ORD'
+//@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@VDM.viewType: #COMPOSITE
+@Analytics.dataCategory: #CUBE
+@EndUserText.label: 'TM Freight Order'
+define view YCVCC_TM_FREIGHT_ORDER
+  //with parameters
+  //@EndUserText.label: 'Ageing In Days'
+  //@Consumption.defaultValue: '0'
+  //p_ageingindays : zp_ageingindays
+  as select distinct from YCVD_TM_FREIGHT_ORDER_DETAILS as Freight_ord
+
+{
+  key Freight_ord.DB_Key,
+      Freight_ord.Document_Id,
+      Freight_ord.Business_Doc_category,
+      Freight_ord.Business_Doc_Type,
+      //        Freight_ord.Planning_Block,
+      //        Freight_ord.Execution_Block,
+      Freight_ord.Creation_Type,
+      //        Freight_ord.Movement_Category,
+      //        Freight_ord.Airway_Bill_Type,
+      Freight_ord.Label_Text,
+      Freight_ord.carrier,
+      ltrim(Freight_ord.Carrier_Id,'0')                                                           as Carrier_Id,
+      Freight_ord.Purchasing_Org,
+      Freight_ord.Purchasing_Grp,
+      Freight_ord.Execution_Org,
+      Freight_ord.Execution_Grp,
+      Freight_ord.Shipper_Id,
+      Freight_ord.Consignee_Id,
+      Freight_ord.description,
+      Freight_ord.Load_Plan_Status,
+      Freight_ord.Driver_Assgn_Status,
+//      @DefaultAggregation: #SUM
+      Freight_ord.Total_Distance_In_KM,
+      Freight_ord.Total_Net_Duration,
+      Freight_ord.Execution_Status,
+      Freight_ord.Execution_Status_text,
+      Freight_ord.Delviery_Status,
+      Freight_ord.Life_Cycle_Status,
+      //        Freight_ord.Plan_Status_Root,
+      Freight_ord.Created_On,
+      Freight_ord.to_item_db_key,
+      Freight_ord.TO_Item_Id,
+      Freight_ord.tor_item_product,
+      Freight_ord.tor_item_equipment,
+      Freight_ord.tor_item_Category,
+      Freight_ord.tor_item_resource,
+      Freight_ord.tor_item_source_loc,
+      Freight_ord.tor_item_dest_location,
+      Freight_ord.trans_request_ID,
+      Freight_ord.trans_req_cat,
+      Freight_ord.Stop_Id,
+      Freight_ord.Stop_Category,
+      Freight_ord.Log_Loc_UUID,
+      //        Freight_ord.Log_Loc_Id,
+      Freight_ord.Plan_Trans_Time,
+      Freight_ord.Plan_trans_time_dat,
+      Freight_ord.Stop_Seq_Pos,
+      Freight_ord.Currentdate,
+      Freight_ord.DepDate,
+      Freight_ord.ArrDate,
+      Freight_ord.DepLoc,
+      Freight_ord.DepLocName,
+      Freight_ord.ArvlLoc,
+      Freight_ord.ArrLocName,
+      Freight_ord.DesLoc,
+      Freight_ord.ArrLoc,
+      Freight_ord.MTR,
+
+      ltrim(Freight_ord.Delivery_No,'0')                                                          as Delivery_No,
+      cast(  cast( Freight_ord.Delviery_Date as abap.char(18) ) as abap.dats)                     as Delviery_Date,
+      Freight_ord.Arrival_Date,
+      Freight_ord.Invoice_No,
+      _Inv_Dt.fkdat                                                                               as Invoice_Date,
+      Freight_ord.Invoice_Value,
+      Freight_ord.LR_No,
+//      @DefaultAggregation: #SUM
+      Freight_ord.CnsgnmtWt,
+      Freight_ord.CnsgnmtWtUnit,
+      Freight_ord.Agreed_CDP_FTL,
+      Freight_ord.CDP_Days,
+
+//      case when Freight_ord.Delv is initial then _Inv.Delivery else Freight_ord.Delv end          as Delv,
+//      case when Freight_ord.DelvDt = 0 then _Inv.Delivery_Date else cast(  cast( Freight_ord.DelvDt as abap.char(18) ) as abap.dats)  end as DelvDt,
+
+      //      case when Freight_ord.Depdate <> 0
+      //           then dats_add_days(Freight_ord.Deppdate, CDP_Days) else '' end as Exp_Date,
+      dats_add_days(Freight_ord.DepDate, CDP_Days+1, 'NULL')                                      as Exp_Date,
+      //'' as Exp_Date,
+
+      //tor_exe.Actual_Date,
+      // tor_exe.Event_Code,
+      Freight_ord.Invoice_Year,
+      Freight_ord.Invoice_Quarter,
+      Freight_ord.Invoice_Month,
+      Freight_ord.Invoice_Month_No,
+      // Freight_ord.Invoice_Week,
+      Freight_ord.Invoice_Week_Year,
+      //        Freight_ord.Invoice_Day_Of_Week,
+      Freight_ord.Invoice_Day,
+      // Freight_ord.Invoice_Hour,
+      Freight_ord.Invoice_Ageing_Days,
+      Freight_ord.Invoice_Data_Period,
+      @DefaultAggregation: #SUM
+      Freight_ord.No_of_Trips,
+
+//      ltrim(_Inv.Delivery, '0')                                                                   as Dlv,
+//      _Inv.Delivery_Date                                                                          as DlvDt,
+//      _Inv.Invoice_No                                                                             as InvNo,
+//      _Inv.Invoice_Date                                                                           as InvDt,
+//      _Inv.Invoice_Value                                                                          as InvVal,
+      
+      ltrim(_TorDlv.DlvNumber, '0') as DlvNumber,
+      _TorDlv.DlvDate,
+      _TorDlv.InvNumber,
+      _TorDlv.InvDate,
+       @DefaultAggregation: #SUM
+      _TorDlv.InvValue,
+      _TorDlv._Header.netwr as NetValue
+      
+
+
+}
+
+//where Delv is not initial
+// where Freight_ord.Invoice_Ageing_Days>=0 and Freight_ord.Invoice_Ageing_Days <=:p_ageingindays 

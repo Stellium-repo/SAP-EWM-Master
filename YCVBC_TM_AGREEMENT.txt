@@ -1,0 +1,56 @@
+/****************************************************/
+// View Name        : YCVCC_TM_DRIVER_UTILIZATION
+// View Type        : Dimension
+// Description      : TM Freight Agreement
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   :
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVBC_TM_AGREE'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@VDM.viewType: #BASIC
+@Analytics.dataCategory: #CUBE
+@EndUserText.label: 'TM Freight Agreement'
+define view YCVBC_TM_AGREEMENT
+  as select from YCVD_TM_AGREEMENT as Agreement
+  
+//   association [0..1] to /scmtms/d_tccsit as _Charge on $projection.tccs_uuid = _Charge.parent_key
+   
+{
+  key Agreement.DB_Key,
+      ltrim(Agreement.Agreement,'0')                                              as Agreement,
+      Agreement.Agreement_Priority,
+      Agreement.Agreement_Usage,
+      Agreement.Agreement_Category,
+      Agreement.Agreement_Type,
+      Agreement.Agreement_Desc,
+      Agreement.Agree_Validity_Start_Date,
+      cast(Agree_Validity_Start_Date as abap.dats) as start_date,
+      Agreement.Agree_Validity_End_Date,
+      //        cast(Agreement.Agree_Validity_End_Date as abap.dats) as Validity_End_Date,
+      //        cast(Agreement.Currentdate as abap.dats) as CurrentDate,
+
+      
+      dats_days_between(Agreement.Currentdate, Agreement.Agree_Validity_End_Date) as Validity_Remain,
+
+      //dats_days_between(Agreement.CurrentDate, Agreement.Agree_Validity_End_Date) as test,
+      //tstmp_seconds_between(, Agreement.Agree_Validity_End_Date,'NULL') as Validity_remain,
+      Agreement.Agreement_Status,
+      Agreement.Party_Role,
+      Agreement.Business_Partner_No,
+      Agreement.party_address_id,
+      Agreement.Business_Partner_Name,
+      Agreement.BP_Agreement_Usage,
+      Agreement.Tccs_UUID,
+      Agreement.RFQ,
+//      _Charge.tcet084,
+      Agreement.Base_Freight,
+      Agreement.Green_Tax,
+      Agreement.LR_Charges,
+      @DefaultAggregation: #SUM
+      Agreement.Agreement_Count
+}

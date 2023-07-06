@@ -1,0 +1,176 @@
+/****************************************************/
+// View Name        : YCVCC_TM_FRE_SET_TRANSP_COST
+// View Type        : Dimension
+// Description      : TM Freight Settlement
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   :
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVCC_TM_F_S_TC'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@VDM.viewType: #COMPOSITE
+@Analytics.dataCategory: #CUBE
+@EndUserText.label: 'TM Freight Settlement Transport Cost'
+define view YCVCC_TM_FRE_SET_TRANSP_COST
+  //with parameters
+  //@EndUserText.label: 'Ageing In Days'
+  //@Consumption.defaultValue: '0'
+  //p_ageingindays : zp_ageingindays
+  as select distinct from YCVD_TM_FRE_SET_TRANSP_COST as Transp_Cost
+  association [0..1] to YCVD_TM_CALENDAR_PERIOD as _CalendarDate on $projection.Created_Date_Hr = _CalendarDate.CalendarDate
+
+
+{
+  key Transp_Cost.DB_Key,
+      Transp_Cost.Created_Date_Hr,
+      Transp_Cost.Document_Id,
+      //      Transp_Cost.Business_Doc_category,
+      //      Transp_Cost.Business_Doc_Type,
+      //      Transp_Cost.Creation_Type,
+      //      Transp_Cost.Movement_Category,
+      //      Transp_Cost.Airway_Bill_Type,
+      Transp_Cost.Label_Text,
+      Transp_Cost.Created_Date,
+      //      Transp_Cost.Planning_Block,
+      //      Transp_Cost.Execution_Block,
+      Transp_Cost.Carrier_Id,
+      Transp_Cost.Carrier,
+      //      Transp_Cost.Plan_Exec_Org,
+      //      Transp_Cost.Plan_Exec_Grp,
+      //      Transp_Cost.Purchasing_Org,
+      //      Transp_Cost.Purchasing_Grp,
+      Transp_Cost.Shipper_Id,
+      Transp_Cost.Consignee_Id,
+      //      Transp_Cost.Plan_Status_Root,
+      //      Transp_Cost.Load_Plan_Status,
+      //      Transp_Cost.Driver_Assgn_Status,
+      //      Transp_Cost.DepLoc,
+//      @DefaultAggregation: #SUM
+//      Transp_Cost.Total_Distance_In_KM,
+//      @DefaultAggregation: #SUM
+//      Transp_Cost.Total_Net_Duration,
+      //      Transp_Cost.Delviery_Status,
+      //      Transp_Cost.Life_Cycle_Status,
+      Transp_Cost.ChargeType,
+      _Charge_Type.text                                      as ChargeTypeDesc,
+      @Semantics.currencyCode: true
+      Transp_Cost.Doc_Currency,
+      @DefaultAggregation: #SUM
+      @Semantics.amount.currencyCode: 'Doc_Currency'
+      //      case when
+      //      Transp_Cost.Transp_Cost <= 150000 then Transp_Cost.Transp_Cost else 0 end as Transp_Cost,
+      Transp_Cost.Transp_Cost,
+
+      @DefaultAggregation: #SUM
+      @Semantics.amount.currencyCode: 'Doc_Currency'
+      Transp_Cost.Base_Cost,
+      @Semantics.amount.currencyCode: 'Doc_Currency'
+      Transp_Cost.Transp_Cost                                as T_Cost,
+      @Semantics.amount.currencyCode: 'Doc_Currency'
+      Transp_Cost.Base_Cost                                  as B_Cost,
+      //      @Semantics.currencyCode: true
+      //      Transp_Cost.Outbound_Doc_Currency,
+      //      @DefaultAggregation: #SUM
+      //      @Semantics.amount.currencyCode: 'Outbound_Doc_Currency'
+      //      Transp_Cost.Outbound_Transp_Cost,
+      //      @DefaultAggregation: #SUM
+      //      @Semantics.amount.currencyCode: 'Outbound_Doc_Currency'
+      //      (Transp_Cost.Inbound_Transp_Cost + Transp_Cost.Outbound_Transp_Cost) as Total_Trans_Cost_Calc,
+      //   2+2 as Total_Trans_Cost_Calc,
+      //        _Timeperiod.zdate_year as Root_Year,
+      //        _Timeperiod.zdate_quarter as Root_Quarter,
+      //        _Timeperiod.zdate_month as Root_Month,
+      //        _Timeperiod.zdate_week as Root_Week,
+      //        _Timeperiod.zweek_year  as Root_Week_Year,
+      //        _Timeperiod.zday_of_week as Root_DayOfWeek,
+      //        _Timeperiod.zdate_day as Root_Day,
+      //        _Timeperiod.DataPeriod
+
+
+//      Transp_Cost.Execution,
+//      Transp_Cost.Execution_text,
+      Transp_Cost.Execution_Status,
+      Transp_Cost.Execution_Status_text,
+
+      Transp_Cost.DeprLoc,
+      Transp_Cost.DeprLocName,
+      Transp_Cost.ArvlLoc,
+      Transp_Cost.ArvlLocName,
+      
+//      case when Transp_Cost.Delv is initial then _Inv.Delivery else Transp_Cost.Delv end          as Delv,
+//      case when Transp_Cost.DelvDt = 0 then _Inv.Delivery_Date else cast(  cast( Transp_Cost.DelvDt as abap.char(18) ) as abap.dats)  end as DelvDt,
+      
+
+      case when Execution_Status = '04' then 'Settled'
+           else 'To be Settled' end                          as Cost,
+
+      Transp_Cost.MTR,
+      Transp_Cost.LRNo,
+//      Transp_Cost.Dlv_No,
+//      Transp_Cost.Dlv_Date,
+//      Transp_Cost.Invoice_No,
+//      Transp_Cost.Invoice_Value,
+      Transp_Cost.Consigneeid,
+      Transp_Cost.CustName,
+      Transp_Cost.CnsgnmtWt,
+//      @DefaultAggregation: #SUM
+      Transp_Cost.TotalDistanceKm,
+//      @DefaultAggregation: #SUM
+      Transp_Cost.TotalDurationNet,
+      Transp_Cost.Agreed_CDP_FTL,
+      Transp_Cost.Agreed_CDP_PTL,
+      Transp_Cost.DepDate,
+      Transp_Cost.ArrDate,
+      Transp_Cost.DepTzone,
+      Transp_Cost.DepLoc,
+      Transp_Cost.DepLocName,
+      Transp_Cost.ArrTzone,
+      Transp_Cost.ArrLoc,
+      //      Transp_Cost.DelPeriodInDays,
+      Transp_Cost.CDP_Days,
+      Transp_Cost.InvoiceDate,
+
+      dats_add_days(Transp_Cost.DepDate, CDP_Days+1, 'NULL') as Exp_Date,
+
+//      ltrim(Transp_Cost.DlvNumber, '0') as DlvNumber,
+//      Transp_Cost.DlvDate,
+//      Transp_Cost.InvNumber,
+//      Transp_Cost.InvDate,
+//      @DefaultAggregation: #SUM
+//      Transp_Cost.InvValue,
+//      Transp_Cost.InvCurrency,
+      
+       
+      _CalendarDate.CalendarYear                             as Root_Year,
+      _CalendarDate.CalendarQuarter                          as Root_Quarter,
+      _CalendarDate.CalendarMonthName                        as Root_Month,
+      // 0                                                                 as Root_Week,
+      _CalendarDate.CalendarWeek                             as Root_Week_Year,
+      _CalendarDate.WeekDay                                  as Root_Day_Of_Week,
+      _CalendarDate.CalendarDay                              as Root_Day,
+      // 0                                                                 as Root_Hour,
+      _CalendarDate.AgeingDays                               as Root_Ageing_Days,
+      _CalendarDate.DataPeriod                               as Root_Data_Period,
+      //
+//      ltrim(_Inv.Delivery, '0')                              as Dlv,
+//      _Inv.Delivery_Date                                     as DlvDt,
+//      _Inv.Invoice_No                                        as InvNo,
+//      _Inv.Invoice_Date                                      as InvDt,
+//      _Inv.Invoice_Value                                     as InvVal,
+//      _Inv.Shipping_pt,
+//      _Inv.ShpPtName
+      
+//      _InvDet
+
+       @DefaultAggregation: #SUM
+       Transp_Cost.Count2
+
+
+}
+// where _Timeperiod.AgeingDays>=0 and _Timeperiod.AgeingDays <=:p_ageingindays
+where
+  Transp_Cost.Doc_Currency = 'INR' 

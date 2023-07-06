@@ -1,0 +1,125 @@
+/****************************************************/
+// View Name        : YCVD_TM_TRANSPORTATION_REQUEST
+// View Type        : Dimension
+// Description      : TM Freight Order
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   :
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVD_TM_FRE_OR'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@VDM.viewType: #BASIC
+@EndUserText.label: 'TM Freight Order'
+define view YCVD_TM_FREIGHT_ORDER
+  as select from    /scmtms/d_torrot as tor_root
+    left outer join YCVD_TM_TO_ITEM  as tor_item on  tor_root.db_key       = tor_item.Parent_Key
+                                                 and tor_item.TO_Item_Cate = 'AVR'
+    left outer join /scmtms/d_torstp as tor_stp  on  tor_root.db_key      = tor_stp.parent_key
+                                                 and tor_stp.stop_seq_pos = 'F'
+    left outer join /scmtms/d_torstp as tor_stp2  on  tor_root.db_key      = tor_stp2.parent_key
+                                                 and tor_stp2.stop_seq_pos = 'L'
+  association [0..1] to /scmtms/d_torite             as _Tor       on  $projection.DB_Key = _Tor.parent_key
+
+  association [0..1] to /scmtms/d_torexe             as _Departure on  $projection.DB_Key    = _Departure.parent_key
+                                                                   and _Departure.event_code = 'DEPARTURE'
+  association [0..1] to /scmtms/d_torexe             as _Arrival   on  $projection.DB_Key  = _Arrival.parent_key
+                                                                   and _Arrival.event_code = 'ARRIV_DEST'
+                                                                   
+
+  association [0..1] to /bofu/cv_bprt                as _Cust      on  $projection.Consignee_Id = _Cust.partner
+  association [0..1] to vbfa                         as _Invoice   on  $projection.Delivery_No = _Invoice.vbelv
+
+  association [0..1] to YCVD_TM_TRANSPORTATION_ORDER as _CDP       on  $projection.DB_Key = _CDP.DbKey
+  association [0..*] to /scmtms/d_torite             as _Dlv       on  $projection.DB_Key = _Dlv.parent_key
+
+{
+  key tor_root.db_key                                                                                                             as DB_Key,
+      tor_root.tor_id                                                                                                             as Document_Id,
+      min(tor_root.tor_cat)                                                                                                       as Business_Doc_category,
+      min(tor_root.tor_type)                                                                                                      as Business_Doc_Type,
+      min(tor_root.blk_plan)                                                                                                      as Planning_Block,
+      min(tor_root.blk_exec)                                                                                                      as Execution_Block,
+      min(tor_root.creation_type)                                                                                                 as Creation_Type,
+      min(tor_root.movement_cat)                                                                                                  as Movement_Category,
+      min(tor_root.consol_type)                                                                                                   as Airway_Bill_Type,
+      min(tor_root.labeltxt)                                                                                                      as Label_Text,
+      min(tor_root.tspid)                                                                                                         as Carrier_Id,
+      min(tor_root.purch_org_id)                                                                                                  as Purchasing_Org,
+      min(tor_root.purch_grp_id)                                                                                                  as Purchasing_Grp,
+      min(tor_root.exec_org_id)                                                                                                   as Execution_Org,
+      min(tor_root.exec_grp_id)                                                                                                   as Execution_Grp,
+      min(tor_root.shipperid)                                                                                                     as Shipper_Id,
+      min(tor_root.consigneeid)                                                                                                   as Consignee_Id,
+      min(tor_root.load_plan_status)                                                                                              as Load_Plan_Status,
+      min(tor_root.drv_assgn_status)                                                                                              as Driver_Assgn_Status,
+      min(tor_root.total_distance_km)                                                                                             as Total_Distance_In_KM,
+      min(tor_root.total_duration_net)                                                                                            as Total_Net_Duration,
+      min(tor_root.mtr)                                                                                                           as MTR,
+      min(tor_root.execution)                                                                                                     as Execution_Status,
+      min(tor_root.base_btd_id)                                                                                                   as Delivery_No,
+      min(tor_root.dlv_delivery_date)                                                                                             as Delviery_Date,
+      min(tor_root.delivery)                                                                                                      as Delviery_Status,
+      min(tor_root.arrival_date)                                                                                                  as Arrival_Date,
+      min(tor_root.zcinv_val)                                                                                                     as Invoice_Value,
+      min(tor_root.partner_ref_id)                                                                                                as LR_No,
+      min(tor_root.total_distance_km)                                                                                             as total_distance_km,
+      min(tor_root.gro_wei_val)                                                                                                   as CnsgnmtWt,
+      min(tor_root.gro_wei_uni)                                                                                                   as CnsgnmtWtUnit,
+
+      min(tor_root.lifecycle )                                                                                                    as Life_Cycle_Status,
+      min(tor_root.plan_status_root)                                                                                              as Plan_Status_Root,
+      min(tor_root.created_on)                                                                                                    as Created_On,
+      min(tor_item.DB_Key)                                                                                                        as to_item_db_key,
+      min(tor_item.TO_Item_Id)                                                                                                    as TO_Item_Id,
+      min(tor_item.Product_Id)                                                                                                    as tor_item_product,
+      min(tor_item.Tures_Cat)                                                                                                     as tor_item_equipment,
+      min(tor_item.TO_Item_Cate)                                                                                                  as tor_item_Category,
+      min(tor_item.Resource_Id)                                                                                                   as tor_item_resource,
+      min(tor_item.Source_Location)                                                                                               as tor_item_source_loc,
+      min(tor_item.Dest_Location)                                                                                                 as tor_item_dest_location,
+      min(tor_item.Transp_Req_Id)                                                                                                 as trans_request_ID,
+      min(tor_item.Transp_Req_Category)                                                                                           as trans_req_cat,
+      min(tor_stp.stop_id)                                                                                                        as Stop_Id,
+      min(tor_stp.stop_cat)                                                                                                       as Stop_Category,
+      min(tor_stp.log_loc_uuid)                                                                                                   as Log_Loc_UUID,
+      min(tor_stp.log_locid)                                                                                                      as DepLoc,
+      min(tor_stp2.log_locid)                                                                                                     as ArvlLoc,
+      min(tor_stp.plan_trans_time)                                                                                                as Plan_Trans_Time,
+      min(tor_stp.stop_seq_pos)                                                                                                   as Stop_Seq,
+      min(tor_stp.stop_seq_pos)                                                                                                   as Stop_Seq_Pos,
+      //     concat(substring( cast( tor_stp.plan_trans_time as abap.char(17) ), 1, 10 ),'0000') as Plan_trans_time_hr,
+
+      tstmp_to_dats(tor_stp.plan_trans_time,abap_user_timezone($session.user, $session.client, 'NULL') , $session.client, 'NULL') as Plan_trans_time_dat,
+
+
+      cast(  cast( tstmp_current_utctimestamp() as abap.char(18) ) as abap.dats)                                                  as Currentdate,
+
+      //      cast(  cast(_Departure.actual_date as abap.char(18) ) as abap.dats) as Deppdate,
+      min(_Departure.actual_date)                                                                                                 as DepDate,
+      //      min(_Departure.ext_loc_id)        as DepLoc1,
+      min(_Arrival.actual_date)                                                                                                   as ArrDate,
+      //      min(_Arrival.ext_loc_id)          as ArrLoc1,
+
+      _Tor,
+      _Cust,
+      _Invoice,
+      _CDP,
+      ltrim(_Dlv.base_btd_id, '0' ) as Delv,
+      _Dlv.assgn_start as DelvDt
+
+}
+where
+  tor_root.tor_cat = 'TO' and tor_root.lifecycle <> '10' /*and _Departure.actual_date <> 0 and _Arrival.actual_date <> 0*/
+  and tor_stp.plan_trans_time >= 20230401000000
+group by
+  tor_root.tor_id,
+  tor_root.db_key,
+  //  tor_stp.stop_id,
+  tor_stp.plan_trans_time,
+  _Departure.actual_date,
+  _Dlv.base_btd_id,
+  _Dlv.assgn_start

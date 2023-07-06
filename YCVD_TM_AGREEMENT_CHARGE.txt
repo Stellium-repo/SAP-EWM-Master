@@ -1,0 +1,44 @@
+/****************************************************/
+// View Name        : YCVD_TM_AGREEMENT_CHARGE
+// View Type        : Dimension
+// Description      : TM Freight Agreement
+// Version          : 1.0.0
+// Created By       : CH Mukharika
+// Change History   : 
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVD_TM_AGR_CHRG'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@VDM.viewType: #BASIC
+@Analytics.dataCategory: #DIMENSION
+@EndUserText.label: 'TM Freight Agreement Charge'
+define view YCVD_TM_AGREEMENT_CHARGE
+  as select from /scmtms/d_fagitm as Charge
+  
+ association [0..1] to /scmtms/d_tccsit as _Base_Freight on $projection.TccsUuid = _Base_Freight.parent_key
+                                                        and  _Base_Freight.tcet084 like '%BF%'
+                                                        
+  association [0..1] to /scmtms/d_tccsit as _Green_Tax on $projection.TccsUuid = _Green_Tax.parent_key
+                                                        and  _Green_Tax.tcet084 like '%GT%'      
+                                                                                                         
+  association [0..1] to /scmtms/d_tccsit as _LR_Charges on $projection.TccsUuid = _LR_Charges.parent_key
+                                                        and  _LR_Charges.tcet084 like '%LR%'   
+ {
+ 
+ key Charge.db_key as DbKey,
+     Charge.parent_key as ParentKey,
+     
+     Charge.tccs_uuid as TccsUuid,
+    
+     
+     
+     _Base_Freight.amount*10000 as Base_Freight,
+     _Green_Tax.amount*10000 as Green_Tax,
+     _LR_Charges.amount*10000 as LR_Charges
+ 
+ }
+ 
+ 
