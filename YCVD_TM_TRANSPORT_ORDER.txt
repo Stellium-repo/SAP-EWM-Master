@@ -1,0 +1,116 @@
+/****************************************************/
+// View Name        : YSVD_TM_TRANSP_ORDER
+// View Type        : Dimension
+// Description      : TM Transportation Order
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   :
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVD_TM_TRNSP_OR'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@VDM.viewType: #BASIC
+@EndUserText.label: 'TM Transportation Order'
+define view YCVD_TM_TRANSPORT_ORDER
+  as select from    /scmtms/d_torrot as Transp_ord
+
+    left outer join /scmtms/d_torstp as tor_stp  on  Transp_ord.db_key    = tor_stp.parent_key
+                                                 and tor_stp.stop_seq_pos = 'F'
+    left outer join /scmtms/d_torstp as tor_stp2 on  Transp_ord.db_key     = tor_stp2.parent_key
+                                                 and tor_stp2.stop_seq_pos = 'L'
+
+  //  association [0..1] to /scmtms/d_torexe as _TrspOrd          on  $projection.DbKey     = _Departure.parent_key
+  association [0..1] to /scmtms/d_torexe as _Departure        on  $projection.DbKey     = _Departure.parent_key
+                                                              and _Departure.event_code = 'DEPARTURE'
+  association [0..1] to /scmtms/d_torexe as _Arrival          on  $projection.DbKey   = _Arrival.parent_key
+                                                              and _Arrival.event_code = 'ARRIV_DEST'
+  association [0..1] to but000           as _Business_Partner on  $projection.Tspid = _Business_Partner.partner
+
+  association [0..1] to /scmtms/cv_locad as _Location         on  $projection.DepLoc = _Location.location_id
+  association [0..1] to /scmtms/cv_locad as _Location_1       on  $projection.SrcLoc = _Location_1.location_id
+  association [0..1] to /scmtms/cv_locad as _Location_2       on  $projection.DestLoc = _Location_2.location_id
+
+  association [0..1] to /bofu/cv_bprt    as _Cust             on  $projection.Consigneeid = _Cust.partner
+  association [0..*] to /scmtms/d_torite as _Dlv              on  $projection.DbKey = _Dlv.parent_key
+
+{
+
+  key Transp_ord.db_key                                                 as DbKey,
+      Transp_ord.tor_id                                                 as TorId,
+      Transp_ord.tor_cat                                                as TorCat,
+      Transp_ord.tor_type                                               as TorType,
+      Transp_ord.creation_type                                          as CreationType,
+      Transp_ord.created_on                                             as Created_Date,
+      Transp_ord.movement_cat                                           as MovementCat,
+      Transp_ord.consol_type                                            as ConsolType,
+      Transp_ord.labeltxt                                               as Labeltxt,
+      Transp_ord.blk_plan                                               as BlkPlan,
+      Transp_ord.blk_exec                                               as BlkExec,
+      Transp_ord.tspid                                                  as Tspid,
+      Transp_ord.shipperid                                              as Shipperid,
+      Transp_ord.consigneeid                                            as Consigneeid,
+      Transp_ord.shipping_type                                          as ShippingType,
+      Transp_ord.movement_type                                          as MovementType,
+      Transp_ord.exec_org_id                                            as ExecOrgId,
+      Transp_ord.exec_grp_id                                            as ExecGrpId,
+      Transp_ord.purch_org_id                                           as PurchOrgId,
+      Transp_ord.purch_grp_id                                           as PurchGrpId,
+      Transp_ord.lifecycle                                              as Lifecycle,
+      Transp_ord.execution                                              as Execution,
+      Transp_ord.delivery                                               as Delivery,
+      Transp_ord.base_btd_id                                            as DlvNo,
+      Transp_ord.dlv_delivery_date                                      as DlvDate,
+      Transp_ord.zcinv_val                                              as Invoice_Value,
+      Transp_ord.mtr                                                    as MTR,
+
+      Transp_ord.partner_ref_id                                         as LRNo,
+
+      tor_stp.log_locid                                                 as SrcLoc,
+      tor_stp2.log_locid                                                as DestLoc,
+      _Location_1.region                                                as SrcRgn,
+      _Location_2.region                                                as DestRgn,
+      _Location_1.street_postal_code                                    as SrcPin,
+      _Location_2.street_postal_code                                    as DestPin,
+
+
+//      @Semantics.quantity.unitOfMeasure: 'Gross_Weight_Unit'
+//      @DefaultAggregation: #SUM
+      Transp_ord.total_distance_km                                      as TotalDistanceKm,
+      Transp_ord.gro_wei_val                                            as CnsgnmtWt,
+//      @Semantics.quantity.unitOfMeasure: 'Gross_Weight_Unit'
+//      @DefaultAggregation: #SUM
+      Transp_ord.total_duration_net                                     as TotalDurationNet,
+
+
+//      case when total_distance_km <= 500 then 3
+//           when total_distance_km > 500 and total_distance_km <= 1000 then 4
+//           when total_distance_km > 1000 and total_distance_km <= 2000 then 6
+//           else 11 end                                                  as Agreed_CDP_FTL,
+//
+//      case when total_distance_km <= 500 then 5
+//           when total_distance_km > 500 and total_distance_km <= 1000 then 7
+//           when total_distance_km > 1000 and total_distance_km <= 2000 then 9
+//           else 15 end                                                  as Agreed_CDP_PTL,
+
+      _Departure.actual_date                                            as DepDate,
+      _Departure.actual_tzone                                           as DepTzone,
+      _Departure.ext_loc_id                                             as DepLoc,
+
+
+      _Arrival.actual_date                                              as ArrDate,
+      _Arrival.actual_tzone                                             as ArrTzone,
+      _Arrival.ext_loc_id                                               as ArrLoc,
+
+      _Business_Partner,
+      _Cust
+
+}
+
+where
+  tor_cat = 'TO' and lifecycle <> '10'
+  and created_on >= 20230401000000
+//  and _Departure.ext_loc_id like 'SP%'
+//  and _Arrival.ext_loc_id   like 'SP%'

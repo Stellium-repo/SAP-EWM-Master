@@ -1,0 +1,126 @@
+/****************************************************/
+// View Name        : YCVQ_TM_AGREEMENT
+// View Type        : Query
+// Description      : TM Resource Status Data
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   : 
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVQ_TM_AGREE'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@VDM.viewType: #CONSUMPTION
+@Analytics.query: true
+@OData.publish: true
+@EndUserText.label: 'TM Forwarding Freight Agreement'
+define view YCVQ_TM_AGREEMENT 
+//with parameters
+//@EndUserText.label: 'Ageing In Days'
+//@Consumption.defaultValue: '0'
+//p_ageingindays : ZP_AGEINGINDAYS 
+as 
+select from YCVCC_TM_AGREEMENT /*( p_ageingindays:$parameters.p_ageingindays)*/ as Agreement
+{
+//        @AnalyticsDetails.query.axis: #ROWS
+//        @Consumption.hidden: true
+//        Agreement.DB_Key, 
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Agreement'
+    key Agreement.Agreement,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        Agreement.Agreement_Priority,
+        @AnalyticsDetails.query.axis: #ROWS
+        Agreement.Agreement_Usage,
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Agreement Category'
+        Agreement.Agreement_Category,
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Agreement Type'
+        Agreement.Agreement_Type,
+        @AnalyticsDetails.query.axis: #ROWS
+        Agreement.Agreement_Desc,
+        @AnalyticsDetails.query.axis: #ROWS
+        @UI.textArrangement: #TEXT_ONLY
+        Agreement.Agree_Validity_Start_Date,
+//        @AnalyticsDetails.query.axis:
+        @AnalyticsDetails.query.axis: #ROWS
+        @UI.textArrangement: #TEXT_ONLY
+        Agreement.Agree_Validity_End_Date,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        Agreement.End_Date,
+        @AnalyticsDetails.query.axis: #ROWS
+        Agreement.Agreement_Status,
+        @AnalyticsDetails.query.axis: #ROWS
+        Agreement.Party_Role,
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Business Partner'
+        Agreement.Business_Partner_No,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        Agreement.party_address_id,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        Agreement.Business_Partner,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        Agreement.BP_Agreement_Usage,
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Business Partner Name'
+        Agreement.Business_Partner_Name,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        Agreement.Tccs_UUID,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        @EndUserText.label: 'Base Freight'
+//        Agreement.Base_Freight,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        @EndUserText.label: 'Green Tax'
+//        Agreement.Green_Tax,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        @EndUserText.label: 'LR Charges'
+//        Agreement.LR_Charges,
+        @AnalyticsDetails.query.axis: #COLUMNS
+        @EndUserText.label: 'Agreement Count'
+        Agreement.Agreement_Count,
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Validity Remaining in Days'
+        Agreement.Validity_Remain,
+        @AnalyticsDetails.query.axis: #COLUMNS
+        @EndUserText.label: 'Days Remaining'
+        Agreement.Validity_Remain_Column,
+        @AnalyticsDetails.query.axis: #ROWS
+        Agreement.Validity_Year,
+        @AnalyticsDetails.query.axis: #ROWS
+        Agreement.Validity_Quarter,
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Calendar Month'
+        Agreement.Validity_Month,
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Calendar Month No.'
+        Agreement.Validity_Month_No,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        Agreement.Validity_Week,
+        @AnalyticsDetails.query.axis: #ROWS
+        Agreement.Validity_Week_Year,
+        @AnalyticsDetails.query.axis: #ROWS
+        Agreement.Validity_Day_Of_Week,
+        @AnalyticsDetails.query.axis: #ROWS
+        Agreement.Validity_Day,
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Period'
+        Agreement.DataPeriod,
+        
+        @DefaultAggregation: #FORMULA
+        @EndUserText.label: 'Aggreement-Count'
+      @AnalyticsDetails:
+         {
+            exceptionAggregationSteps:
+              [ { exceptionAggregationBehavior : #COUNT,
+                  exceptionAggregationElements: ['Agreement']
+                }
+              ]
+         }
+      1 as Agg_Count
+      
+}
+
+//where Agreement.Validity_Remain >= 0

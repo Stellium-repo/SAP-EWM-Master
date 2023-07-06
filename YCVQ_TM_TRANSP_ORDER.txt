@@ -1,0 +1,222 @@
+/****************************************************/
+// View Name        : YCVQ_TM_TRANSP_ORDER
+// View Type        : Consumption
+// Description      : TM Freight Order
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   :
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVQ_TM_TRP_OR'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@VDM.viewType: #CONSUMPTION
+@Analytics.query: true
+@OData.publish: true
+@EndUserText.label: 'TM Transportation Order'
+define view YCVQ_TM_TRANSP_ORDER
+
+  as select from YCVCC_TM_TRANSP_ORDER
+
+  as Transp_ord
+{
+      @AnalyticsDetails.query.axis: #ROWS
+      @Consumption.hidden: true
+  key Transp_ord.DbKey,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Freight Order'
+      Transp_ord.Tor_ID,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Businnes Document Category'
+      Transp_ord.TorCat,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Document Type'
+      Transp_ord.TorType,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Creation Type'
+      Transp_ord.CreationType,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Movement Category'
+      Transp_ord.MovementCat,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Airway Bill Type'
+      Transp_ord.ConsolType,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: '(Label) Freight Order Type'
+      Transp_ord.Labeltxt,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Planning Block'
+      Transp_ord.BlkPlan,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Execution Block'
+      Transp_ord.BlkExec,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Carrier Code'
+      Transp_ord.Tspid,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Carrier Name'
+      Transp_ord.description,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Consignment Type'
+      Transp_ord.MTR,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'LR No.'
+      Transp_ord.LRNo,
+////      @AnalyticsDetails.query.axis: #ROWS
+////      @EndUserText.label: 'Delivery No.'
+////      Transp_ord.Dlv,
+////      @AnalyticsDetails.query.axis: #ROWS
+////      @EndUserText.label: 'Delivery Date'
+////      Transp_ord.DlvDt,
+////      @AnalyticsDetails.query.axis: #ROWS
+////      @EndUserText.label: 'Invoice No.'
+////      Transp_ord.InvNo,
+////      @AnalyticsDetails.query.axis: #ROWS
+////      @EndUserText.label: 'Invoice Date'
+////      Transp_ord.InvDt,
+////      @AnalyticsDetails.query.axis: #ROWS
+////      @EndUserText.label: 'Invoice Value'
+////      Transp_ord.InvVal,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Consignee Name'
+      Transp_ord.CustName,
+      @DefaultAggregation: #SUM
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Consignment Weight'
+      Transp_ord.CnsgnmtWt,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Shipper'
+      Transp_ord.Shipperid,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Consignee ID'
+      Transp_ord.Consigneeid,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Shipping Type'
+      Transp_ord.ShippingType,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'MovementType'
+      Transp_ord.MovementType,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Planning and Execution Organization'
+      Transp_ord.ExecOrgId,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Planning and Execution Group'
+      Transp_ord.ExecGrpId,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Purchasing Organization'
+      Transp_ord.PurchOrgId,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Purchasing Group'
+      Transp_ord.PurchGrpId,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Life Cycle Status'
+      Transp_ord.Lifecycle,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Execution'
+      Transp_ord.Execution,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Execution Status'
+      Transp_ord.Execution_text,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Delivery Status'
+      Transp_ord.Delivery,
+      @AnalyticsDetails.query.axis: #COLUMNS
+      @EndUserText.label: 'Total Distance in Km'
+      Transp_ord.TotalDistanceKm,
+      @AnalyticsDetails.query.axis: #COLUMNS
+      @EndUserText.label: 'Total Net Duration'
+      Transp_ord.TotalDurationNet,
+
+//      @AnalyticsDetails.query.axis: #ROWS
+//      @EndUserText.label: 'CDP Days'
+//      Transp_ord.CDP_Days,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'CDP'
+      Transp_ord.CDP,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Actual CDP'
+      Transp_ord.Actual_CDP,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Expected Delivery Date'
+      @UI.textArrangement: #TEXT_ONLY
+      Transp_ord.Exp_Date,
+
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Departure Date'
+      @UI.textArrangement: #TEXT_ONLY
+      Transp_ord.DepDate,
+//      @AnalyticsDetails.query.axis: #ROWS
+//      @EndUserText.label: 'Departure Time Zone'
+//      Transp_ord.DepTzone,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Shipping Point'
+      Transp_ord.SrcLoc,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Shipping Point Name'
+      Transp_ord.DeprLocName,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Arrival Date'
+      @UI.textArrangement: #TEXT_ONLY
+      Transp_ord.ArrDate,
+//      @AnalyticsDetails.query.axis: #ROWS
+//      @EndUserText.label: 'Arrival Time Zone'
+//      Transp_ord.ArrTzone,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Arrival Location'
+      Transp_ord.ArvlLocName,
+//      @AnalyticsDetails.query.axis: #COLUMNS
+//      @EndUserText.label: 'Delivery Period in Days'
+//      Transp_ord.DelPeriodInDays,
+//      @AnalyticsDetails.query.axis: #COLUMNS
+//      @EndUserText.label: 'On Time'
+//      Transp_ord.On_time,
+      @AnalyticsDetails.query.axis: #COLUMNS
+      @EndUserText.label: 'On-Time'
+      Transp_ord.On_time1,      
+//      @EndUserText.label: 'Carrier Delivery Performance in %'
+//      @AnalyticsDetails:{
+//         query.formula: '$projection.On_time',
+//         exceptionAggregationSteps: [
+//             {
+//                 exceptionAggregationBehavior: #AVG,
+//                 exceptionAggregationElements: ['Tor_ID','Tspid']
+//             }
+//         ]
+//      }
+//      0 as AvgDelvPeriod,      
+      
+      @EndUserText.label: 'Carrier Delivery Performance in %'
+      @AnalyticsDetails:{
+         query.formula: '$projection.On_time1',
+         exceptionAggregationSteps: [
+             {
+                 exceptionAggregationBehavior: #AVG,
+                 exceptionAggregationElements: ['Tor_ID','Tspid']
+             }
+         ]
+      }
+      0 as AvgDelvPeriod1,
+      
+      
+      @AnalyticsDetails.query.axis: #ROWS
+      Transp_ord.Root_Year,
+      @AnalyticsDetails.query.axis: #ROWS
+      Transp_ord.Root_Quarter,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Calendar Month'
+      Transp_ord.Root_Month,
+
+      @AnalyticsDetails.query.axis: #ROWS
+      Transp_ord.Root_Week_Year,
+      @AnalyticsDetails.query.axis: #ROWS
+      Transp_ord.Root_Day_Of_Week,
+      @AnalyticsDetails.query.axis: #ROWS
+      Transp_ord.Root_Day
+//      @AnalyticsDetails.query.axis: #ROWS
+//      @EndUserText.label: 'Period'
+//      Transp_ord.Root_Data_Period
+ 
+}
+

@@ -1,0 +1,38 @@
+/****************************************************/
+// View Name        : YCVD_TM_BASE_FREIGHT
+// View Type        : Dimension
+// Description      : TM Root Node
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   :
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVD_TM_BS_FRGT'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@VDM.viewType: #BASIC
+@EndUserText.label: 'TM Root Node'
+define view YCVD_TM_BASE_FREIGHT
+  as select from /scmtms/d_tchrge as Transp_Charge
+
+{
+  key  root_key,
+       Transp_Charge.tcet084,
+       ltrim(Transp_Charge.btd_id006, '0') as Document_ID,
+       @Semantics.currencyCode: true
+       Transp_Charge.currcode016           as Currency,
+       @Semantics.amount.currencyCode: 'Currency'
+       sum(Transp_Charge.amount)           as Amount2,
+       Transp_Charge.analyticrelev
+
+}
+where
+  tcet084 like '%BF%'
+group by
+  tcet084,
+  root_key,
+  btd_id006,
+  currcode016,
+  analyticrelev

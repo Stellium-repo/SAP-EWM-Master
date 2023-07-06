@@ -1,0 +1,142 @@
+/****************************************************/
+// View Name        : YCVD_TM_TOTAL_TRANSP
+// View Type        : Dimension
+// Description      : TM Freight Settlement
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   :
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVD_TM_TOTAL_TR'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@VDM.viewType: #BASIC
+@EndUserText.label: 'TM Freset Node'
+define view YCVD_TM_TOTAL_TRANSP
+  as select distinct from YCVD_TM_FRESET_ROOT as FreSet
+  association [0..1] to YCVD_TM_ROOT_NODE as _Tor on $projection.Document_ID = _Tor.Document_Id
+  association [0..1] to /scmtms/cv_locad  as _Location on  $projection.deprloc = _Location.location_id
+  association [0..1] to /scmtms/cv_locad  as _Location2 on  $projection.arvlloc = _Location2.location_id
+  
+//  association [0..1] to YCVD_TM_DLV       as _TorDlv on $projection.Document_ID = _TorDlv.Tor_Id
+{
+  key FreSet.DbKey,
+      FreSet.SfirId,
+      FreSet.SfirType,
+      FreSet.SfirCategory,
+      //      FreSet.CreationType,
+      //      FreSet.Logsys,
+      //      FreSet.BillFromParty,
+      //      FreSet.TspUuid,
+      FreSet.TspId,
+      FreSet.Carrier,
+      FreSet.PurchOrgId,
+      FreSet.PurchGrpId,
+      //      FreSet.CreatedBy,
+      //      FreSet.CreatedOn,
+      //      FreSet.ChangedBy,
+      //      FreSet.ChangedOn,
+      FreSet.BlockReason,
+      FreSet.SfirEewRoot,
+      FreSet.Lifecycle,
+      //      FreSet.Block,
+      //      FreSet.Consistency,
+      //      FreSet.Archiving,
+      //      FreSet.Confirmation,
+      FreSet.Inv_Dt,
+      FreSet.Charge_Type,
+      _Charge_Type.text                                                                                                           as ChargeTypeDesc,
+      FreSet.Document_ID,
+      @Semantics.currencyCode: true
+      FreSet.DocCurrency                                                                                                          as Doc_Currency,
+      //      @DefaultAggregation: #SUM
+      @Semantics.amount.currencyCode: 'Doc_Currency'
+
+      //      case when
+      //      FreSet.Amount <= 150000 then FreSet.Amount else 0 end as Amount,
+
+      FreSet.Amount,
+      //      @DefaultAggregation: #SUM
+      @Semantics.amount.currencyCode: 'Doc_Currency'
+
+      //       case when
+      //      FreSet.Amount2 <= 150000 then FreSet.Amount2 else 0 end as Amount2,
+
+      FreSet.Amount2,
+
+      FreSet.analyticrelev,
+
+      _Fields.Execution_Status as Execution,
+      _Fields.Execution_Status_text as Execution_Text,
+      _Fields.MTR,
+      _Fields.LRNo,
+//      _Fields.Dlv_No,
+//      _Fields.Dlv_Date,
+//      _Fields.Invoice_No,
+//      _Fields.Invoice_Value,
+      _Fields.Consigneeid,
+      _Fields.CustName,
+      _Fields.CnsgnmtWt,
+      _Fields.TotalDistanceKm,
+      _Fields.TotalDurationNet,
+      //      _Fields.Agreed_CDP_FTL,
+      //      _Fields.Agreed_CDP_PTL,
+      _Fields.DepDate,
+      _Fields.ArrDate,
+      _Fields.DepTzone,
+      _Fields.DepLoc,
+      _Fields.DepLocName,
+      _Fields.ArrTzone,
+      _Fields.ArrLoc,
+      //      _Fields.DelPeriodInDays,
+      _Fields.CDP_Days,
+      _Fields.InvoiceDate,
+      _Fields.Label_Text,
+      _Fields.Base_Cost,
+      _Fields.Business_Doc_Type,
+
+//      _Fields.DeprLoc,
+//      _Fields.DeprLocName,
+//      _Fields.ArvlLoc,
+//      _Fields.ArvlLocName,
+
+      _Fields2.ArvlLoc,
+      _Fields2.DeprLoc,
+      _Fields2.Execution_Status_text,
+     
+//      case when _Fields2.Delv is initial then _Inv.Delivery else _Fields2.Delv end                                                  as Delv,
+//      case when _Fields2.DelvDt = 0 then _Inv.Delivery_Date else cast(  cast( _Fields2.DelvDt as abap.char(18) ) as abap.dats)  end as DelvDt,
+
+//      ltrim(_Inv.Delivery, '0')                                                                                                   as Dlv,
+//      _Inv.Delivery_Date                                                                                                          as DlvDt,
+//      _Inv.Invoice_No                                                                                                             as InvNo,
+//      _Inv.Invoice_Date                                                                                                           as InvDt,
+//      _Inv.Invoice_Value                                                                                                          as InvVal,
+      _Inv.Shipping_pt                                                                                                            as ShipPt,
+      _Inv.ShpPtName,
+
+      _Tor.Created_Date,
+      tstmp_to_dats(_Tor.Created_Date, abap_user_timezone($session.user,
+      $session.client, 'NULL') , $session.client, 'NULL')                                                                         as Created_Date_Hr,
+ 
+      _Location,
+      _Location2,
+
+//      _TorDlv.DlvNumber,
+//      _TorDlv.DlvDate,
+//      _TorDlv.InvNumber,
+//      _TorDlv.InvDate,
+//      _TorDlv.InvValue
+
+       @DefaultAggregation: #SUM
+       FreSet.Count2
+
+}
+where
+      FreSet.analyticrelev <>   'X'
+  and FreSet.Document_ID   like '6%'
+  and FreSet.Amount        <    150000
+  and FreSet.Amount2       <    150000
+

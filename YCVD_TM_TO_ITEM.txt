@@ -1,0 +1,51 @@
+/****************************************************/
+// View Name        : YCVD_TM_TO_ITEM
+// View Type        : Dimension
+// Description      : TM TO Item
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   : 
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVD_TM_TO_ITM'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@VDM.viewType: #BASIC
+@EndUserText.label: 'TM TO Item'
+define view YCVD_TM_TO_ITEM
+as 
+select from /scmtms/d_torite as TO_Item
+{
+  key  TO_Item.db_key as DB_Key,
+  TO_Item.parent_key as Parent_Key,
+  TO_Item.item_id as TO_Item_Id,
+  TO_Item.item_type as TO_Item_Type,
+  TO_Item.item_descr as TO_Item_Desc,
+  TO_Item.item_cat as TO_Item_Cate,
+  TO_Item.mtr as Means_Of_Transport,
+  TO_Item.country as Country_Key,
+  TO_Item.res_id as Resource_Id,
+  TO_Item.src_loc_idtrq as Source_Location,
+  TO_Item.des_loc_idtrq as Dest_Location,
+  TO_Item.trq_id as Transp_Req_Id,
+  TO_Item.trq_cat as Transp_Req_Category,
+  @Semantics.quantity.unitOfMeasure: 'Gross_Volume_Unit'
+  @DefaultAggregation: #SUM
+  TO_Item.gro_vol_val as Gross_Volume,
+  @Semantics.unitOfMeasure: true
+  TO_Item.gro_vol_uni as Gross_Volume_Unit,
+  @Semantics.quantity.unitOfMeasure: 'Gross_Weight_Unit'
+  @DefaultAggregation: #SUM
+  TO_Item.gro_wei_val as Gross_Weight,
+  @Semantics.unitOfMeasure: true
+  TO_Item.gro_wei_uni as Gross_Weight_Unit,
+  @Semantics.quantity.unitOfMeasure: 'Net_weight_Unit'
+  @DefaultAggregation: #SUM
+  TO_Item.net_wei_val as Net_Weight,
+  @Semantics.unitOfMeasure: true
+  TO_Item.net_wei_uni as Net_weight_Unit,
+  TO_Item.product_id  as Product_Id,
+  TO_Item.tures_cat   as Tures_Cat
+}

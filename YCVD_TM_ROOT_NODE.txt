@@ -1,0 +1,108 @@
+/****************************************************/
+// View Name        : YCVD_TM_ROOT_NODE
+// View Type        : Dimension
+// Description      : TM Root Node
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   :
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVD_TM_RT_NODE'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@VDM.viewType: #BASIC
+@EndUserText.label: 'TM Root Node'
+define view YCVD_TM_ROOT_NODE
+  as select from /scmtms/d_torrot as Root_Node
+  
+    left outer join /scmtms/d_torstp as tor_stp  on  Root_Node.db_key      = tor_stp.parent_key
+                                                 and tor_stp.stop_seq_pos = 'F'
+    left outer join /scmtms/d_torstp as tor_stp2  on  Root_Node.db_key      = tor_stp2.parent_key
+                                                 and tor_stp2.stop_seq_pos = 'L'
+  association [0..1] to /scmtms/d_torexe as _Departure        on  $projection.DB_Key     = _Departure.parent_key
+                                                              and _Departure.event_code = 'DEPARTURE'
+  association [0..1] to /scmtms/d_torexe as _Arrival          on  $projection.DB_Key   = _Arrival.parent_key
+                                                              and _Arrival.event_code = 'ARRIV_DEST'   
+  association [0..1] to /scmtms/cv_locad as _Location         on  $projection.DepLoc = _Location.location_id 
+  association [0..1] to /bofu/cv_bprt    as _Cust             on  $projection.Consignee_Id = _Cust.partner                                                                                                           
+
+  association [0..1] to but000               as _Business_Partner on $projection.Carrier_Id = _Business_Partner.partner
+  //  association [0..1] to /scmtms/d_torstp as _tor_stp         on $projection.DB_Key     = _tor_stp.parent_key
+  //  association [0..1] to /scmtms/cv_locad as _Location         on  $projection.DepLoc = _Location.location_id
+  association [0..1] to YCVD_TM_TRANSP_ORDER as _Fields           on $projection.Document_Id = _Fields.Tor_ID
+  association [0..1] to /scmtms/d_torite             as _Dlv       on  $projection.DB_Key = _Dlv.parent_key
+                                                                   and _Dlv.main_cargo_item = 'X'
+
+{
+  key Root_Node.db_key             as DB_Key,
+      ltrim(Root_Node.tor_id,'0')  as Document_Id,
+      Root_Node.tor_cat            as Business_Doc_category,
+      Root_Node.tor_type           as Business_Doc_Type,
+      Root_Node.creation_type      as Creation_Type,
+      Root_Node.movement_cat       as Movement_Category,
+      Root_Node.consol_type        as Airway_Bill_Type,
+      Root_Node.labeltxt           as Label_Text,
+      Root_Node.created_on         as Created_Date,
+      Root_Node.blk_plan           as Planning_Block,
+      Root_Node.blk_exec           as Execution_Block,
+      Root_Node.tspid              as Carrier_Id,
+      _Business_Partner.name_org1  as Carrier,
+      Root_Node.exec_org_id        as Plan_Exec_Org,
+      Root_Node.exec_grp_id        as Plan_Exec_Grp,
+      Root_Node.purch_org_id       as Purchasing_Org,
+      Root_Node.purch_grp_id       as Purchasing_Grp,
+      Root_Node.shipperid          as Shipper_Id,
+      Root_Node.consigneeid        as Consignee_Id,
+      Root_Node.plan_status_root   as Plan_Status_Root,
+      Root_Node.load_plan_status   as Load_Plan_Status,
+      Root_Node.drv_assgn_status   as Driver_Assgn_Status,
+      Root_Node.mtr                as MTR,
+      Root_Node.inv_block          as Invoice_Block,
+//      @DefaultAggregation: #SUM
+      Root_Node.total_distance_km  as Total_Distance_In_KM,
+//      @DefaultAggregation:#SUM
+      Root_Node.total_duration_net as Total_Net_Duration,
+      Root_Node.execution          as Execution_Status,
+      Root_Node.gro_wei_val        as CnsgnmtWt,
+      case when Root_Node.execution = '03' then 'In Transit'
+          when Root_Node.execution = '04' then 'Delivered'
+          when Root_Node.execution = '02' then 'Trip Not Started'
+          when Root_Node.execution = '06' then 'Trip Cancelled'
+          when Root_Node.execution = '09' then 'Loading in Process' else 'Others' end         as Execution_Status_text,
+      Root_Node.delivery           as Delviery_Status,
+      Root_Node.lifecycle          as Life_Cycle_Status,
+      Root_Node.partner_ref_id     as LRNo,
+      
+      tor_stp.log_locid as DeprLoc,
+      tor_stp2.log_locid as ArvlLoc,
+      
+      _Departure.actual_date                                            as DepDate,
+      _Departure.actual_tzone                                           as DepTzone,
+      _Departure.ext_loc_id                                             as DepLoc,
+
+      _Arrival.actual_date                                              as ArrDate,
+      _Arrival.actual_tzone                                             as ArrTzone,
+      _Arrival.ext_loc_id                                               as ArrLoc,
+
+      //      _tor_stp.log_locid as DepLoc,
+      //      _Location,
+      //      Root_Node.partner_ref_id as LRNo
+      _Location,
+      _Cust,
+      _Fields,
+      
+      ltrim(_Dlv.base_btd_id, '0' ) as Delv,
+      _Dlv.base_btd_version,
+      _Dlv.assgn_start as DelvDt,
+      
+      @DefaultAggregation: #SUM
+      1      as Count2
+
+}
+where
+      Root_Node.tor_cat = 'TO' and Root_Node.inv_block <> 'X' and Root_Node.lifecycle <> '10' 
+      and created_on >= 20230401000000
+      //  and execution         = '04'
+--(Root_Node.drv_assgn_status = 'C' or Root_Node.drv_assgn_status = 'I')

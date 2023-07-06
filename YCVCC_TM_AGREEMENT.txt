@@ -1,0 +1,89 @@
+/****************************************************/
+// View Name        : YCVCC_TM_DRIVER_UTILIZATION
+// View Type        : Dimension
+// Description      : TM Freight Agreement
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   :
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVCC_TM_AGREE'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@VDM.viewType: #COMPOSITE
+@Analytics.dataCategory: #CUBE
+@EndUserText.label: 'TM Freight Agreement'
+define view YCVCC_TM_AGREEMENT
+  //with parameters
+  //@EndUserText.label: 'Ageing In Days'
+  //@Consumption.defaultValue: '0'
+  //p_ageingindays : ZP_AGEINGINDAYS
+  as select distinct from YCVBC_TM_AGREEMENT as Agreement
+  association [0..1] to YCVD_TM_CALENDAR_PERIOD as _Timeperiod on $projection.Agree_Validity_End_Date = _Timeperiod.CalendarDate
+  
+//  association [0..1] to /scmtms/c_tcett as _Charge on $projection.Charge_Type = _Charge.tcet084
+   
+  //left outer join YCVD_TM_TIME_PERIOD as _Timeperiod
+  //on Agreement.Agree_Validity_End_Date = _Timeperiod.zdate_sap
+{
+  key Agreement.DB_Key,
+      ltrim(Agreement.Agreement,'0') as Agreement,
+      Agreement.Agreement_Priority,
+      Agreement.Agreement_Usage,
+      Agreement.Agreement_Category,
+      Agreement.Agreement_Type,
+      Agreement.Agreement_Desc,
+      Agreement.Agree_Validity_Start_Date,
+      Agreement.start_date,
+      //cast(Agreement.Agree_Validity_Start_Date as abap.char(18)) as Agree_Validity_Start_Date,
+      //concat(substring(Agreement.Agree_Validity_Start_Date, 1,4),'-', substring(Agreement.Agree_Validity_Start_Date, 5,2), '-', substring(Agreement.Agree_Validity_Start_Date,7,2)) as Start_Date,
+      //Agreement.Agree_Validity_Start_Date as Start_Date,
+      //concat(_Timeperiod.zdate_sql,concat('', concat(substring(cast(Agreement.Agree_Validity_Start_Date as abap.char( 18 )), 9, 2),
+      //concat('',substring(cast(Agreement.Agree_Validity_Start_Date as abap.char( 18 )), 11, 2))))) as Agree_Validity_Start_Date,
+      Agreement.Agree_Validity_End_Date,
+      //Agreement.Agree_Validity_End_Date as End_Date,
+      //        concat(_Timeperiod.zdate_sql,concat('', concat(substring(cast(Agreement.Agree_Validity_End_Date as abap.char( 18 )), 9, 2),
+      //        concat('',substring(cast(Agreement.Agree_Validity_End_Date as abap.char( 18 )), 11, 2))))) as End_Date,
+      //      @DefaultAggregation: #SUM
+      //      dats_days_between(Agreement.CurrentDate, Agreement.Validity_End_Date) as Validity_Remain,
+      @DefaultAggregation: #SUM
+      Agreement.Validity_Remain,
+      Agreement.Validity_Remain as Validity_Remain_Column,
+      Agreement.Agreement_Status,
+      Agreement.Party_Role,
+      Agreement.Business_Partner_No,
+      Agreement.party_address_id,
+      Agreement.Business_Partner_Name,
+      Agreement.BP_Agreement_Usage,
+      Agreement.Tccs_UUID,
+      Agreement.RFQ,
+//      Agreement.tcet084 as Charge_Type,
+//      _Charge.text as Charge_Type_Desc,
+      Agreement.Base_Freight,
+      Agreement.Green_Tax,
+      Agreement.LR_Charges,
+      @DefaultAggregation: #SUM
+      Agreement.Agreement_Count,
+      
+      _Timeperiod.CalendarYear       as Validity_Year,
+      _Timeperiod.CalendarQuarter    as Validity_Quarter,
+      _Timeperiod.CalendarMonthName  as Validity_Month,
+      _Timeperiod.CalendarMonth      as Validity_Month_No,
+      _Timeperiod.CalendarWeek       as Validity_Week_Year,
+      _Timeperiod.WeekDay            as Validity_Day_Of_Week,
+      _Timeperiod.CalendarDay        as Validity_Day,
+//      _Timeperiod.AgeingDays         as Validity_Ageing_Days,
+      _Timeperiod.DataPeriod
+
+
+
+
+}
+//where _Timeperiod.AgeingDays >=:p_ageingindays
+//where _Timeperiod.AgeingDays>=0
+//and _Timeperiod.AgeingDays <=:p_ageingindays
+// or _Timeperiod.AgeingDays <=:p_ageingindays)
+
+//where Agreement.Validity_Remain >= 0

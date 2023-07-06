@@ -1,0 +1,359 @@
+/****************************************************/
+// View Name        : YCVQ_TM_INV
+// View Type        : Consumption
+// Description      : TM Invoice
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   :
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YCVQ_TM_INV'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #CHECK
+@EndUserText.label: 'Invoice Data'
+define view YCVQ_TM_INVOICE
+  as select distinct from vbak             as so_header
+
+    inner join            vbap             as so_item             on so_header.vbeln = so_item.vbeln
+
+    left outer join       tvakt            as type                on  type.auart = so_header.auart
+                                                                  and type.spras = 'E'
+
+    left outer join       lips             as delivery_item       on  so_item.vbeln = delivery_item.vgbel
+                                                                  and so_item.posnr = delivery_item.vgpos
+
+    left outer join       likp             as delivery_header     on delivery_item.vbeln = delivery_header.vbeln
+    
+  
+
+  // Freight unit
+    left outer join       ZTM_CDS_DRF_DATA as tor_fu_so_rot_fu    on tor_fu_so_rot_fu.tor_cat           = 'FU'
+                                                                  and(
+                                                                   (
+                                                                      delivery_item.vbeln            = substring(
+                                                                        tor_fu_so_rot_fu.base_btd_id, 26, 10 )
+                                                                      and delivery_item.posnr                 = substring(
+                                                                        tor_fu_so_rot_fu.base_btditem_id, 5, 6  )
+                                                                      and  tor_fu_so_rot_fu.base_btd_tco    = '73'
+                                                                      and tor_fu_so_rot_fu.item_cat      = 'PRD'
+                                                                    )
+                                                                  )
+
+
+  //  // Freight Order
+    left outer join       ZTM_CDS_DRF_DATA as tor_fu_so_rot_to_on on  tor_fu_so_rot_to_on.tor_cat           = 'TO'
+                                                                  and tor_fu_so_rot_fu.db_key               = tor_fu_so_rot_to_on.ref_root_key
+                                                                  and (
+                                                                     (
+                                                                          so_item.vbeln                        = substring(
+                                                                         tor_fu_so_rot_to_on.base_btd_id, 26, 10
+                                                                                                                     )
+                                                                       and so_item.posnr                    = substring(
+                                                                         tor_fu_so_rot_to_on.base_btd_paritem_id, 5, 6
+                                                                                                                     )
+                                                                       and tor_fu_so_rot_to_on.base_btd_tco = '114'
+                                                                       and tor_fu_so_rot_to_on.item_cat     = 'PRD'
+                                                                     )
+                                                                     or(
+                                                                       so_item.vbeln                        = substring(
+                                                                         tor_fu_so_rot_to_on.orig_btd_id, 26, 10
+                                                                                                                      )
+                                                                       and so_item.posnr                    = substring(
+                                                                         tor_fu_so_rot_to_on.orig_btditem_id, 5, 6
+                                                                                                                 )
+                                                                       and tor_fu_so_rot_to_on.orig_btd_tco = '114'
+                                                                       and tor_fu_so_rot_to_on.item_cat     = 'PRD'
+                                                                     )
+                                                                     or(
+                                                                       so_item.vbeln  = tor_fu_so_rot_to_on.orig_btd_id
+                                                                       and so_item.posnr                    = substring(
+                                                                         tor_fu_so_rot_to_on.orig_btditem_id, 5, 6
+                                                                                                                 )
+                                                                       and tor_fu_so_rot_to_on.orig_btd_tco = '114'
+                                                                       and tor_fu_so_rot_to_on.item_cat     = 'PRD'
+                                                                     )
+                                                                   )
+
+
+  //
+  // Freight Booking
+//    left outer join       ZTM_CDS_DRF_DATA as tor_fu_so_rot_bo    on tor_fu_so_rot_bo.tor_cat            = 'BO'
+//                                                                  and(
+//                                                                    (
+//                                                                      so_item.vbeln                      = substring(
+//                                                                        tor_fu_so_rot_bo.base_btd_id, 26, 10
+//                                                                      )
+//                                                                      and so_item.posnr                  = substring(
+//                                                                        tor_fu_so_rot_bo.base_btd_paritem_id, 5, 6
+//                                                                      )
+//                                                                      and tor_fu_so_rot_bo.base_btd_tco  = '114'
+//                                                                      and tor_fu_so_rot_bo.item_cat      = 'PRD'
+//                                                                    )
+//                                                                    or(
+//                                                                      so_item.vbeln                      = substring(
+//                                                                        tor_fu_so_rot_bo.orig_btd_id, 26, 10
+//                                                                                                                 )
+//                                                                      and so_item.posnr                  = substring(
+//                                                                        tor_fu_so_rot_bo.orig_btditem_id, 5, 6
+//                                                                                                                )
+//                                                                      and(
+//                                                                        tor_fu_so_rot_bo.orig_btd_tco    = '114'
+//                                                                        or tor_fu_so_rot_bo.orig_btd_tco = '32'
+//                                                                             )
+//                                                                      and tor_fu_so_rot_bo.item_cat      = 'PRD'
+//                                                                    )
+//
+//                                                                    or(
+//                                                                      so_item.vbeln  =  tor_fu_so_rot_bo.orig_btd_id                                                                                                          
+//                                                                      and so_item.posnr                  = substring(
+//                                                                        tor_fu_so_rot_bo.orig_btditem_id, 5, 6
+//                                                                                                                )
+//                                                                      and(
+//                                                                        tor_fu_so_rot_bo.orig_btd_tco    = '114'
+//                                                                        or tor_fu_so_rot_bo.orig_btd_tco = '32'
+//                                                                             )
+//                                                                      and tor_fu_so_rot_bo.item_cat      = 'PRD'
+//                                                                    )
+//                                                                    
+//                                                                  )
+
+
+//
+    left outer join       vbrp             as bd_item             on  delivery_item.vbeln = bd_item.vgbel
+                                                                  and delivery_item.posnr = bd_item.vgpos
+                                                                  and bd_item.vgtyp = 'J'
+
+    left outer join       vbrk             as bd_header           on bd_item.vbeln = bd_header.vbeln
+
+////    left outer join       vbkd             as so_busdoc           on  so_item.vbeln = so_busdoc.vbeln
+////                                                                  and so_item.posnr = so_busdoc.posnr
+//    left outer join       vbkd             as so_busdoc           on  so_header.vbeln = so_busdoc.vbeln
+//
+//    left outer join       but000            as bp_name           on  so_header.kunnr = bp_name.partner
+//                                                                 and bp_name.bpkind = 'C001'
+//                                                                 and bp_name.bu_group = 'C001'
+//                                                                 
+//
+//    left outer join       tvlkt            as del_type            on  del_type.lfart = delivery_header.lfart
+//                                                                  and del_type.spras = 'E'
+//
+//    left outer join       zrfq                                    on zrfq.delivery_no = delivery_header.vbeln
+//
+//    left outer join      /scmtms/cv_locad   as src_loc           on src_loc.location_id =  tor_fu_so_rot_to_on.sourcelocation
+//
+//    left outer join      /scmtms/cv_locad   as dest_loc          on dest_loc.location_id =  tor_fu_so_rot_to_on.destinationlocation
+//
+//    left outer join       ZTM_CDS_FSD_TO   as FSD                 on FSD.tor_id = tor_fu_so_rot_to_on.tor_id
+//
+//    left outer join       ztm_mfg_to_cust   as mto_gl_cost        on mto_gl_cost.sales_off = so_header.vkbur
+//                                                                 and mto_gl_cost.division = so_header.spart
+//
+//    left outer join       ztm_mfgplant_cus   as mts_gl_cost        on mts_gl_cost.salesoffice   = so_header.vkbur
+//                                                                     and mts_gl_cost.salesgroup = so_header.vkgrp
+//                                                                     and mts_gl_cost.division   = so_header.spart
+  association [0..1] to /scmtms/cv_locad as _Location         on  $projection.Shipping_pt = _Location.location_id
+{
+//  ''                                      as CBOX,
+//      so_header.bukrs_vf                      as company_code,
+//      so_item.werks                         as plant,
+
+       bd_header.vbeln                   as Invoice_No,
+       bd_header.fkart                   as Invoice_Type,
+       bd_header.fkdat                   as Invoice_Date,
+       bd_header.netwr                   as Invoice_Value,
+//     concat( concat( so_busdoc.inco1, '-' ), so_busdoc.inco2_l )  as So_Incoterm,
+//     bp_name.name_org1                     as So_Custname,
+
+  delivery_header.vbeln                   as Delivery,
+  delivery_header.erdat                   as Delivery_Date,
+//  delivery_header.lfart                   as delivery_type,
+//  del_type.vtext                          as delivery_desc,
+  delivery_header.vstel                   as Shipping_pt,
+  case when _Location.city_name = ' ' then _Location.name2 else _Location.city_name end as ShpPtName,
+//
+//  so_header.vbeln,
+//  so_header.auart                         as doc_type,
+//  type.bezei                              as doc_desc,
+//  so_header.erdat                         as created_on,
+//  so_header.vkorg                         as Sales_org,
+//  so_header.vtweg                         as Del_Chnl,
+//  so_header.spart                         as Division,
+//  so_header.vkbur                         as Sales_off,
+//  so_header.vkgrp                         as Sales_grp,
+//  
+  tor_fu_so_rot_fu.tor_id                 as freight_unit,
+//  tor_fu_so_rot_fu.tor_type               as fu_type,
+//  tor_fu_so_rot_fu.tor_desc               as fu_desc,
+//  tor_fu_so_rot_fu.created_on             as fu_created_on,
+//  tor_fu_so_rot_fu.created_by             as fu_CREATED_BY,
+//  tor_fu_so_rot_fu.orig_btditem_id        as fu_item,
+//  tor_fu_so_rot_fu.product_id,
+//  tor_fu_so_rot_fu.item_descr,
+//  //
+//  tor_fu_so_rot_fu.item_gro_vol_val       as fu_item_volume,
+//  tor_fu_so_rot_fu.item_gro_vol_uni       as fu_item_voluni,
+//  tor_fu_so_rot_fu.item_gro_wei_val       as fu_item_weight,
+//  tor_fu_so_rot_fu.item_gro_wei_uni       as fu_item_weiuni,
+//
+//  tor_fu_so_rot_fu.gro_wei_val            as fu_tot_weight,
+//  tor_fu_so_rot_fu.gro_wei_uni            as fu_tot_weiuni,
+//  tor_fu_so_rot_fu.item_qua_val            as fu_qty,
+//  tor_fu_so_rot_fu.item_qua_unit            as fu_qty_uni,
+  //    tor_fu_so_rot_fu.FreightCost            as fu_charges,
+  //
+//  tor_fu_so_rot_to_on.db_key              as fo_guid,
+ ltrim(tor_fu_so_rot_to_on.tor_id, '0')   as freight_order
+//  tor_fu_so_rot_to_on.tor_type            as fo_type,
+//  tor_fu_so_rot_to_on.tor_desc            as fo_desc,
+//  tor_fu_so_rot_to_on.created_by          as fo_CREATED_BY,
+//  tor_fu_so_rot_to_on.gro_wei_val         as fo_weight,
+//  tor_fu_so_rot_to_on.qua_pcs_val         as fo_qty,
+//
+//  tor_fu_so_rot_to_on.FreightCost         as fo_charges,
+//  tor_fu_so_rot_to_on.created_on          as fo_created_on,
+//  tor_fu_so_rot_to_on.tspid               as carrier,
+//  tor_fu_so_rot_to_on.name                as carr_desc,
+//  tor_fu_so_rot_to_on.vehicleresource     as vehicleresource,
+//  tor_fu_so_rot_to_on.VEH_TEXT,
+//  tor_fu_so_rot_to_on.sourcelocation      as sourcelocation,
+//  tor_fu_so_rot_to_on.destinationlocation as destinationlocation
+//  tor_fu_so_rot_to_on.BASE_FREIGHT,
+//  tor_fu_so_rot_to_on.DET_DAYS,
+//  tor_fu_so_rot_to_on.DELIVERY_TYPE       as ZDELIVERY_TYPE,
+//  tor_fu_so_rot_to_on.lifecycle,
+//  tor_fu_so_rot_to_on.execution,
+//  src_loc.region as src_region,
+//  src_loc.street_postal_code as src_pincode,
+//  dest_loc.region as dest_region,
+//  dest_loc.street_postal_code as dest_pincode,
+
+//  tor_fu_so_rot_bo.tor_id                 as freight_booking,
+//  tor_fu_so_rot_bo.tor_type               as booking_type,
+//  tor_fu_so_rot_bo.labeltxt               as fb_type_desc,
+//  tor_fu_so_rot_bo.created_by             as fb_CREATED_BY,
+//  tor_fu_so_rot_bo.gro_wei_val            as fb_weight,
+//  tor_fu_so_rot_bo.qua_pcs_val            as fb_qty,
+//  tor_fu_so_rot_bo.FreightCost            as fb_charges,
+//  tor_fu_so_rot_bo.created_on             as fb_CREATED_ON,
+//  tor_fu_so_rot_bo.tspid                  as fb_carrier,
+//  tor_fu_so_rot_bo.name                   as fb_carr_desc,
+  //
+//  ////
+//  FSD.FSD_NO,
+//  FSD.FSD_TYPE,
+//  FSD.FSD_CREATED_ON,
+//  FSD.FSD_BLOCK,
+//  FSD.FSD_CONSISTENCY,
+//  FSD.FSD_CONFIRMATION,
+//
+//  FSD.FSD_LIFECYCLE,
+//
+//  FSD.SERVICE_PO,
+//  FSD.SERVICE_ENTRY,
+  //
+//  zrfq.request_no                         as rfq_request,
+//  tor_fu_so_rot_to_on.total_distance_km,
+  //
+//      case delivery_header.vstel
+//       when '1000' 
+//       then mto_gl_cost.costcentre
+//       when '1001' 
+//       then mto_gl_cost.costcentre
+//       when '1002' 
+//       then mto_gl_cost.costcentre
+//       when '1003' 
+//       then mto_gl_cost.costcentre
+//       when '1004' 
+//       then mto_gl_cost.costcentre
+//       when '1005' 
+//       then mts_gl_cost.costcentre
+//       when '1006' 
+//       then mts_gl_cost.costcentre
+//       when '1007' 
+//       then mts_gl_cost.costcentre
+//       else
+//      '          '                
+//       end           as Cost_Center,
+//       
+//      case delivery_header.vstel
+//       when '1000' 
+//       then mto_gl_cost.gl_code
+//       when '1001' 
+//       then mto_gl_cost.gl_code
+//       when '1002' 
+//       then mto_gl_cost.gl_code
+//       when '1003' 
+//       then mto_gl_cost.gl_code
+//       when '1004' 
+//       then mto_gl_cost.gl_code
+//       when '1005' 
+//       then mts_gl_cost.gl_code
+//       when '1006' 
+//       then mts_gl_cost.gl_code
+//       when '1007' 
+//       then mts_gl_cost.gl_code
+//       else
+//      '          '                
+//       end           as GL_Account,
+       
+//  '          '                            as Post_Cost_Center,
+//  '          '                            as Post_GL_Account,
+//  '              '                        as PO_Value,
+//  tor_fu_so_rot_to_on.Chrgtype_amt          as Base_Charges,
+//  tor_fu_so_rot_to_on.Chrgtype_amt         as Delta_Charges,
+//    tor_fu_so_rot_to_on.Chrgtype  ,
+//    tor_fu_so_rot_to_on.Chrgtype_amt,
+//    tor_fu_so_rot_to_on.Chrgtype_curr
+    
+//     tor_fu_so_rot_to_on.Departure_date,
+//     tor_fu_so_rot_to_on.Intransit_date,           
+//     tor_fu_so_rot_to_on.ARRIV_date,
+//      tor_fu_so_rot_to_on.POD_date,
+  //
+  //  //  tor_fu_so_rot_to_on.charg_type,
+  //  //  tor_fu_so_rot_to_on.charg_desc,
+  //
+  //
+//  tor_fu_so_rot_to_on.max_util_mass,
+//  tor_fu_so_rot_to_on.max_util_volume,
+  ////
+////  FSD.Distribution_Cost,
+////  FSD.Distribution_Qty,
+////  FSD.Distribution_unit,
+////  FSD.Distribution_Currency,
+  
+//  tor_fu_so_rot_to_on.Distribution_Cost,
+//  tor_fu_so_rot_to_on.Distribution_Qty,
+//  tor_fu_so_rot_to_on.Distribution_unit,
+//  tor_fu_so_rot_to_on.Distribution_Currency,
+//  
+//
+//  tor_fu_so_rot_to_on.item_gro_wei_val,
+//  tor_fu_so_rot_to_on.item_gro_wei_uni,
+//
+//  tor_fu_so_rot_to_on.partner_ref_id      as lr_NO,
+//  tor_fu_so_rot_to_on.mat_group,
+//  ////  FSD.event_code,
+//  //'' as event_code,
+//  '00'                                    as actual_cdp_days_ptl,
+//  '00'                                    as pln_cdp_days_ptl,
+//  '00'                                    as actual_cdp_days_ftl,
+//  '00'                                    as pln_cdp_days_ftl,
+  ////  FSD.actual_date,
+  //''                                    as Dep_date,
+  //''                                    as Intransit_date,
+  //''                                    as arrv_dest_date,
+ // ''                                    as pod_date,
+//  tor_fu_so_rot_to_on.mtr
+
+}
+where
+  tor_fu_so_rot_fu.tor_id is not initial
+//  and tor_fu_so_rot_to_on.erp_plant_id = $parameters.p_werks ;
+////////  and
+////   bd_header.bukrs         is not initial;
+//  and tor_fu_so_rot_to_on.erp_plant_id is not initial;
+//
+//  and tor_fu_so_rot_to_on.tor_id       = '00000000006100000974';

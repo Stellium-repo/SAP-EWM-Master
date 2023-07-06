@@ -1,0 +1,234 @@
+/****************************************************/
+// View Name        : YCVQ_TM_FRESET_TRANSP
+// View Type        : Consumption
+// Description      : TM Freight Order
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   :
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVQ_TM_F_S_TC'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@VDM.viewType: #CONSUMPTION
+@Analytics.query: true
+@OData.publish: true
+@EndUserText.label: 'TM Fre Settlement Transport Cost'
+define view YCVQ_TM_FRESET_TRANSP
+  //with parameters
+  //@EndUserText.label: 'Ageing In Days'
+  //@Consumption.defaultValue: '0'
+  //p_ageingindays : ZP_AGEINGINDAYS
+  as select distinct from YCVCC_TM_FRE_SET_TRANSP_COST /*( p_ageingindays:$parameters.p_ageingindays)*/ as Freight_Set_Transp_Cost
+{
+      @AnalyticsDetails.query.axis: #ROWS
+      @Consumption.hidden: true
+  key Freight_Set_Transp_Cost.DB_Key,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Freight Order'
+      Freight_Set_Transp_Cost.Document_Id,
+//      @AnalyticsDetails.query.axis: #ROWS
+//      Freight_Set_Transp_Cost.Business_Doc_category,
+//      @AnalyticsDetails.query.axis: #ROWS
+//      Freight_Set_Transp_Cost.Business_Doc_Type,
+//      @AnalyticsDetails.query.axis: #ROWS
+//      Freight_Set_Transp_Cost.Creation_Type,
+//      @AnalyticsDetails.query.axis: #ROWS
+//      Freight_Set_Transp_Cost.Movement_Category,
+//      @AnalyticsDetails.query.axis: #ROWS
+//      Freight_Set_Transp_Cost.Airway_Bill_Type,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: '(Label) Freight Order Type'
+      Freight_Set_Transp_Cost.Label_Text,
+//      @AnalyticsDetails.query.axis: #ROWS
+//      Freight_Set_Transp_Cost.Plan_Exec_Org,
+//      @AnalyticsDetails.query.axis: #ROWS
+//      Freight_Set_Transp_Cost.Plan_Exec_Grp,
+//      @AnalyticsDetails.query.axis: #ROWS
+//      Freight_Set_Transp_Cost.Purchasing_Org,
+//      @AnalyticsDetails.query.axis: #ROWS
+//      Freight_Set_Transp_Cost.Purchasing_Grp,
+      @AnalyticsDetails.query.axis: #ROWS
+      Freight_Set_Transp_Cost.Shipper_Id,
+      @AnalyticsDetails.query.axis: #ROWS
+      Freight_Set_Transp_Cost.Consignee_Id,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Carrier ID'
+      Freight_Set_Transp_Cost.Carrier_Id,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Carrier'
+      Freight_Set_Transp_Cost.Carrier,
+//      @AnalyticsDetails.query.axis: #ROWS
+//      Freight_Set_Transp_Cost.Plan_Status_Root,
+//      @AnalyticsDetails.query.axis: #ROWS
+//      Freight_Set_Transp_Cost.Load_Plan_Status,
+//      @AnalyticsDetails.query.axis: #ROWS
+//      @EndUserText.label: 'Driver Assgn. Status'
+//      Freight_Set_Transp_Cost.Driver_Assgn_Status,
+//      @AnalyticsDetails.query.axis: #ROWS
+//      Freight_Set_Transp_Cost.Execution_Status,
+//      @AnalyticsDetails.query.axis: #ROWS
+//      Freight_Set_Transp_Cost.Delviery_Status,
+//      @AnalyticsDetails.query.axis: #ROWS
+//      Freight_Set_Transp_Cost.Life_Cycle_Status,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Cost'
+      Freight_Set_Transp_Cost.Cost, 
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Base Freight'
+      Freight_Set_Transp_Cost.Base_Cost,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Charge Type Description'
+      Freight_Set_Transp_Cost.ChargeTypeDesc,
+      @AnalyticsDetails.query.axis: #ROWS
+      Freight_Set_Transp_Cost.Doc_Currency,
+      
+      /*Calculate unique FO transp cost changes*/
+      @AnalyticsDetails.query.axis: #COLUMNS
+      @EndUserText.label: 'Transportation Cost'
+//      @AnalyticsDetails:{
+//       query.formula: 'Transp_Cost',
+//        exceptionAggregationSteps: [{
+//            exceptionAggregationBehavior: #AVG,
+//            exceptionAggregationElements: ['InvNumber','DlvNumber' , 'Document_Id']
+//         }]
+//      }
+//      
+      Freight_Set_Transp_Cost.Transp_Cost,
+      
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Base-Freight'
+      Freight_Set_Transp_Cost.B_Cost,
+      @AnalyticsDetails.query.axis: #COLUMNS
+      @EndUserText.label: 'Transportation-Cost'
+      Freight_Set_Transp_Cost.T_Cost,
+
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Execution'
+      Freight_Set_Transp_Cost.Execution_Status,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Execution Status'
+      Freight_Set_Transp_Cost.Execution_Status_text,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Consignment Type'
+      Freight_Set_Transp_Cost.MTR,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'LR No.'
+      Freight_Set_Transp_Cost.LRNo,
+//      @AnalyticsDetails.query.axis: #ROWS
+//      @EndUserText.label: 'Delivery No.'
+//      Freight_Set_Transp_Cost.DlvNumber,
+//      @AnalyticsDetails.query.axis: #ROWS
+//      @EndUserText.label: 'Delivery Date'
+//      Freight_Set_Transp_Cost.DlvDate,
+//      @AnalyticsDetails.query.axis: #ROWS
+//      @EndUserText.label: 'Invoice No.'
+//      Freight_Set_Transp_Cost.InvNumber,
+////      @AnalyticsDetails.query.axis: #ROWS
+////      _InvDet.vbeln,
+//      @AnalyticsDetails.query.axis: #ROWS
+//      @EndUserText.label: 'Invoice Date'
+//      Freight_Set_Transp_Cost.InvDate,
+//      @AnalyticsDetails.query.axis: #ROWS
+//      @EndUserText.label: 'Invoice Value'
+////        @AnalyticsDetails:{
+////       query.formula: 'InvValue',
+////        exceptionAggregationSteps: [{
+////            exceptionAggregationBehavior: #SUM,
+////            exceptionAggregationElements: ['InvNumber','DlvNumber' , 'Document_Id']
+////         }]
+////      }
+////      1 as InvValue,    
+//      Freight_Set_Transp_Cost.InvValue,
+//      @AnalyticsDetails.query.axis: #ROWS
+//      @EndUserText.label: 'Consignee ID'
+//      Freight_Set_Transp_Cost.Consigneeid,
+//      @AnalyticsDetails.query.axis: #ROWS
+//      @EndUserText.label: 'Consignee Name'
+//      Freight_Set_Transp_Cost.CustName,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Consignment Weight in KG'
+      Freight_Set_Transp_Cost.CnsgnmtWt,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Total Distance in KM'
+      Freight_Set_Transp_Cost.TotalDistanceKm,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Departure Date'
+      @UI.textArrangement: #TEXT_ONLY
+      Freight_Set_Transp_Cost.DepDate,
+      @AnalyticsDetails.query.axis: #ROWS
+      @UI.textArrangement: #TEXT_ONLY
+      @EndUserText.label: 'Arrival Date'
+      Freight_Set_Transp_Cost.ArrDate,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Shipping Point'
+      Freight_Set_Transp_Cost.DeprLoc,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Shipping Point Name'
+      Freight_Set_Transp_Cost.DeprLocName,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Arrival Location'
+      Freight_Set_Transp_Cost.ArvlLocName,
+//      @AnalyticsDetails.query.axis: #ROWS
+//      @EndUserText.label: 'Actual CDP'
+//      Freight_Set_Transp_Cost.DelPeriodInDays,
+//      @AnalyticsDetails.query.axis: #ROWS
+//      @EndUserText.label: 'CDP Days'
+//      Freight_Set_Transp_Cost.CDP_Days,
+//      @AnalyticsDetails.query.axis: #ROWS
+//      @EndUserText.label: 'Invoice Date'
+//      Freight_Set_Transp_Cost.InvoiceDate,
+//      @AnalyticsDetails.query.axis: #ROWS
+//      @EndUserText.label: 'Expected Delivery Date'
+//      Freight_Set_Transp_Cost.Exp_Date,
+
+
+
+      //        @AnalyticsDetails.query.axis: #ROWS
+      //        @EndUserText.label: 'Shipping Point'
+      //        Freight_Set_Transp_Cost.DepLoc,
+      //        @AnalyticsDetails.query.axis: #ROWS
+      //        Freight_Set_Transp_Cost.Outbound_Doc_Currency,
+      //        @AnalyticsDetails.query.axis: #COLUMNS
+      //        @EndUserText.label: 'Outbound Transportation Cost'
+      //        Freight_Set_Transp_Cost.Outbound_Transp_Cost,
+      //        @AnalyticsDetails.query.axis: #COLUMNS
+      //        @EndUserText.label: 'Total Transportation Cost'
+      //        Freight_Set_Transp_Cost.Total_Trans_Cost_Calc,
+      @AnalyticsDetails.query.axis: #ROWS
+      Freight_Set_Transp_Cost.Root_Year,
+      @AnalyticsDetails.query.axis: #ROWS
+      Freight_Set_Transp_Cost.Root_Quarter,
+      @AnalyticsDetails.query.axis: #ROWS
+      @EndUserText.label: 'Calendar Month'
+      Freight_Set_Transp_Cost.Root_Month,
+      //        @AnalyticsDetails.query.axis: #ROWS
+      //        Freight_Set_Transp_Cost.Root_Week,
+      @AnalyticsDetails.query.axis: #ROWS
+      Freight_Set_Transp_Cost.Root_Week_Year,
+      @AnalyticsDetails.query.axis: #ROWS
+      Freight_Set_Transp_Cost.Root_Day_Of_Week,
+      @AnalyticsDetails.query.axis: #ROWS
+      Freight_Set_Transp_Cost.Root_Day,
+//      @AnalyticsDetails.query.axis: #ROWS
+//      @EndUserText.label: 'Period'
+//      Freight_Set_Transp_Cost.Root_Data_Period
+        @AnalyticsDetails.query.axis: #COLUMNS
+        @DefaultAggregation: #FORMULA
+        @EndUserText.label: 'Count1'
+      @AnalyticsDetails:
+         {
+            exceptionAggregationSteps:
+              [ { exceptionAggregationBehavior : #COUNT,
+                  exceptionAggregationElements: ['Document_Id']
+                }
+              ]
+         }
+      1 as Agg_Count,
+
+      @AnalyticsDetails.query.axis: #COLUMNS
+      @EndUserText.label: 'Count2'
+      Freight_Set_Transp_Cost.Count2
+}

@@ -1,0 +1,40 @@
+/****************************************************/
+// View Name        : YSVD_TM_DELIVERY
+// View Type        : Dimension
+// Description      : TM Transportation Order
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   :
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVD_TM_DELIVERY'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@VDM.viewType: #BASIC
+@EndUserText.label: 'TM Transportation Order'
+define view YCVD_TM_DELIVERY
+  as select from    /scmtms/d_torrot as tor_rot
+
+    left outer join /scmtms/d_torite as _Dlv on  tor_rot.db_key       = _Dlv.parent_key
+                                             and _Dlv.item_cat        = 'PRD'
+                                             and _Dlv.main_cargo_item = 'X'
+association [0..1] to     vbrp             as bd_item             on  $projection.Delv = bd_item.vgbel
+//                                                                  and $projection.DelvId = bd_item.vgpos
+//                                                                  and bd_item.vgtyp = 'J'                                          
+                                           
+
+{
+
+  key tor_rot.db_key,
+      ltrim(tor_rot.tor_id, '0') as Tor_Id,
+      tor_rot.tor_cat,
+      right(_Dlv.base_btd_id, 10 ) as Delv,
+      _Dlv.assgn_start,
+      right(_Dlv.base_btditem_id, 6) as DelvId,
+      
+      bd_item
+
+}
+where tor_cat = 'TO'

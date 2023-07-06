@@ -1,0 +1,249 @@
+/****************************************************/
+// View Name        : YCVQ_TM_FREIGHT_ORDER
+// View Type        : Consumption
+// Description      : TM Freight Order
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   :
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVQ_TM_FRE_ORD'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@VDM.viewType: #CONSUMPTION
+@Analytics.query: true
+@OData.publish: true
+@EndUserText.label: 'TM Freight Order'
+define view YCVQ_TM_FREIGHT_ORDER 
+//with parameters
+//@EndUserText.label: 'Ageing In Days'
+//@Consumption.defaultValue: '0'
+//p_ageingindays : zp_ageingindays
+as 
+select  distinct from YCVCC_TM_FREIGHT_ORDER /* (p_ageingindays: $parameters.p_ageingindays)*/ as Freight_Ord
+{
+//       @UI.hidden:true
+//        Freight_Ord.DB_Key,    
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Freight Order'
+    key Freight_Ord.Document_Id,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        @EndUserText.label: 'Document Category'
+//        Freight_Ord.Business_Doc_category,
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Document Type'
+        Freight_Ord.Business_Doc_Type,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        Freight_Ord.Planning_Block,        
+//        @AnalyticsDetails.query.axis: #ROWS    
+//        Freight_Ord.Execution_Block,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        @EndUserText.label: 'Creation Type'
+//        Freight_Ord.Creation_Type,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        Freight_Ord.Movement_Category,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        Freight_Ord.Airway_Bill_Type,
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Freight Order Type (Label)'
+        Freight_Ord.Label_Text,
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Carrier Code'
+        Freight_Ord.Carrier_Id,
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Carrier Name'
+        Freight_Ord.carrier,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        @EndUserText.label: 'Purchasing Organization'
+//        Freight_Ord.Purchasing_Org,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        @EndUserText.label: 'Purchasing Group'
+//        Freight_Ord.Purchasing_Grp,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        @EndUserText.label: 'Planning and Execution Organization'
+//        Freight_Ord.Execution_Org,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        @EndUserText.label: 'Planning and Execution Group'
+//        Freight_Ord.Execution_Grp,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        @EndUserText.label: 'Shipper ID'
+//        Freight_Ord.Shipper_Id,
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Customer ID'
+        Freight_Ord.Consignee_Id,
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Customer Name'
+        Freight_Ord.description,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        @EndUserText.label: 'Load Plan Status'
+//        Freight_Ord.Load_Plan_Status,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        @EndUserText.label: 'Driver Assign Status'
+//        Freight_Ord.Driver_Assgn_Status,
+        @AnalyticsDetails.query.axis: #COLUMNS
+        @EndUserText.label: 'Total Distance In KM'
+        Freight_Ord.Total_Distance_In_KM,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        @EndUserText.label: 'Total Net Duration'
+//        Freight_Ord.Total_Net_Duration,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        Freight_Ord.Execution_Status,
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Execution Status'
+        Freight_Ord.Execution_Status_text,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        @EndUserText.label: 'Delviery Status'
+//        Freight_Ord.Delviery_Status,    
+//        @AnalyticsDetails.query.axis: #ROWS
+//        @EndUserText.label: 'Life Cycle Status'
+//        Freight_Ord.Life_Cycle_Status,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        Freight_Ord.Plan_Status_Root,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        @EndUserText.label: 'Created On'
+//        Freight_Ord.Created_On,
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Departure Date'
+        @UI.textArrangement: #TEXT_ONLY
+        Freight_Ord.DepDate,
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Arrival Date'
+        @UI.textArrangement: #TEXT_ONLY
+        Freight_Ord.ArrDate,
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Shipping Point'
+        Freight_Ord.DepLoc,
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Shipping Point Name'
+        Freight_Ord.DepLocName,
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Consign. Destination'
+        Freight_Ord.ArrLocName,
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Consignment Type'
+        Freight_Ord.MTR,
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Delivery No.'
+        Freight_Ord.DlvNumber,
+        @AnalyticsDetails.query.axis: #ROWS
+        @UI.textArrangement: #TEXT_ONLY
+        @EndUserText.label: 'Delivery Date'
+        Freight_Ord.DlvDate,
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Invoice No.'
+        Freight_Ord.InvNumber,
+        @AnalyticsDetails.query.axis: #ROWS
+        @UI.textArrangement: #TEXT_ONLY
+        @EndUserText.label: 'Invoice Date'
+        Freight_Ord.InvDate,
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Invoice Value'
+        Freight_Ord.NetValue,
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'LR No.'
+        Freight_Ord.LR_No,
+        @DefaultAggregation: #SUM
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Consignment Weight in KG'
+        Freight_Ord.CnsgnmtWt,
+        @AnalyticsDetails.query.axis: #ROWS
+        @UI.hidden:true
+        Freight_Ord.CnsgnmtWtUnit,
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'CDP Days'
+        Freight_Ord.CDP_Days,
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Expected Delivery Date'
+        @UI.textArrangement: #TEXT_ONLY
+        Freight_Ord.Exp_Date,
+        
+        
+//       @UI.hidden:true
+//        Freight_Ord.to_item_db_key,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        Freight_Ord.TO_Item_Id,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        Freight_Ord.tor_item_product,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        Freight_Ord.tor_item_equipment,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        @EndUserText.label: 'Item Category'
+//        Freight_Ord.tor_item_Category,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        Freight_Ord.tor_item_resource,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        Freight_Ord.tor_item_source_loc,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        Freight_Ord.tor_item_dest_location,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        Freight_Ord.trans_request_ID,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        Freight_Ord.trans_req_cat,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        @EndUserText.label: 'Stop ID'
+//        Freight_Ord.Stop_Id ,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        @EndUserText.label: 'Stop Category'
+//        Freight_Ord.Stop_Category,
+////       @UI.hidden:true
+//        Freight_Ord.Log_Loc_UUID,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        @EndUserText.label: 'Location'
+//        Freight_Ord.Log_Loc_Id,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        Freight_Ord.Plan_Trans_Time, 
+//        @AnalyticsDetails.query.axis: #ROWS
+//        @EndUserText.label: 'Stop Position'
+//        Freight_Ord.Stop_Seq_Pos,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        Freight_Ord.Currentdate,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        @EndUserText.label: 'Transportation Planning Date'
+//        Freight_Ord.Plan_trans_time_dat,
+        @AnalyticsDetails.query.axis: #ROWS
+        //tor_exe.Actual_Date,
+       // tor_exe.Event_Code,
+        Freight_Ord.Invoice_Year,
+        @AnalyticsDetails.query.axis: #ROWS
+        Freight_Ord.Invoice_Quarter,
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Calendar Month'
+        Freight_Ord.Invoice_Month,
+        @AnalyticsDetails.query.axis: #ROWS
+        @EndUserText.label: 'Calendar Month No.'
+        Freight_Ord.Invoice_Month_No,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        Freight_Ord.Invoice_Week,
+        @AnalyticsDetails.query.axis: #ROWS
+        Freight_Ord.Invoice_Week_Year,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        Freight_Ord.Invoice_Day_Of_Week,
+        @AnalyticsDetails.query.axis: #ROWS
+        Freight_Ord.Invoice_Day,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        Freight_Ord.Invoice_Hour,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        Freight_Ord.Invoice_Ageing_Days,
+//        @AnalyticsDetails.query.axis: #ROWS
+//        @EndUserText.label: 'Period'
+//        Freight_Ord.Invoice_Data_Period,
+        @AnalyticsDetails.query.axis: #COLUMNS
+//        @DefaultAggregation: #SUM
+//        @EndUserText.label: 'Consignments'
+        @DefaultAggregation: #FORMULA
+        @EndUserText.label: 'Consignments'
+      @AnalyticsDetails:
+         {
+            exceptionAggregationSteps:
+              [ { exceptionAggregationBehavior : #COUNT,
+                  exceptionAggregationElements: ['Document_Id']
+                }
+              ]
+         }
+      1 as Trip_Count,
+      @AnalyticsDetails.query.axis: #COLUMNS
+      @EndUserText.label: 'No. of Trips'
+        Freight_Ord.No_of_Trips
+}   

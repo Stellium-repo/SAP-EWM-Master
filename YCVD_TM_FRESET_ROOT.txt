@@ -1,0 +1,69 @@
+/****************************************************/
+// View Name        : YCVD_TM_FRESET_ROOT
+// View Type        : Dimension
+// Description      : TM Freight Settlement Root
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   :
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVD_TM_FRST_RT'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@VDM.viewType: #BASIC
+@EndUserText.label: 'TM Root Node'
+define view YCVD_TM_FRESET_ROOT
+  as select from /scmtms/d_sf_rot as FreSet
+  //association [0..*] to /scmtms/d_torrot on $projection.
+  association [0..*] to YCVD_TM_CHARGE_ROOT_NODE    as _Charge           on $projection.DbKey = _Charge.HostKey
+  association [0..1] to but000                      as _Business_Partner on $projection.TspId = _Business_Partner.partner
+  association [0..1] to /scmtms/c_tcett             as _Charge_Type      on $projection.Charge_Type = _Charge_Type.tcet084
+  association [0..1] to YCVD_TM_FRE_SET_TRANSP_COST as _Fields           on $projection.Document_ID = _Fields.Document_Id
+  association [0..1] to YCVD_TM_ROOT_NODE           as _Fields2          on $projection.Document_ID = _Fields2.Document_Id
+  association [0..1] to YCVQ_TM_INVOICE   as _Inv      on  $projection.Document_ID = _Inv.freight_order
+{
+  key FreSet.db_key                   as DbKey,
+      ltrim(FreSet.sfir_id, '0')      as SfirId,
+      FreSet.sfir_type                as SfirType,
+      FreSet.sfir_category            as SfirCategory,
+      FreSet.creation_type            as CreationType,
+      FreSet.logsys                   as Logsys,
+      FreSet.bill_from_party          as BillFromParty,
+      FreSet.tsp_uuid                 as TspUuid,
+      FreSet.tsp_id                   as TspId,
+      _Business_Partner.name_org1     as Carrier,
+      FreSet.purch_org_id             as PurchOrgId,
+      FreSet.purch_grp_id             as PurchGrpId,
+      FreSet.created_by               as CreatedBy,
+      FreSet.created_on               as CreatedOn,
+      FreSet.changed_by               as ChangedBy,
+      FreSet.changed_on               as ChangedOn,
+      FreSet.block_reason             as BlockReason,
+      FreSet.sfir_eew_root            as SfirEewRoot,
+      FreSet.lifecycle                as Lifecycle,
+      FreSet.block                    as Block,
+      FreSet.consistency              as Consistency,
+      FreSet.archiving                as Archiving,
+      FreSet.confirmation             as Confirmation,
+      FreSet.inv_dt                   as Inv_Dt,
+
+      _Charge.tcet084                 as Charge_Type,
+      ltrim(_Charge.Document_ID ,'0') as Document_ID,
+      _Charge.analyticrelev,
+      _Charge.DocCurrency,
+      _Charge.Amount,
+      _Charge.Amount2,
+
+      _Charge_Type,
+      _Fields,
+      _Fields2,
+      _Inv,
+      
+       @DefaultAggregation: #SUM
+       1 as Count2
+
+}
+where
+  FreSet.lifecycle = '04' or FreSet.lifecycle = '07'or FreSet.lifecycle = '12'

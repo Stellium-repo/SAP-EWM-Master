@@ -1,0 +1,53 @@
+/****************************************************/
+// View Name        : YSVD_TM_TR_ORD
+// View Type        : Dimension
+// Description      : TM Transportation Order
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   :
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVD_TM_TR_ORD'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@VDM.viewType: #BASIC
+@EndUserText.label: 'TM Transportation Order'
+define view YCVD_TM_TR_ORD
+  as select  from YCVD_TM_TR_OR as Transp_ord
+
+{
+  key Transp_ord.DbKey,
+      Transp_ord.Tor_ID,
+      Transp_ord.TotalDistanceKm,
+      Transp_ord.MTR,
+      Transp_ord.Tspid,
+      Transp_ord.SP,
+      Transp_ord.SrcLoc,
+      Transp_ord.DestLoc,
+      Transp_ord.SrcRgn,
+      Transp_ord.DestRgn,
+      Transp_ord.SrcPin,
+      Transp_ord.DestPin,
+      Transp_ord.km_from,
+      Transp_ord.km_to,
+      Transp_ord.CDP_Location,
+      Transp_ord.CDP_Zone,
+      Transp_ord.CDP_Pin_Zone,
+      Transp_ord.CDP_Pincode,
+      Transp_ord.From_km,
+      Transp_ord.To_km,
+     
+
+//      case when  Transp_ord.TotalDistanceKm >= km_to and  Transp_ord.TotalDistanceKm <= km_from then
+//           ( case when Transp_ord.MTR like '%PTL%' then _CDP_km.ptl_cdp else _CDP_km.ftl_cdp end )  end as CDP_km,
+
+      case when  Transp_ord.From_km = km_to and  Transp_ord.To_km = km_from then
+           ( case when Transp_ord.MTR like '%PTL%' then _CDP_km.ptl_cdp else _CDP_km.ftl_cdp end )  end as CDP_km,
+  
+      cast(Transp_ord.CDP as abap.int4) as CDP      
+      
+
+
+}

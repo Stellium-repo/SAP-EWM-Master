@@ -1,0 +1,62 @@
+/****************************************************/
+// View Name        : YCVD_TM_CALENDAR
+// View Type        : Dimension
+// Description      : Used for Ageing Period and Live data (by year/quarter/month/week/day)
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   :
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVD_TM_CALENDAR'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #CHECK
+@EndUserText.label: 'Used for Ageing/Trend/Live periods'
+define view YCVD_TM_CALENDAR
+  as select from ZI_CalendarDate as Time_Dimension
+{
+  key Time_Dimension.CalendarDate,
+      Time_Dimension.CalendarCurrentDateEST,
+      Time_Dimension.CalendarCurrentDateAST,
+      Time_Dimension.CalendarCurrentDateIST,
+      Time_Dimension.CalendarYear,
+      Time_Dimension.CalendarQuarter,
+      Time_Dimension.CalendarMonth,
+      
+      cast(CalendarMonth as abap.int2) as CalendarMonth1,
+            
+      Time_Dimension.CalendarWeek,
+      Time_Dimension.CalendarDay,
+      Time_Dimension.YearMonth,
+      Time_Dimension.YearQuarter,
+      Time_Dimension.YearWeek,
+      Time_Dimension.WeekDay,
+      Time_Dimension.FirstDayOfWeekDate,
+      Time_Dimension.FirstDayOfMonthDate,
+      Time_Dimension.CalendarDayOfYear,
+      Time_Dimension.YearDay,
+      Time_Dimension._CalendarMonth,
+      Time_Dimension._CalendarQuarter,
+      Time_Dimension._CalendarYear,
+      Time_Dimension._WeekDay,
+      Time_Dimension._YearMonth,
+
+      tstmp_to_dats(tstmp_current_utctimestamp(),abap_user_timezone
+      ($session.user, $session.client, 'NULL') , $session.client, 'NULL')                            as Currentdate,
+      dats_add_days(tstmp_to_dats(tstmp_current_utctimestamp(),abap_user_timezone
+      ($session.user, $session.client, 'NULL') , $session.client, 'NULL'), -1, 'INITIAL')            as YesterdayDate,
+      dats_add_days(tstmp_to_dats(tstmp_current_utctimestamp(),abap_user_timezone
+      ($session.user, $session.client, 'NULL') , $session.client, 'NULL'), -2, 'INITIAL')            as DayBeforeYesterdayDate,
+      dats_days_between(CalendarDate,tstmp_to_dats(tstmp_current_utctimestamp(),abap_user_timezone
+      ($session.user, $session.client, 'NULL') , $session.client, 'NULL'))                           as AgeingDays
+
+      //      cast(concat( substring( cast( tstmp_current_utctimestamp() as abap.char(17) ), 1, 10 ), '0000') as abap.dats)                  as CurrentDate,
+      //      dats_add_days(cast(concat( substring( cast( tstmp_current_utctimestamp() as abap.char(17) ), 1, 10 ), '0000') as abap.dats)
+      //      , -1, 'INITIAL')                                                                                                               as YesterdayDate,
+      //      dats_add_days(cast(concat( substring( cast( tstmp_current_utctimestamp() as abap.char(17) ), 1, 10 ), '0000') as abap.dats)
+      //      , -2, 'INITIAL')                                                                                                               as DayBeforeYesterdayDate,
+      //      dats_days_between(cast(CalendarDate as  abap.dats),
+      //       cast(concat( substring( cast( tstmp_current_utctimestamp() as abap.char(17) ), 1, 10 ), '0000') as abap.dats))                as AgeingDays
+
+}

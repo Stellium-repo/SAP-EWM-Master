@@ -1,0 +1,59 @@
+/****************************************************/
+// View Name        : YCVD_TM_AGREEMENT
+// View Type        : Dimension
+// Description      : TM Freight Agreement
+// Version          : 1.0.0
+// Created By       : P R Abhishek
+// Change History   : 
+// Copyright©       : 2022 Stellium Inc
+/****************************************************/
+
+@AbapCatalog.sqlViewName: 'YSVD_TM_AGREE'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@VDM.viewType: #BASIC
+@Analytics.dataCategory: #DIMENSION
+@EndUserText.label: 'TM Freight Agreement'
+define view YCVD_TM_AGREEMENT
+  as select distinct from /scmtms/d_fagrot as Agreement
+  //left outer join /scmtms/d_fagpty as _Business_Partner
+  //on Agreement.db_key = _Business_Partner.parent_key
+  association [0..1] to /scmtms/d_fagpty as _Business_Partner on $projection.DB_Key = _Business_Partner.parent_key
+  association [0..1] to /scmtms/d_fagrtt as _agg_desc         on $projection.DB_Key = _agg_desc.parent_key
+  association [0..1] to YCVD_TM_AGREEMENT_CHARGE as _Agreement_Item on $projection.DB_Key = _Agreement_Item.ParentKey
+   
+  //left outer join /scmtms/d_fagitm as _Agreement_Item
+  //on Agreement.db_key = _Agreement_Item.parent_key
+{
+  key Agreement.db_key                                                           as DB_Key,
+      Agreement.fagrmntid044                                                     as Agreement,
+      Agreement.fagprioid104                                                     as Agreement_Priority,
+      Agreement.fagusageid105                                                    as Agreement_Usage,
+      Agreement.fagcateid111                                                     as Agreement_Category,
+      Agreement.fagtypeid103                                                     as Agreement_Type,
+      Agreement.fagtype_desc                                                     as Agreement_Description,
+      Agreement.rfq_type_code                                                    as RFQ,
+      Agreement.validity_start                                                   as Agree_Validity_Start_Date,
+      Agreement.validity_end                                                     as Agree_Validity_End_Date,
+      //tstmp_current_utctimestamp() as Sys_Curr_Date_Time,
+      cast(  cast( tstmp_current_utctimestamp() as abap.char(18) ) as abap.dats) as Currentdate,
+      Agreement.status                                                           as Agreement_Status,
+      //'' as Party_Role,
+      _Business_Partner.pty_rco012_i                                             as Party_Role,
+      _Business_Partner.ptyintid_id133_i                                         as Business_Partner_No,
+      _Business_Partner.party_address_id,
+      _Business_Partner.party_name                                               as Business_Partner_Name,
+      _Business_Partner.usage_code                                               as BP_Agreement_Usage,
+      _Agreement_Item.TccsUuid                                                   as Tccs_UUID,
+      _Agreement_Item.Base_Freight,
+      _Agreement_Item.Green_Tax,
+      _Agreement_Item.LR_Charges,
+      _agg_desc.description                                                      as Agreement_Desc,
+      
+      @DefaultAggregation: #SUM
+      1                                                     as Agreement_Count
+}
+//where Agreement.rfq_type_code <> 'ZRFQ'
+where Agreement.fagcateid111 <> '01' and Agreement.status <> '03'
+// 01 = 'Agreement RFQ Master'
