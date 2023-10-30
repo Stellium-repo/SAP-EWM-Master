@@ -1,0 +1,171 @@
+%PDF-1.3
+101 0 obj
+<< /Length 1610 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 20 752 Tm
+/F3 10 Tf
+0.50 0.50 0.50 rg
+0.50 0.50 0.50 RG
+(*----------------------------------------------------------------------*) Tj
+0 -12 TD
+/F3 10 Tf
+0.50 0.50 0.50 rg
+0.50 0.50 0.50 RG
+(***INCLUDE LZFG_AF_PICK_LISTO01.) Tj
+0 -12 TD
+/F3 10 Tf
+0.50 0.50 0.50 rg
+0.50 0.50 0.50 RG
+(*----------------------------------------------------------------------*) Tj
+0 -12 TD
+/F3 10 Tf
+0.50 0.50 0.50 rg
+0.50 0.50 0.50 RG
+(*&---------------------------------------------------------------------*) Tj
+0 -12 TD
+/F3 10 Tf
+0.50 0.50 0.50 rg
+0.50 0.50 0.50 RG
+(*& Module STATUS_9001 OUTPUT) Tj
+0 -12 TD
+/F3 10 Tf
+0.50 0.50 0.50 rg
+0.50 0.50 0.50 RG
+(*&---------------------------------------------------------------------*) Tj
+0 -12 TD
+/F3 10 Tf
+0.50 0.50 0.50 rg
+0.50 0.50 0.50 RG
+(*&) Tj
+0 -12 TD
+/F3 10 Tf
+0.50 0.50 0.50 rg
+0.50 0.50 0.50 RG
+(*&---------------------------------------------------------------------*) Tj
+0 -12 TD
+0.00 0.00 1.00 rg
+0.00 0.00 1.00 RG
+(MODULE ) Tj
+0.00 0.00 0.00 rg
+0.00 0.00 0.00 RG
+(status_9001 ) Tj
+0.00 0.00 1.00 rg
+0.00 0.00 1.00 RG
+(OUTPUT) Tj
+0.50 0.00 0.50 rg
+0.50 0.00 0.50 RG
+(.) Tj
+0 -12 TD
+0.00 0.00 0.00 rg
+0.00 0.00 0.00 RG
+( ) Tj
+0.00 0.00 1.00 rg
+0.00 0.00 1.00 RG
+(SET ) Tj
+0.00 0.00 1.00 rg
+0.00 0.00 1.00 RG
+(PF-STATUS ) Tj
+0.30 0.65 0.10 rg
+0.30 0.65 0.10 RG
+('STAT') Tj
+0.50 0.00 0.50 rg
+0.50 0.00 0.50 RG
+(.) Tj
+0 -12 TD
+/F3 10 Tf
+0.50 0.50 0.50 rg
+0.50 0.50 0.50 RG
+(* SET TITLEBAR 'xxx'.) Tj
+0 -12 TD
+0.00 0.00 1.00 rg
+0.00 0.00 1.00 RG
+(ENDMODULE) Tj
+0.50 0.00 0.50 rg
+0.50 0.00 0.50 RG
+(.) Tj
+ET
+endstream
+endobj
+100 0 obj
+<< /Type /Page
+/Parent 3 0 R
+/MediaBox [ 0 0 612 792 ]
+/Contents 101 0 R
+/Resources << /ProcSet 6 0 R
+/Font << /F1 7 0 R 
+/F2 8 0 R 
+/F3 9 0 R 
+/F4 10 0 R >>
+>>
+>>
+endobj
+3 0 obj
+<< /Type /Pages
+/Kids [100 0 R ]
+/Count 1
+>>
+endobj
+% catalog object
+1 0 obj
+<< /Type /Catalog
+/Outlines 2 0 R
+/Pages 3 0 R
+>>
+endobj
+2 0 obj
+<< /Type /Outlines
+/Count 0
+>>
+endobj
+6 0 obj
+[ /PDF /Text ]
+endobj
+7 0 obj
+<< /Type /Font
+/Subtype /TrueType
+/Name /F1
+/BaseFont /Courier
+/Encoding /MacRomanEncoding
+>>
+endobj
+8 0 obj
+<< /Type /Font
+/Subtype /TrueType
+/Name /F2
+/BaseFont /Courier-Bold
+/Encoding /MacRomanEncoding
+>>
+endobj
+9 0 obj
+<< /Type /Font
+/Subtype /TrueType
+/Name /F3
+/BaseFont /Courier-Oblique
+/Encoding /MacRomanEncoding
+>>
+endobj
+10 0 obj
+<< /Type /Font
+/Subtype /TrueType
+/Name /F4
+/BaseFont /Courier-BoldOblique
+/Encoding /MacRomanEncoding
+>>
+endobj
+11 0 obj
+<<
+/CreationDate (D:20231030124145)
+/Creator (AB4Editor Control)
+/Producer (AB4Editor Control)
+/Title (LZFG_AF_PICK_LISTO01)
+>>
+endobj
+trailer
+<< /Info 11 0 R
+/Root 1 0 R
+ >>
+startxref
+0
+%%EOF
